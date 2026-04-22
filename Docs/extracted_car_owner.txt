@@ -1,0 +1,328 @@
+================================================================================
+FIXIT CAR OWNER - SCREENS AND UI ELEMENTS
+================================================================================
+
+
+SCREEN: Splash
+--------------------------------------------------------------------------------
+  1. Fix It
+  2. Car repair & parts marketplace
+  3. EN · Splash
+  4. صلّح
+  5. سوق إصلاح السيارات وقطع الغيار
+  6. عر · البداية
+
+
+SCREEN: Enter Number
+--------------------------------------------------------------------------------
+  1. Welcome
+  2. Enter your WhatsApp number to get started
+  3. WhatsApp number
+  4. 🇮🇶+964
+  5. 7xx xxx xxxx
+  6. Send code on WhatsApp
+  7. You'll receive a 6-digit code via WhatsApp
+  8. EN · Enter number
+  9. أهلاً وسهلاً
+  10. أدخل رقم الواتساب الخاص بك للبدء
+  11. رقم الواتساب
+  12. أرسل الرمز عبر الواتساب
+  13. راح تصلك رسالة واتساب تحتوي رمز التحقق
+  14. عر · إدخال الرقم
+
+
+SCREEN: OTP
+--------------------------------------------------------------------------------
+  1. Check WhatsApp
+  2. 6-digit code sent to +964 7xx
+  3. Enter code
+  4. ·
+  5. Resend in 0:42
+  6. Verify
+  7. EN · OTP
+  8. تحقق من الواتساب
+  9. أرسلنا رمزاً من 6 أرقام إلى +964 7xx
+  10. أدخل الرمز
+  11. إعادة الإرسال خلال 0:42
+  12. تحقق
+  13. عر · رمز التحقق
+
+
+SCREEN: Account type
+--------------------------------------------------------------------------------
+  1. I am a...
+  2. Choose your account type
+  3. Car owner
+  4. Post repair & parts requests
+  5. Shop / Workshop
+  6. Bid on requests
+  7. Continue as car owner
+  8. EN · Account type
+  9. أنا...
+  10. اختر نوع حسابك للمتابعة
+  11. صاحب سيارة
+  12. انشر طلبات الإصلاح وقطع الغيار
+  13. ورشة / محل قطع غيار
+  14. قدّم عروض على الطلبات
+  15. تابع كصاحب سيارة
+  16. عر · نوع الحساب
+  17. Owner Details · Location
+  18. Fix It — Car Owner
+
+
+SCREEN: Owner details
+--------------------------------------------------------------------------------
+  1. Your details
+  2. Step 1 of 2
+  3. Your name
+  4. Ahmed Al-Jabouri
+  5. City
+  6. Baghdad
+  7. Used to find nearby shops
+  8. Continue
+  9. EN · Owner details
+  10. بياناتك
+  11. الخطوة ١ من ٢
+  12. اسمك
+  13. أحمد الجبوري
+  14. المدينة
+  15. بغداد
+  16. تُستخدم لإيجاد ورش قريبة منك
+  17. تابع
+  18. عر · بيانات المستخدم
+
+
+SCREEN: Owner location
+--------------------------------------------------------------------------------
+  1. Your location
+  2. Step 2 of 2
+  3. District / Area
+  4. Search district...
+  5. Mansour
+  6. Karrada
+  7. Jadriya
+  8. Adhamiya
+  9. Zayouna
+  10. Kadhimiya
+  11. Arasat
+  12. Home address (optional)
+  13. Mansour St, near Al-Salam roundabout
+  14. Default for towing posts — can change per post
+  15. Finish setup
+  16. EN · Owner location
+  17. موقعك
+  18. الخطوة ٢ من ٢
+  19. المنطقة / الحي
+  20. ابحث عن منطقة...
+  21. المنصور
+  22. الكرادة
+  23. الجادرية
+  24. الأعظمية
+  25. الزيونة
+  26. الكاظمية
+  27. عنوانك / سكنك (اختياري)
+  28. شارع المنصور، قرب دوار السلام
+  29. افتراضي لطلبات السحب — تقدر تغيره عند كل طلب
+  30. إنهاء الإعداد
+
+
+SCREEN: Owner Home
+--------------------------------------------------------------------------------
+  1. Car owner
+  2. My Posts
+  3. AJ
+  4. Repair · Engine
+  5. Toyota Camry 2020
+  6. Knocking when accelerating above 80 km/h.
+  7. 38 hrs left
+  8. 4 bids
+  9. Best
+  10. Al-Amana Workshop
+  11. 380K IQD
+  12. Rod knock. Same day, free diag.
+  13. Accept
+  14. Message
+  15. Karaj Al-Nujoom
+  16. 450K IQD
+  17. Full scan. Tomorrow morning.
+  18. Need something else? Tap + to post
+  19. New Post
+  20. Inbox
+  21. Profile
+  22. EN · My Posts (home)
+  23. صاحب سيارة
+  24. طلباتي
+  25. إصلاح · محرك
+  26. تويوتا كامري 2020
+  27. صوت طقطقة عند التسارع فوق 80 كم/ساعة.
+  28. 38 ساعة متبقية
+  29. 4 عروض
+  30. الأفضل
+
+
+SCREEN: Create Repair
+--------------------------------------------------------------------------------
+  1. Create post
+  2. Post
+  3. I need
+  4. Repair
+  5. Parts
+  6. Towing
+  7. Repair type
+  8. Engine
+  9. Brakes
+  10. Electrical
+  11. AC
+  12. Tyres
+  13. Suspension
+  14. Body & Paint
+  15. Transmission
+  16. Exhaust
+  17. Oil & Fluids
+  18. Other
+  19. Car details
+  20. Toyota
+  21. Camry
+  22. Describe the issue
+  23. Knocking when accelerating above 80 km/h.
+  24. 52 / 300
+  25. Photos
+  26. Up to 3
+  27. Post & start receiving bids
+  28. Auto-deletes after 48 hours
+  29. EN · Create repair
+  30. نشر
+
+
+SCREEN: Create Parts
+--------------------------------------------------------------------------------
+  1. Create post
+  2. Post
+  3. I need
+  4. Repair
+  5. Parts
+  6. Towing
+  7. Part category
+  8. Brakes
+  9. Engine
+  10. Filters
+  11. Electrical
+  12. Suspension
+  13. Body
+  14. Tyres
+  15. AC
+  16. Exhaust
+  17. Other
+  18. Part condition
+  19. New
+  20. Used
+  21. Car details
+  22. Kia
+  23. Sportage
+  24. What do you need?
+  25. OEM front brake pads. Delivery to Karrada if possible.
+  26. Photos
+  27. Up to 3
+  28. Delivery needed?
+  29. Yes
+  30. No
+
+
+SCREEN: Create Towing
+--------------------------------------------------------------------------------
+  1. Create post
+  2. I need
+  3. Repair
+  4. Parts
+  5. Towing
+  6. Your location
+  7. Palestine St, Baghdad
+  8. GPS
+  9. Change location
+  10. Drag pin to adjust
+  11. Tow to (optional)
+  12. Enter destination...
+  13. Notes
+  14. Broke down on Palestine St. Urgent tow to Karrada.
+  15. Urgency
+  16. ASAP
+  17. Within the hour
+  18. Post & get bids
+  19. EN · Create towing (GPS)
+  20. إنشاء طلب
+  21. أريد
+  22. سحب
+  23. قطع غيار
+  24. إصلاح
+  25. موقعك الحالي
+  26. شارع فلسطين، بغداد
+  27. اسحب الدبوس للتعديل
+  28. غيّر الموقع
+  29. وين تريد نسحبها؟ (اختياري)
+  30. أدخل الوجهة...
+
+
+SCREEN: Chat
+--------------------------------------------------------------------------------
+  1. Al-Amana Workshop
+  2. Repair · Engine · Toyota Camry
+  3. Accepted
+  4. Bid accepted · Today 9:15am
+  5. Rod knock diagnosed. Available Sun 11am. 380K IQD total.
+  6. 9:16am
+  7. Sunday works. What's the address?
+  8. 9:22am ✓✓
+  9. Karrada St 14, near Al-Zahraa mosque. See you Sunday!
+  10. 9:24am
+  11. Perfect, see you then.
+  12. 9:25am ✓✓
+  13. Type a message...
+  14. EN · Chat
+  15. مقبول
+  16. ورشة الأمانة
+  17. إصلاح · محرك · تويوتا كامري
+  18. تم قبول العرض · اليوم 9:15ص
+  19. تم تشخيص الطرق. متاح الأحد 11ص. 380K د.ع.
+  20. 9:16ص
+  21. الأحد مناسب. وين موقعكم؟
+  22. 9:22ص ✓✓
+  23. الكرادة ش 14، قرب مسجد الزهراء. نشوفك الأحد!
+  24. 9:24ص
+  25. تمام، نشوفك.
+  26. 9:25ص ✓✓
+  27. اكتب رسالة...
+  28. عر · الرسائل
+
+
+SCREEN: Profile
+--------------------------------------------------------------------------------
+  1. AJ
+  2. Ahmed Al-Jabouri
+  3. +964 7xx · Baghdad
+  4. Notifications
+  5. Language
+  6. English
+  7. City
+  8. Baghdad
+  9. District
+  10. Mansour
+  11. Address
+  12. Mansour St...
+  13. Privacy policy
+  14. Terms of service
+  15. Log out
+  16. My Posts
+  17. New Post
+  18. Inbox
+  19. Profile
+  20. EN · Profile
+  21. أحمد الجبوري
+  22. +964 7xx · بغداد
+  23. الإشعارات
+  24. اللغة
+  25. العربية
+  26. المدينة
+  27. بغداد
+  28. المنطقة
+  29. المنصور
+  30. العنوان

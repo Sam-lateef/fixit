@@ -1,0 +1,478 @@
+import { useFocusEffect } from "@react-navigation/native";
+import { router, type Href } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import {
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
+import { PostImageLightbox } from "@/components/PostImageLightbox";
+import { ShopPremiumGate } from "@/components/ShopPremiumGate";
+import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
+import type { StringKey } from "@/lib/strings";
+import {
+  partsCategoryLabel,
+  repairCategoryLabel,
+} from "@/lib/taxonomy-labels";
+import { theme } from "@/lib/theme";
+
+// Category labels kept for future use; banner hidden for first release
+const _CATEGORY_LABEL: Record<string, string> = {
+  CARS: "🚗 Cars",
+  ELECTRICS: "⚡ Electrics",
+  PLUMBING: "🔧 Plumbing",
+  METAL: "🔩 Metal",
+  WOOD: "🪵 Wood",
+};
+
+type Post = {
+  id: string;
+  serviceType: string;
+  category: string;
+  title: string | null;
+  repairCategory: string | null;
+  partsCategory: string | null;
+  carMake: string | null;
+  carYear: number | null;
+  description: string;
+  distanceKm: number | null;
+  expiresAt: string;
+  createdAt: string;
+  photoUrls: string[];
+  bids: Array<{ shopId: string }>;
+  user: { name: string | null };
+};
+
+const NEW_THRESHOLD_HOURS = 2;
+
+function isNew(createdAt: string): boolean {
+  return Date.now() - new Date(createdAt).getTime() < NEW_THRESHOLD_HOURS * 3_600_000;
+}
+
+function userInitials(name: string | null): string {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join("");
+}
+
+type ShopMe = {
+  id: string;
+  category: string;
+  offersRepair: boolean;
+  offersParts: boolean;
+  offersTowing: boolean;
+};
+
+type FilterTab = "ALL" | "REPAIR" | "PARTS" | "TOWING";
+
+function serviceTagStyle(type: string): { bg: string; fg: string } {
+  const upper = type.toUpperCase();
+  if (upper === "PARTS") return { bg: theme.partsBg, fg: theme.partsText };
+  if (upper === "TOWING") return { bg: theme.towingBg, fg: theme.towingText };
+  return { bg: theme.repairBg, fg: theme.repairText };
+}
+
+function hoursLeft(expiresAt: string): number {
+  return Math.max(0, Math.round((new Date(expiresAt).getTime() - Date.now()) / 3_600_000));
+}
+
+function serviceTypeLabel(
+  type: string,
+  t: (key: StringKey) => string,
+): string {
+  const u = type.toUpperCase();
+  if (u === "REPAIR") {
+    return t("repair");
+  }
+  if (u === "PARTS") {
+    return t("parts");
+  }
+  if (u === "TOWING") {
+    return t("towing");
+  }
+  return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+}
+
+export default function ShopFeedScreen(): React.ReactElement {
+  const { t, locale } = useI18n();
+  const [shopId, setShopId] = useState<string | null>(null);
+  const [shop, setShop] = useState<ShopMe | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState<FilterTab>("ALL");
+
+  const load = useCallback(async (activeFilter: FilterTab) => {
+    try {
+      const { shop: s } = await apiFetch<{ shop: ShopMe }>("/api/v1/shops/me");
+      setShopId(s.id);
+      setShop(s);
+      const query = activeFilter === "ALL" ? "" : `?serviceType=${activeFilter}`;
+      const { posts: list } = await apiFetch<{ posts: Post[] }>(`/api/v1/feed${query}`);
+      setPosts(list);
+    } catch {
+      /* stay empty when API is unreachable */
+    }
+  }, []);
+
+  useEffect(() => {
+    void load(filter);
+  }, [load, filter]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void load(filter);
+    }, [load, filter]),
+  );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    void (async () => {
+      try {
+        await load(filter);
+      } finally {
+        setRefreshing(false);
+      }
+    })();
+  }, [load, filter]);
+
+  const tabs: Array<{ key: FilterTab; label: string }> = [{ key: "ALL", label: t("all") }];
+  if (shop?.offersRepair) tabs.push({ key: "REPAIR", label: t("repair") });
+  if (shop?.offersParts) tabs.push({ key: "PARTS", label: t("parts") });
+  if (shop?.offersTowing) tabs.push({ key: "TOWING", label: t("towing") });
+
+  const categoryLabel = (p: Post): string | null => {
+    if (p.serviceType.toUpperCase() === "REPAIR" && p.repairCategory) {
+      return repairCategoryLabel(p.repairCategory, locale);
+    }
+    if (p.serviceType.toUpperCase() === "PARTS" && p.partsCategory) {
+      return partsCategoryLabel(p.partsCategory, locale);
+    }
+    return null;
+  };
+
+  return (
+    <ShopPremiumGate>
+      <FlatList
+        data={posts}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListHeaderComponent={
+          <View>
+            <View style={styles.tabRow}>
+              {tabs.map((tab) => (
+                <Pressable
+                  key={tab.key}
+                  style={[styles.tab, filter === tab.key && styles.tabActive]}
+                  onPress={() => setFilter(tab.key)}
+                >
+                  <Text style={[styles.tabText, filter === tab.key && styles.tabTextActive]}>
+                    {tab.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        }
+        ListEmptyComponent={
+          <Text style={styles.empty}>{t("noPosts")}</Text>
+        }
+        renderItem={({ item: p }) => {
+          const hasBid = shopId !== null && p.bids.some((b) => b.shopId === shopId);
+          const tag = serviceTagStyle(p.serviceType);
+          const cat = categoryLabel(p);
+          const hrs = hoursLeft(p.expiresAt);
+          const isTowing = p.serviceType.toUpperCase() === "TOWING";
+          const postIsNew = isNew(p.createdAt);
+
+          const openBid = (): void => {
+            router.push(`/shop/bid/${p.id}` as Href);
+          };
+
+          return (
+            <View style={[styles.card, hasBid && styles.cardDimmed]}>
+              <Pressable onPress={openBid}>
+              {/* Top row: service tag + badges + distance */}
+              <View style={styles.cardTopRow}>
+                <View style={styles.tagRow}>
+                  <View style={[styles.serviceTag, { backgroundColor: tag.bg }]}>
+                    <Text style={[styles.serviceTagText, { color: tag.fg }]}>
+                      {serviceTypeLabel(p.serviceType, t)}
+                      {cat ? ` · ${cat}` : ""}
+                    </Text>
+                  </View>
+                  {isTowing ? (
+                    <View style={styles.urgencyBadge}>
+                      <Text style={styles.urgencyText}>⚡</Text>
+                    </View>
+                  ) : null}
+                  {postIsNew && !hasBid ? (
+                    <View style={styles.newBadge}>
+                      <Text style={styles.newBadgeText}>{t("new_")}</Text>
+                    </View>
+                  ) : null}
+                  {hasBid ? (
+                    <View style={styles.bidSentBadgeTop}>
+                      <Text style={styles.bidSentTextTop}>{t("bidSent")}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                {p.distanceKm != null ? (
+                  <View style={styles.distPill}>
+                    <Text style={styles.distText}>{p.distanceKm} {t("distKm")}</Text>
+                  </View>
+                ) : null}
+              </View>
+
+              {/* User row: avatar + name */}
+              <View style={styles.userRow}>
+                <View style={styles.userAvatar}>
+                  <Text style={styles.userAvatarText}>{userInitials(p.user.name)}</Text>
+                </View>
+                <Text style={styles.userName} numberOfLines={1}>
+                  {p.user.name ?? "—"}
+                </Text>
+              </View>
+
+              {/* Title + description, thumbnail: right in English, left in Arabic (RTL mirrors row-reverse) */}
+              {p.photoUrls?.length > 0 ? (
+                <View style={styles.contentRow}>
+                  <View style={styles.thumbWrap}>
+                    <PostImageLightbox
+                      uri={p.photoUrls[0].trim()}
+                      thumbnailStyle={styles.thumb}
+                    />
+                    {p.photoUrls.length > 1 ? (
+                      <View style={styles.moreOverlay}>
+                        <Text style={styles.moreText}>+{p.photoUrls.length - 1}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <View style={styles.textFlex}>
+                    {p.title ? (
+                      <Text style={styles.title} numberOfLines={1}>{p.title}</Text>
+                    ) : null}
+                    <Text style={styles.desc} numberOfLines={2}>
+                      {p.description}
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <>
+                  {p.title ? (
+                    <Text style={styles.title} numberOfLines={1}>{p.title}</Text>
+                  ) : null}
+                  <Text style={styles.desc} numberOfLines={2}>
+                    {p.description}
+                  </Text>
+                </>
+              )}
+              </Pressable>
+
+              <Pressable onPress={openBid}>
+              {/* Car info */}
+              {(p.carMake || p.carYear) ? (
+                <Text style={styles.carInfo}>
+                  {[p.carMake, p.carYear].filter(Boolean).join(" · ")}
+                </Text>
+              ) : null}
+
+              {/* Bottom row: bids + time left + button */}
+              <View style={styles.bottomRow}>
+                <View style={styles.metaRow}>
+                  <Text style={styles.metaText}>
+                    {p.bids.length} {t("bidsCount")}
+                  </Text>
+                  <Text style={styles.metaDot}>·</Text>
+                  <Text style={styles.metaText}>{hrs}{t("hrsLeft")}</Text>
+                </View>
+                {!hasBid ? (
+                  <Pressable
+                    style={styles.bidBtn}
+                    onPress={openBid}
+                  >
+                    <Text style={styles.bidBtnText}>{t("placeBid")}</Text>
+                  </Pressable>
+                ) : null}
+              </View>
+              </Pressable>
+            </View>
+          );
+        }}
+      />
+    </ShopPremiumGate>
+  );
+}
+
+const styles = StyleSheet.create({
+  list: { padding: 16, paddingBottom: 32, backgroundColor: theme.bg },
+
+  categoryBanner: {
+    backgroundColor: theme.primaryLight,
+    borderRadius: theme.radiusMd,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginBottom: 12,
+    alignSelf: "flex-start",
+  },
+  categoryBannerText: { fontSize: 13, fontWeight: "700", color: theme.primary },
+
+  tabRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
+  tab: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: theme.chip,
+  },
+  tabActive: { backgroundColor: theme.primary },
+  tabText: { fontSize: 14, fontWeight: "600", color: theme.muted },
+  tabTextActive: { color: "#fff" },
+
+  empty: { color: theme.muted, marginTop: 24, textAlign: "center" },
+
+  card: {
+    backgroundColor: theme.surface,
+    borderRadius: theme.radiusLg,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  cardTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  tagRow: { flexDirection: "row", alignItems: "center", gap: 6, flexShrink: 1 },
+  serviceTag: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  serviceTagText: { fontSize: 12, fontWeight: "700" },
+  urgencyBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: theme.towingBg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  urgencyText: { fontSize: 12 },
+  distPill: {
+    backgroundColor: "#D8F3DC",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  distText: { fontSize: 12, fontWeight: "700", color: "#1B4332" },
+
+  title: { marginTop: 10, color: theme.text, fontSize: 15, fontWeight: "700", lineHeight: 20 },
+  desc: { marginTop: 4, color: theme.muted, fontSize: 14, lineHeight: 20 },
+  carInfo: { marginTop: 4, fontSize: 13, color: theme.mutedLight },
+
+  bottomRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: theme.border,
+  },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  metaText: { fontSize: 13, color: theme.mutedLight },
+  metaDot: { fontSize: 13, color: theme.mutedLight },
+
+  bidBtn: {
+    backgroundColor: theme.primaryMid,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: theme.radiusMd,
+  },
+  bidBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+  bidSentBadge: {
+    backgroundColor: theme.primaryLight,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: theme.radiusMd,
+  },
+  bidSentText: { color: theme.primary, fontWeight: "700", fontSize: 13 },
+
+  cardDimmed: { opacity: 0.65 },
+
+  newBadge: {
+    backgroundColor: "#D8F3DC",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  newBadgeText: { fontSize: 11, fontWeight: "700", color: "#1B4332" },
+
+  bidSentBadgeTop: {
+    backgroundColor: theme.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  bidSentTextTop: { fontSize: 11, fontWeight: "700", color: theme.primary },
+
+  userRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 10,
+  },
+  userAvatar: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: theme.chip,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  userAvatarText: { fontSize: 9, fontWeight: "700", color: theme.muted },
+  userName: { fontSize: 13, color: theme.muted, flex: 1 },
+  contentRow: {
+    flexDirection: "row-reverse",
+    alignItems: "flex-start",
+    gap: 10,
+    marginTop: 6,
+  },
+  thumbWrap: {
+    position: "relative",
+  },
+  thumb: {
+    width: 72,
+    height: 72,
+    borderRadius: 8,
+  },
+  moreOverlay: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  moreText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  textFlex: {
+    flex: 1,
+  },
+});

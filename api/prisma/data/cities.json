@@ -1,0 +1,12 @@
+[
+  { "slug": "baghdad", "nameEn": "Baghdad", "nameAr": "بغداد", "sortOrder": 0 },
+  { "slug": "basra", "nameEn": "Basra", "nameAr": "البصرة", "sortOrder": 1 },
+  { "slug": "mosul", "nameEn": "Mosul", "nameAr": "الموصل", "sortOrder": 2 },
+  { "slug": "erbil", "nameEn": "Erbil", "nameAr": "أربيل", "sortOrder": 3 },
+  { "slug": "najaf", "nameEn": "Najaf", "nameAr": "النجف", "sortOrder": 4 },
+  { "slug": "karbala", "nameEn": "Karbala", "nameAr": "كربلاء", "sortOrder": 5 },
+  { "slug": "kirkuk", "nameEn": "Kirkuk", "nameAr": "كركوك", "sortOrder": 6 },
+  { "slug": "sulaymaniyah", "nameEn": "Sulaymaniyah", "nameAr": "السليمانية", "sortOrder": 7 },
+  { "slug": "duhok", "nameEn": "Duhok", "nameAr": "دهوك", "sortOrder": 8 },
+  { "slug": "other", "nameEn": "Other", "nameAr": "أخرى", "sortOrder": 99 }
+]

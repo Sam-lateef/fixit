@@ -1,0 +1,23 @@
+---
+description: FixIt mobile — Expo vs dev client and Google Sign-In (do not regress to Expo Go for Google)
+globs: mobile/**/*
+alwaysApply: true
+---
+
+# Expo workflow (FixIt mobile)
+
+## Google Sign-In — mandatory facts
+
+- **Expo Go** cannot use `@react-native-google-signin/google-signin`. In Expo Go, the app uses `expo-auth-session` + **`https://auth.expo.io/...`** (proxy). That path is fragile and is **not** what we fixed for SHA / `google-services.json`.
+- **Native Google** (the pipeline we aligned with Firebase SHA-1 and `android/app/debug.keystore`) runs only in a **development build or release build** installed with **`npx expo run:android`** (or `npm run android` from `mobile/`), **not** inside the Expo Go host app.
+
+## What the assistant must do
+
+1. For **Google auth testing, debugging, or “reload the app”** on Android: default instruction is **`npx expo run:android`** (or `npm run android`) from `mobile/`, unless the user explicitly says they are debugging **Expo Go only**.
+2. **Do not** tell the user to use **`npx expo start` + Expo Go** as the way to verify Google sign-in after native setup work, without a **explicit warning** that Google will fall back to the proxy and native config does not apply.
+3. If the user needs a clean Metro for a **dev build**: they can run `npx expo start` **only** when they are loading the project in the **same dev client** already installed (or document that they will run `expo run:android` again). Prefer **`npx expo run:android`** to reinstall + start Metro in one step when unclear.
+4. **Terminal:** run commands in the tool when possible; do not push routine commands back to the user.
+
+## Env reminder
+
+- `EXPO_PUBLIC_EXPO_PROJECT_FULL_NAME` + `auth.expo.io` matter **only** for Expo Go / proxy Google. It is **not** the path for native Google validation on the dev client.

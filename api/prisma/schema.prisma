@@ -1,0 +1,297 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String @id @default(cuid())
+  phone       String? @unique
+  email       String? @unique
+  firebaseUid String? @unique
+  name        String?
+  userType    UserType
+  /// Role for admin dashboard access. Regular users = USER; admins log in via email+password.
+  role        Role   @default(USER)
+  /// bcrypt hash for admin email+password login. Null for regular users.
+  passwordHash String?
+  /// Non-null = banned. Blocks login, posting, and bidding. Data preserved.
+  bannedAt    DateTime?
+  city       String?
+  districtId String?
+  district   District? @relation(fields: [districtId], references: [id])
+  address    String?
+  fcmToken   String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  posts Post[]
+  shop  Shop?
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model PendingOtp {
+  phone     String   @id
+  pinId     String
+  createdAt DateTime @default(now())
+}
+
+model Shop {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+  name   String
+
+  category ServiceCategory @default(CARS)
+
+  /// Public hero / storefront image (HTTPS URL from uploads).
+  coverImageUrl String?
+
+  offersRepair  Boolean @default(false)
+  offersParts   Boolean @default(false)
+  offersTowing  Boolean @default(false)
+
+  repairRadiusKm Int @default(15)
+  partsRadiusKm  Int @default(20)
+  towingRadiusKm Int @default(8)
+
+  partsNationwide Boolean @default(false)
+
+  deliveryAvailable Boolean @default(false)
+
+  carMakes   String[]
+  carYearMin Int?
+  carYearMax Int?
+
+  repairCategories String[]
+  partsCategories  String[]
+
+  rating      Float @default(0)
+  reviewCount Int   @default(0)
+  bidsWon     Int   @default(0)
+
+  bids      Bid[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Canonical city catalog (slug matches `User.city` / `District.city`, e.g. Baghdad).
+model City {
+  id        String @id @default(cuid())
+  slug      String @unique
+  nameEn    String
+  nameAr    String
+  sortOrder Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model District {
+  id     String @id @default(cuid())
+  name   String
+  nameAr String
+  city   String
+  cityAr String
+  lat    Float
+  lng    Float
+
+  users User[]
+  posts Post[]
+
+  @@unique([city, name])
+}
+
+/// Global make name; per-market ordering via VehicleMakeMarket.
+model VehicleMake {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  nameAr String?
+
+  models  VehicleModel[]
+  markets VehicleMakeMarket[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// sortOrder: lower = show first in that market (popular), then alphabetical by name.
+model VehicleMakeMarket {
+  makeId     String
+  marketCode String
+  sortOrder  Int    @default(1000)
+
+  make VehicleMake @relation(fields: [makeId], references: [id], onDelete: Cascade)
+
+  @@id([makeId, marketCode])
+}
+
+model VehicleModel {
+  id     String  @id @default(cuid())
+  makeId String
+  name   String
+  nameAr String?
+
+  make    VehicleMake @relation(fields: [makeId], references: [id], onDelete: Cascade)
+  markets VehicleModelMarket[]
+  years   VehicleModelYear[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([makeId, name])
+}
+
+model VehicleModelMarket {
+  modelId    String
+  marketCode String
+  sortOrder  Int    @default(1000)
+
+  model VehicleModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@id([modelId, marketCode])
+}
+
+model VehicleModelYear {
+  modelId String
+  year    Int
+
+  model VehicleModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@id([modelId, year])
+}
+
+model Post {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  serviceType ServiceType
+  category    ServiceCategory @default(CARS)
+
+  title          String?
+  repairCategory String?
+  partsCategory  String?
+  carMake        String?
+  carModel       String?
+  carYear        Int?
+
+  conditionNew  Boolean @default(false)
+  conditionUsed Boolean @default(false)
+
+  deliveryNeeded Boolean @default(false)
+
+  towingFromLat     Float?
+  towingFromLng     Float?
+  towingFromAddress String?
+  towingToAddress   String?
+  urgency           String?
+
+  districtId String?
+  district   District? @relation(fields: [districtId], references: [id])
+  lat        Float?
+  lng        Float?
+
+  description String
+  photoUrls   String[]
+
+  status    PostStatus @default(ACTIVE)
+  expiresAt DateTime
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  bids Bid[]
+}
+
+model Bid {
+  id     String @id @default(cuid())
+  postId String
+  post   Post   @relation(fields: [postId], references: [id])
+  shopId String
+  shop   Shop   @relation(fields: [shopId], references: [id])
+
+  priceEstimate Int
+
+  appointmentDate DateTime?
+  appointmentTime String?
+  estimatedQty    Int?
+  durationUnit    String?
+
+  deliveryDate   DateTime?
+  deliveryWindow String?
+
+  message String
+
+  status    BidStatus @default(PENDING)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  chatThread ChatThread?
+
+  @@unique([postId, shopId])
+}
+
+model ChatThread {
+  id        String    @id @default(cuid())
+  bidId     String    @unique
+  bid       Bid       @relation(fields: [bidId], references: [id])
+  messages  Message[]
+  createdAt DateTime  @default(now())
+}
+
+model Message {
+  id        String     @id @default(cuid())
+  threadId  String
+  thread    ChatThread @relation(fields: [threadId], references: [id])
+  senderId  String
+  content   String
+  readAt    DateTime?
+  createdAt DateTime   @default(now())
+}
+
+enum UserType {
+  OWNER
+  SHOP
+}
+
+enum ServiceType {
+  REPAIR
+  PARTS
+  TOWING
+}
+
+enum ServiceCategory {
+  CARS
+  ELECTRICS
+  PLUMBING
+  METAL
+  WOOD
+}
+
+enum PostStatus {
+  ACTIVE
+  ACCEPTED
+  EXPIRED
+  DELETED
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  WITHDRAWN
+}
+
+model ShopNotifyBatch {
+  id        String   @id @default(cuid())
+  shopId    String
+  lastSentAt DateTime @default(now())
+
+  @@unique([shopId])
+}

@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "Post" ALTER COLUMN "photoUrls" DROP DEFAULT;
+
+-- AlterTable
+ALTER TABLE "Shop" ALTER COLUMN "carMakes" DROP DEFAULT,
+ALTER COLUMN "repairCategories" DROP DEFAULT,
+ALTER COLUMN "partsCategories" DROP DEFAULT;

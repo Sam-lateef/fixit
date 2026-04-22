@@ -1,0 +1,26 @@
+# Google OAuth "Download JSON" for OAuth clients — do not commit (often empty of secret but misleading).
+client_secret*.json
+**/client_secret*.json
+
+# Firebase Admin SDK (download from Firebase Console → Project settings → Service accounts)
+firebase-service-account.json
+fixit-*-firebase-adminsdk*.json
+
+node_modules/
+dist/
+api/dist/
+api/uploads/
+.env
+mobile/.env
+api/.env
+app/.env
+app/.env.development
+app/.env.production
+web/admin/.env.local
+.expo/
+*COMPLETE_INVENTORY*.txt
+*.log
+.DS_Store
+android/
+ios/
+.capacitor/

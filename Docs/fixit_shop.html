@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Fix It — Shop Screens</title>
+<style>* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#fff; font-family:'Segoe UI',Arial,sans-serif; zoom:2; }
+@media print { .page { page-break-after: always; } }
+.cover { width:100%; background:#fff; padding:40px 36px 36px; border-bottom:4px solid #1B4332; }
+.section { width:100%; min-height:70px; background:#1B4332; display:flex; align-items:center; justify-content:space-between; padding:0 28px; }
+.section-en { font-size:18px; font-weight:500; color:#fff; }
+.section-ar { font-size:14px; color:rgba(255,255,255,0.6); }
+.section-num { font-size:10px; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px; }
+.page { width:100%; padding:28px 24px; display:flex; flex-direction:column; gap:20px; background:#fff; }
+.page-header { font-size:8px; color:#aaa; text-transform:uppercase; letter-spacing:1px; padding-bottom:4px; border-bottom:0.5px solid #eee; display:flex; justify-content:space-between; }
+.pair { display:flex; gap:8mm; align-items:flex-start; }
+.sc { display:flex; flex-direction:column; align-items:center; gap:4px; }
+.sl { font-size:7.5px; color:#888; text-transform:uppercase; letter-spacing:0.5px; text-align:center; }
+.phone { width:46mm; background:#f4f4f2; border-radius:6mm; border:0.5px solid #c8c8c8; overflow:hidden; font-size:8px; display:flex; flex-direction:column; }
+.phone-ar { direction:rtl; font-family:'Segoe UI',Tahoma,Arial,sans-serif; }
+.sb { background:#fff; padding:3px 8px 0; font-size:6px; color:#888; direction:ltr; }
+.hdr { background:#fff; padding:6px 9px 7px; border-bottom:0.3px solid #e8e8e8; }
+.body { padding:7px 9px; flex:1; background:#f4f4f2; overflow:hidden; }
+.navb { background:#fff; border-top:0.3px solid #e8e8e8; padding:4px 0 7px; display:flex; justify-content:space-around; }
+.ni { display:flex; flex-direction:column; align-items:center; gap:2px; font-size:6.5px; color:#888; }
+.nia { color:#40916C; font-weight:500; }
+.cs { display:inline-block; padding:2px 7px; background:#1B4332; border-radius:20px; font-size:6.5px; color:#fff; margin:1.5px; }
+.cu { display:inline-block; padding:2px 7px; background:#eee; border-radius:20px; font-size:6.5px; color:#555; border:0.3px solid #ddd; margin:1.5px; }
+.btn { background:#40916C; border-radius:5px; padding:6px; text-align:center; font-size:8px; font-weight:500; color:#fff; }
+.btn-sm { background:#40916C; border-radius:4px; padding:2px 7px; font-size:7px; font-weight:500; color:#fff; display:inline-block; }
+.btn-out { background:#eee; border-radius:4px; padding:2px 7px; font-size:7px; color:#333; border:0.3px solid #ddd; display:inline-block; }
+.btn-red { background:#FEE2E2; border-radius:4px; padding:2px 7px; font-size:7px; color:#EF4444; border:0.3px solid #FECACA; display:inline-block; }
+.inp { background:#ebebea; border:0.3px solid #ddd; border-radius:5px; padding:5px 8px; font-size:7.5px; color:#111; }
+.inp-v { background:#ebebea; border:0.3px solid #40916C; border-radius:5px; padding:5px 8px; font-size:7.5px; color:#1B4332; font-weight:500; display:flex; justify-content:space-between; align-items:center; }
+.card { background:#fff; border-radius:6px; border:0.3px solid #e5e5e5; padding:7px 8px; margin-bottom:5px; }
+.card-g { border:1.2px solid #40916C; }
+.sec { font-size:6.5px; color:#aaa; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:3px; font-weight:500; }
+.tag-r { display:inline-block; padding:1px 6px; background:#D8F3DC; border-radius:20px; font-size:6.5px; font-weight:500; color:#1B4332; }
+.tag-p { display:inline-block; padding:1px 6px; background:#E8F0FE; border-radius:20px; font-size:6.5px; font-weight:500; color:#1A5FC8; }
+.tag-t { display:inline-block; padding:1px 6px; background:#FFF8E6; border-radius:20px; font-size:6.5px; font-weight:500; color:#B07A00; }
+.tag-n { display:inline-block; padding:1px 5px; background:#D8F3DC; border-radius:20px; font-size:6px; font-weight:500; color:#1B4332; }
+.tag-s { display:inline-block; padding:1px 5px; background:#E8F0FE; border-radius:20px; font-size:6px; font-weight:500; color:#1A5FC8; }
+.av { width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:6.5px; font-weight:500; flex-shrink:0; }
+.av-g { background:#D8F3DC; color:#1B4332; }
+.av-o { background:#FFF0E6; color:#C44E1A; }
+.av-y { background:#FFF8E6; color:#B07A00; }
+.dg { width:5px; height:5px; border-radius:50%; background:#22C55E; display:inline-block; }
+.dy { width:5px; height:5px; border-radius:50%; background:#F59E0B; display:inline-block; }
+.dr { width:4px; height:4px; border-radius:50%; background:#EF4444; border:0.8px solid #fff; display:inline-block; }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:3px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:3px; }
+.pbar { display:flex; gap:2px; margin-bottom:10px; direction:ltr; }
+.pa { flex:1; height:2px; background:#40916C; border-radius:1px; }
+.pi { flex:1; height:2px; background:#ddd; border-radius:1px; }
+.splash-bg { flex:1; background:#1B4332; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; }
+.slogo { width:32px; height:32px; background:#fff; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
+.cal-mini { background:#fff; border-radius:5px; border:0.3px solid #e5e5e5; padding:5px; margin-bottom:5px; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; }
+.cd { width:11px; height:11px; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:6px; color:#555; }
+.cd-s { background:#1B4332; color:#fff !important; }
+.cd-t { border:0.8px solid #40916C; color:#1B4332 !important; }
+.cd-x { color:#ccc !important; }
+.bubble-out { background:#1B4332; border-radius:6px 6px 2px 6px; padding:4px 6px; font-size:7px; color:#fff; line-height:1.4; max-width:82%; margin-left:auto; }
+.bubble-in { background:#fff; border-radius:6px 6px 6px 2px; padding:4px 6px; font-size:7px; color:#111; line-height:1.4; max-width:82%; border:0.3px solid #eee; }
+.ts { font-size:5.5px; color:rgba(255,255,255,0.5); text-align:right; margin-top:1px; }
+.ts-in { font-size:5.5px; color:#bbb; margin-top:1px; }
+.prow { display:flex; justify-content:space-between; align-items:center; padding:5px 8px; border-bottom:0.3px solid #f0f0f0; font-size:7.5px; }
+.prow:last-child { border-bottom:none; }
+.stat { background:#fff; border-radius:4px; padding:5px 3px; text-align:center; border:0.3px solid #eee; }
+.dist-badge { padding:2px 7px; background:#D8F3DC; border-radius:20px; font-size:7px; color:#1B4332; font-weight:500; display:inline-block; }</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover page">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px;">
+    <div style="width:48px;height:48px;background:#1B4332;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+    <div>
+      <div style="font-size:28px;font-weight:500;color:#1B4332;line-height:1;">Fix It &nbsp;&middot;&nbsp; صلّح</div>
+      <div style="font-size:12px;color:#888;margin-top:3px;">Shop / Workshop Screens &nbsp;&middot;&nbsp; EN + Iraqi Arabic &nbsp;&middot;&nbsp; March 2026</div>
+    </div>
+  </div>
+  <div style="max-width:580px;margin-bottom:28px;">
+    <div style="font-size:14px;font-weight:500;color:#111;margin-bottom:6px;">Shop / Workshop — What they do</div>
+    <div style="font-size:11px;color:#444;line-height:1.7;">Shops browse a filtered feed of customer requests and place bids with a price, availability, and message. They never post — only bid. When a customer accepts a bid, a direct in-app chat opens. The shop feed is filtered by their service type, car makes, categories, and distance radius set during signup.</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div>
+      <div style="font-size:12px;font-weight:500;color:#1B4332;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #1B4332;">Screens in this file</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Splash / Enter number / OTP</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Account type &rarr; Shop signup</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Signup: What do you offer (Step 1)</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Signup: Car makes (Step 2)</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Signup: Repair &amp; Parts categories (Steps 3–4)</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Signup: Location (Step 5)</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Signup: Service area / reach (Step 6)</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Shop feed</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Place a bid (Repair &amp; Parts)</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>My Bids (Pending / Accepted)</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Chat</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Shop Profile</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:500;color:#1B4332;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #1B4332;">Key shop rules</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Shops NEVER post — they only bid</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Feed filtered by makes, categories, distance</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Parts shops can toggle: Ship nationwide</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Towing has tightest distance radius (1–30km)</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Can edit or withdraw a pending bid</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Once bid accepted: direct chat opens</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Distance shown on every feed card</div><div style="font-size:11px;color:#333;display:flex;gap:7px;"><span style="color:#40916C;font-weight:500;">&#10003;</span>Towing requests trigger urgent push notification</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP 1: AUTH -->
+<div class="section page">
+  <div><div class="section-num">Group 1</div><div class="section-en">Auth &amp; Shop Signup</div></div>
+  <div class="section-ar">التسجيل وإعداد الورشة</div>
+</div>
+
+<!-- PAGE 1: Splash + Number + OTP + Account type -->
+<div class="page">
+<div class="page-header"><span>Splash · Enter Number · OTP · Account Type (Shop)</span><span>Fix It — Shop</span></div>
+<div class="pair">
+
+<div class="sc">
+<div class="phone" style="height:86mm;">
+<div class="sb">9:41</div>
+<div class="splash-bg">
+  <div class="slogo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+  <div style="font-size:16px;font-weight:500;color:#fff;margin-bottom:3px;">Fix It</div>
+  <div style="font-size:7px;color:rgba(255,255,255,0.6);text-align:center;">Car repair &amp; parts marketplace</div>
+</div>
+</div>
+<div class="sl">EN · Splash</div>
+</div>
+
+<div class="sc">
+<div class="phone phone-ar" style="height:86mm;">
+<div class="sb">9:41</div>
+<div class="splash-bg">
+  <div class="slogo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+  <div style="font-size:16px;font-weight:500;color:#fff;margin-bottom:3px;">صلّح</div>
+  <div style="font-size:7px;color:rgba(255,255,255,0.6);text-align:center;">سوق إصلاح السيارات وقطع الغيار</div>
+</div>
+</div>
+<div class="sl">عر · البداية</div>
+</div>
+
+<div class="sc">
+<div class="phone" style="height:86mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:10px 9px;">
+  <div style="width:24px;height:24px;background:#D8F3DC;border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
+  <div style="font-size:11px;font-weight:500;color:#111;margin-bottom:2px;">Welcome</div>
+  <div style="font-size:7px;color:#888;margin-bottom:10px;">Enter your WhatsApp number to get started</div>
+  <div class="sec">WhatsApp number</div>
+  <div style="display:flex;gap:3px;margin-bottom:8px;direction:ltr;"><div class="inp" style="width:36px;text-align:center;font-size:6.5px;">🇮🇶+964</div><div class="inp" style="flex:1;">7xx xxx xxxx</div></div>
+  <div class="btn" style="font-size:7.5px;">Send code on WhatsApp</div>
+</div>
+</div>
+<div class="sl">EN · Enter number</div>
+</div>
+
+<div class="sc">
+<div class="phone" style="height:86mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:10px 9px;">
+  <div style="width:24px;height:24px;background:#D8F3DC;border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+  <div style="font-size:11px;font-weight:500;color:#111;margin-bottom:2px;">Check WhatsApp</div>
+  <div style="font-size:7px;color:#888;margin-bottom:10px;">6-digit code sent to +964 7xx</div>
+  <div class="sec">Enter code</div>
+  <div style="display:flex;gap:3px;margin-bottom:5px;direction:ltr;"><div style="flex:1;height:24px;background:#D8F3DC;border-radius:4px;border:1.2px solid #40916C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#1B4332;">3</div><div style="flex:1;height:24px;background:#D8F3DC;border-radius:4px;border:1.2px solid #40916C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#1B4332;">8</div><div style="flex:1;height:24px;background:#D8F3DC;border-radius:4px;border:1.2px solid #40916C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#1B4332;">4</div><div style="flex:1;height:24px;background:#D8F3DC;border-radius:4px;border:1.2px solid #40916C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#1B4332;">1</div><div style="flex:1;height:24px;background:#eee;border-radius:4px;border:0.3px solid #ddd;display:flex;align-items:center;justify-content:center;color:#bbb;">&middot;</div><div style="flex:1;height:24px;background:#eee;border-radius:4px;border:0.3px solid #ddd;display:flex;align-items:center;justify-content:center;color:#bbb;">&middot;</div></div>
+  <div style="font-size:7px;color:#bbb;margin-bottom:10px;">Resend in 0:42</div>
+  <div class="btn" style="opacity:0.4;font-size:7.5px;">Verify</div>
+</div>
+</div>
+<div class="sl">EN · OTP</div>
+</div>
+
+</div><!-- end pair -->
+<div class="pair" style="margin-top:20px;">
+
+<div class="sc">
+<div class="phone phone-ar" style="height:86mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:10px 9px;">
+  <div style="width:24px;height:24px;background:#D8F3DC;border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></div>
+  <div style="font-size:11px;font-weight:500;color:#111;margin-bottom:2px;text-align:right;">أهلاً وسهلاً</div>
+  <div style="font-size:7px;color:#888;margin-bottom:10px;text-align:right;">أدخل رقم الواتساب الخاص بك للبدء</div>
+  <div class="sec">رقم الواتساب</div>
+  <div style="display:flex;gap:3px;margin-bottom:8px;direction:ltr;"><div class="inp" style="width:38px;text-align:center;font-size:6px;">🇮🇶+964</div><div class="inp" style="flex:1;direction:ltr;">7xx xxx xxxx</div></div>
+  <div class="btn" style="font-size:7.5px;">أرسل الرمز عبر الواتساب</div>
+</div>
+</div>
+<div class="sl">عر · إدخال الرقم</div>
+</div>
+
+<div class="sc">
+<div class="phone phone-ar" style="height:86mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:10px 9px;">
+  <div style="width:24px;height:24px;background:#D8F3DC;border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+  <div style="font-size:11px;font-weight:500;color:#111;margin-bottom:2px;text-align:right;">تحقق من الواتساب</div>
+  <div style="font-size:7px;color:#888;margin-bottom:10px;text-align:right;">أرسلنا رمزاً من 6 أرقام</div>
+  <div class="sec">أدخل الرمز</div>
+  <div style="display:flex;gap:3px;margin-bottom:5px;direction:ltr;"><div style="flex:1;height:24px;background:#D8F3DC;border-radius:4px;border:1.2px solid #40916C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#1B4332;">3</div><div style="flex:1;height:24px;background:#D8F3DC;border-radius:4px;border:1.2px solid #40916C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#1B4332;">8</div><div style="flex:1;height:24px;background:#D8F3DC;border-radius:4px;border:1.2px solid #40916C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#1B4332;">4</div><div style="flex:1;height:24px;background:#D8F3DC;border-radius:4px;border:1.2px solid #40916C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#1B4332;">1</div><div style="flex:1;height:24px;background:#eee;border-radius:4px;border:0.3px solid #ddd;display:flex;align-items:center;justify-content:center;color:#bbb;">&middot;</div><div style="flex:1;height:24px;background:#eee;border-radius:4px;border:0.3px solid #ddd;display:flex;align-items:center;justify-content:center;color:#bbb;">&middot;</div></div>
+  <div style="font-size:7px;color:#bbb;margin-bottom:10px;text-align:right;">إعادة الإرسال خلال 0:42</div>
+  <div class="btn" style="opacity:0.4;font-size:7.5px;">تحقق</div>
+</div>
+</div>
+<div class="sl">عر · رمز التحقق</div>
+</div>
+
+<!-- EN Account type: Shop selected -->
+<div class="sc">
+<div class="phone" style="height:86mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:10px 9px;">
+  <div style="font-size:11px;font-weight:500;color:#111;margin-bottom:2px;">I am a...</div>
+  <div style="font-size:7px;color:#888;margin-bottom:10px;">Choose your account type</div>
+  <div style="border:0.3px solid #ddd;border-radius:8px;padding:9px;margin-bottom:6px;background:#eee;">
+    <div style="display:flex;align-items:center;gap:7px;"><div style="width:22px;height:22px;background:#ccc;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div><div><div style="font-size:8.5px;font-weight:500;color:#555;">Car owner</div><div style="font-size:6.5px;color:#888;">Post repair &amp; parts requests</div></div></div>
+  </div>
+  <div style="border:1.2px solid #40916C;border-radius:8px;padding:9px;margin-bottom:12px;background:#D8F3DC;">
+    <div style="display:flex;align-items:center;gap:7px;"><div style="width:22px;height:22px;background:#1B4332;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><div><div style="font-size:8.5px;font-weight:500;color:#1B4332;">Shop / Workshop</div><div style="font-size:6.5px;color:#40916C;">Bid on customer requests</div></div></div>
+  </div>
+  <div class="btn" style="font-size:7.5px;">Continue as shop</div>
+</div>
+</div>
+<div class="sl">EN · Account type (shop)</div>
+</div>
+
+<!-- AR Account type: Shop selected -->
+<div class="sc">
+<div class="phone phone-ar" style="height:86mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:10px 9px;">
+  <div style="font-size:11px;font-weight:500;color:#111;margin-bottom:2px;text-align:right;">أنا...</div>
+  <div style="font-size:7px;color:#888;margin-bottom:10px;text-align:right;">اختر نوع حسابك للمتابعة</div>
+  <div style="border:0.3px solid #ddd;border-radius:8px;padding:9px;margin-bottom:6px;background:#eee;">
+    <div style="display:flex;align-items:center;gap:7px;"><div style="width:22px;height:22px;background:#ccc;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div><div style="text-align:right;"><div style="font-size:8.5px;font-weight:500;color:#555;">صاحب سيارة</div><div style="font-size:6.5px;color:#888;">انشر طلبات الإصلاح</div></div></div>
+  </div>
+  <div style="border:1.2px solid #40916C;border-radius:8px;padding:9px;margin-bottom:12px;background:#D8F3DC;">
+    <div style="display:flex;align-items:center;gap:7px;"><div style="width:22px;height:22px;background:#1B4332;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><div style="text-align:right;"><div style="font-size:8.5px;font-weight:500;color:#1B4332;">ورشة / محل قطع غيار</div><div style="font-size:6.5px;color:#40916C;">قدّم عروض على الطلبات</div></div></div>
+  </div>
+  <div class="btn" style="font-size:7.5px;">تابع كورشة</div>
+</div>
+</div>
+<div class="sl">عر · نوع الحساب (ورشة)</div>
+</div>
+
+</div>
+</div>
+
+<!-- PAGE 2: What do you offer + Car makes -->
+<div class="page">
+<div class="page-header"><span>Shop Signup — What You Offer (Step 1) · Car Makes (Step 2)</span><span>Fix It — Shop</span></div>
+<div class="pair">
+
+<!-- EN What do you offer -->
+<div class="sc">
+<div class="phone" style="height:110mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:10px;overflow:hidden;">
+  <div class="pbar"><div class="pa"></div><div class="pi"></div><div class="pi"></div><div class="pi"></div><div class="pi"></div><div class="pi"></div></div>
+  <div style="font-size:10px;font-weight:500;color:#111;margin-bottom:2px;">What do you offer?</div>
+  <div style="font-size:7px;color:#888;margin-bottom:8px;">Step 1 of 6 &middot; Select all that apply</div>
+  <div style="border:1.2px solid #40916C;border-radius:8px;padding:8px;margin-bottom:5px;background:#D8F3DC;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;background:#1B4332;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><div><div style="font-size:8.5px;font-weight:500;color:#1B4332;">Repair</div><div style="font-size:6.5px;color:#40916C;">Fix cars at your workshop</div></div></div>
+    <div style="width:14px;height:14px;border-radius:4px;background:#1B4332;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>
+  </div>
+  <div style="border:1.2px solid #40916C;border-radius:8px;padding:8px;margin-bottom:5px;background:#D8F3DC;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;background:#1B4332;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div><div><div style="font-size:8.5px;font-weight:500;color:#1B4332;">Parts</div><div style="font-size:6.5px;color:#40916C;">Sell spare parts</div></div></div>
+    <div style="width:14px;height:14px;border-radius:4px;background:#1B4332;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>
+  </div>
+  <div style="border:0.3px solid #ddd;border-radius:8px;padding:8px;margin-bottom:8px;background:#eee;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;background:#ccc;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div><div><div style="font-size:8.5px;font-weight:500;color:#555;">Towing</div><div style="font-size:6.5px;color:#888;">Roadside tow service</div></div></div>
+    <div style="width:14px;height:14px;border-radius:4px;border:1.2px solid #ccc;flex-shrink:0;"></div>
+  </div>
+  <div style="font-size:6.5px;color:#aaa;margin-bottom:8px;">You'll set up categories for each service in the next steps</div>
+  <div class="btn" style="font-size:7.5px;">Continue</div>
+</div>
+</div>
+<div class="sl">EN · What do you offer</div>
+</div>
+
+<!-- AR What do you offer -->
+<div class="sc">
+<div class="phone phone-ar" style="height:110mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:10px;overflow:hidden;">
+  <div class="pbar"><div class="pa"></div><div class="pi"></div><div class="pi"></div><div class="pi"></div><div class="pi"></div><div class="pi"></div></div>
+  <div style="font-size:10px;font-weight:500;color:#111;margin-bottom:2px;text-align:right;">شنو تقدم؟</div>
+  <div style="font-size:7px;color:#888;margin-bottom:8px;text-align:right;">الخطوة ١ من ٦ &middot; اختر كل ما ينطبق عليك</div>
+  <div style="border:1.2px solid #40916C;border-radius:8px;padding:8px;margin-bottom:5px;background:#D8F3DC;display:flex;align-items:center;justify-content:space-between;">
+    <div style="width:14px;height:14px;border-radius:4px;background:#1B4332;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>
+    <div style="display:flex;align-items:center;gap:7px;"><div style="text-align:right;"><div style="font-size:8.5px;font-weight:500;color:#1B4332;">إصلاح</div><div style="font-size:6.5px;color:#40916C;">تصليح السيارات في ورشتك</div></div><div style="width:24px;height:24px;background:#1B4332;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div></div>
+  </div>
+  <div style="border:1.2px solid #40916C;border-radius:8px;padding:8px;margin-bottom:5px;background:#D8F3DC;display:flex;align-items:center;justify-content:space-between;">
+    <div style="width:14px;height:14px;border-radius:4px;background:#1B4332;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>
+    <div style="display:flex;align-items:center;gap:7px;"><div style="text-align:right;"><div style="font-size:8.5px;font-weight:500;color:#1B4332;">قطع غيار</div><div style="font-size:6.5px;color:#40916C;">بيع قطع الغيار</div></div><div style="width:24px;height:24px;background:#1B4332;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div></div>
+  </div>
+  <div style="border:0.3px solid #ddd;border-radius:8px;padding:8px;margin-bottom:8px;background:#eee;display:flex;align-items:center;justify-content:space-between;">
+    <div style="width:14px;height:14px;border-radius:4px;border:1.2px solid #ccc;flex-shrink:0;"></div>
+    <div style="display:flex;align-items:center;gap:7px;"><div style="text-align:right;"><div style="font-size:8.5px;font-weight:500;color:#555;">سحب</div><div style="font-size:6.5px;color:#888;">خدمة سحب السيارات</div></div><div style="width:24px;height:24px;background:#ccc;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div></div>
+  </div>
+  <div style="font-size:6.5px;color:#aaa;margin-bottom:8px;text-align:right;">ستضبط الفئات لكل خدمة في الخطوات التالية</div>
+  <div class="btn" style="font-size:7.5px;">تابع</div>
+</div>
+</div>
+<div class="sl">عر · شنو تقدم</div>
+</div>
+
+<!-- EN Car makes -->
+<div class="sc">
+<div class="phone" style="height:110mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:8px 9px;overflow:hidden;">
+  <div class="pbar"><div class="pa"></div><div class="pa"></div><div class="pi"></div><div class="pi"></div><div class="pi"></div><div class="pi"></div></div>
+  <div style="font-size:10px;font-weight:500;color:#111;margin-bottom:1px;">Car makes &amp; years</div>
+  <div style="font-size:7px;color:#888;margin-bottom:6px;">Step 2 of 6</div>
+  <div style="margin-bottom:4px;"><span class="cs">Toyota</span><span class="cs">Kia</span></div>
+  <div class="sec">Popular in Iraq</div>
+  <div style="margin-bottom:4px;"><span class="cs">Toyota</span><span class="cu">Kia</span><span class="cu">Hyundai</span><span class="cu">Nissan</span><span class="cu">Honda</span><span class="cu">GMC</span><span class="cu">Isuzu</span><span class="cu">Mitsubishi</span></div>
+  <div style="border-top:0.3px solid #eee;margin:4px 0;"></div>
+  <div class="sec">All brands</div>
+  <div style="background:#ebebea;border:0.3px solid #ddd;border-radius:4px;padding:3px 7px;font-size:7px;color:#aaa;display:flex;align-items:center;gap:4px;margin-bottom:3px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>Search brand...</div>
+  <div style="margin-bottom:5px;"><span class="cu">BMW</span><span class="cu">Chery</span><span class="cs">Kia</span><span class="cu">Lexus</span><span class="cu">Mercedes</span><span class="cs">Toyota</span></div>
+  <div class="sec">Year range</div>
+  <div class="g2" style="margin-bottom:6px;"><div class="inp" style="font-size:7px;">From: 2010 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="inp" style="font-size:7px;">To: 2024 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div></div>
+  <div style="display:flex;justify-content:space-between;font-size:7px;margin-bottom:4px;"><span style="color:#888;">2 selected</span><span style="color:#40916C;">Clear all</span></div>
+  <div class="btn" style="font-size:7.5px;">Continue</div>
+</div>
+</div>
+<div class="sl">EN · Car makes</div>
+</div>
+
+<!-- AR Car makes -->
+<div class="sc">
+<div class="phone phone-ar" style="height:110mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:8px 9px;overflow:hidden;">
+  <div class="pbar"><div class="pa"></div><div class="pa"></div><div class="pi"></div><div class="pi"></div><div class="pi"></div><div class="pi"></div></div>
+  <div style="font-size:10px;font-weight:500;color:#111;margin-bottom:1px;text-align:right;">الماركات والسنوات</div>
+  <div style="font-size:7px;color:#888;margin-bottom:6px;text-align:right;">الخطوة ٢ من ٦</div>
+  <div style="margin-bottom:4px;text-align:right;"><span class="cs">تويوتا</span><span class="cs">كيا</span></div>
+  <div class="sec">الأكثر انتشاراً في العراق</div>
+  <div style="margin-bottom:4px;text-align:right;"><span class="cs">تويوتا</span><span class="cu">كيا</span><span class="cu">هيونداي</span><span class="cu">نيسان</span><span class="cu">هوندا</span><span class="cu">GMC</span></div>
+  <div style="border-top:0.3px solid #eee;margin:4px 0;"></div>
+  <div class="sec">جميع الماركات</div>
+  <div style="background:#ebebea;border:0.3px solid #ddd;border-radius:4px;padding:3px 7px;font-size:7px;color:#aaa;display:flex;align-items:center;gap:4px;margin-bottom:3px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>ابحث عن ماركة...</div>
+  <div style="margin-bottom:5px;text-align:right;"><span class="cu">BMW</span><span class="cu">تشيري</span><span class="cs">كيا</span><span class="cu">لكزس</span><span class="cs">تويوتا</span></div>
+  <div class="sec">نطاق السنوات</div>
+  <div class="g2" style="margin-bottom:6px;"><div class="inp" style="font-size:7px;text-align:right;">من: 2010 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="inp" style="font-size:7px;text-align:right;">إلى: 2024 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div></div>
+  <div style="display:flex;justify-content:space-between;font-size:7px;margin-bottom:4px;"><span style="color:#40916C;">مسح الكل</span><span style="color:#888;">٢ مختارة</span></div>
+  <div class="btn" style="font-size:7.5px;">تابع</div>
+</div>
+</div>
+<div class="sl">عر · الماركات والسنوات</div>
+</div>
+
+</div>
+</div>
+
+<!-- PAGE 3: Repair cats + Parts cats + Location + Service area -->
+<div class="page">
+<div class="page-header"><span>Shop Signup — Categories (Steps 3–4) · Location (Step 5) · Service Area (Step 6)</span><span>Fix It — Shop</span></div>
+<div class="pair">
+
+<!-- EN Repair + Parts cats combined -->
+<div class="sc">
+<div class="phone" style="height:115mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:9px;overflow:hidden;">
+  <div class="pbar"><div class="pa"></div><div class="pa"></div><div class="pa"></div><div class="pi"></div><div class="pi"></div><div class="pi"></div></div>
+  <div style="font-size:9px;font-weight:500;color:#111;margin-bottom:1px;">Repair categories</div>
+  <div style="font-size:6.5px;color:#888;margin-bottom:5px;">Step 3 of 6 &middot; What repair types do you handle?</div>
+  <div style="margin-bottom:7px;"><span class="cs">Engine</span><span class="cs">Brakes</span><span class="cu">Electrical</span><span class="cu">AC</span><span class="cu">Tyres</span><span class="cu">Suspension</span><span class="cu">Body &amp; Paint</span><span class="cu">Transmission</span><span class="cu">Exhaust</span><span class="cu">Oil &amp; Fluids</span><span class="cu">Other</span></div>
+  <div style="border-top:0.5px solid #eee;margin-bottom:7px;"></div>
+  <div class="pbar"><div class="pa"></div><div class="pa"></div><div class="pa"></div><div class="pa"></div><div class="pi"></div><div class="pi"></div></div>
+  <div style="font-size:9px;font-weight:500;color:#111;margin-bottom:1px;">Parts categories</div>
+  <div style="font-size:6.5px;color:#888;margin-bottom:5px;">Step 4 of 6 &middot; What parts do you sell?</div>
+  <div style="margin-bottom:6px;"><span class="cs">Engine parts</span><span class="cs">Brakes</span><span class="cu">Filters</span><span class="cu">Electrical</span><span class="cu">Suspension</span><span class="cu">Body parts</span><span class="cu">Tyres</span><span class="cu">AC parts</span><span class="cu">Exhaust</span><span class="cu">Other</span></div>
+  <div class="sec" style="margin-bottom:3px;">Delivery available?</div>
+  <div><span class="cs">Yes</span><span class="cu">No</span></div>
+</div>
+<div style="padding:5px 9px 8px;background:#fff;border-top:0.3px solid #eee;"><div class="btn" style="font-size:7.5px;">Continue</div></div>
+</div>
+<div class="sl">EN · Repair &amp; Parts categories</div>
+</div>
+
+<!-- AR Repair + Parts cats -->
+<div class="sc">
+<div class="phone phone-ar" style="height:115mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:9px;overflow:hidden;">
+  <div class="pbar"><div class="pa"></div><div class="pa"></div><div class="pa"></div><div class="pi"></div><div class="pi"></div><div class="pi"></div></div>
+  <div style="font-size:9px;font-weight:500;color:#111;margin-bottom:1px;text-align:right;">فئات الإصلاح</div>
+  <div style="font-size:6.5px;color:#888;margin-bottom:5px;text-align:right;">الخطوة ٣ من ٦ &middot; شنو تصلح؟</div>
+  <div style="margin-bottom:7px;text-align:right;"><span class="cs">المحرك</span><span class="cs">الفرامل</span><span class="cu">الكهرباء</span><span class="cu">التكييف</span><span class="cu">الإطارات</span><span class="cu">التعليق</span><span class="cu">الهيكل</span><span class="cu">ناقل الحركة</span><span class="cu">العادم</span><span class="cu">الزيوت</span><span class="cu">أخرى</span></div>
+  <div style="border-top:0.5px solid #eee;margin-bottom:7px;"></div>
+  <div class="pbar"><div class="pa"></div><div class="pa"></div><div class="pa"></div><div class="pa"></div><div class="pi"></div><div class="pi"></div></div>
+  <div style="font-size:9px;font-weight:500;color:#111;margin-bottom:1px;text-align:right;">فئات قطع الغيار</div>
+  <div style="font-size:6.5px;color:#888;margin-bottom:5px;text-align:right;">الخطوة ٤ من ٦ &middot; شنو تبيع؟</div>
+  <div style="margin-bottom:6px;text-align:right;"><span class="cs">قطع المحرك</span><span class="cs">فرامل</span><span class="cu">فلاتر</span><span class="cu">كهرباء</span><span class="cu">تعليق</span><span class="cu">هيكل</span><span class="cu">إطارات</span><span class="cu">تكييف</span><span class="cu">عادم</span><span class="cu">أخرى</span></div>
+  <div class="sec" style="margin-bottom:3px;">التوصيل متاح؟</div>
+  <div style="text-align:right;"><span class="cs">نعم</span><span class="cu">لا</span></div>
+</div>
+<div style="padding:5px 9px 8px;background:#fff;border-top:0.3px solid #eee;"><div class="btn" style="font-size:7.5px;">تابع</div></div>
+</div>
+<div class="sl">عر · فئات الإصلاح والقطع</div>
+</div>
+
+<!-- EN Shop Location -->
+<div class="sc">
+<div class="phone" style="height:115mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:9px;overflow:hidden;">
+  <div class="pbar"><div class="pa"></div><div class="pa"></div><div class="pa"></div><div class="pa"></div><div class="pa"></div><div class="pi"></div></div>
+  <div style="font-size:10px;font-weight:500;color:#111;margin-bottom:1px;">Shop location</div>
+  <div style="font-size:7px;color:#888;margin-bottom:7px;">Step 5 of 6</div>
+  <div class="sec">City</div>
+  <div class="inp" style="font-size:7.5px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">Baghdad <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+  <div class="sec">District / Area</div>
+  <div style="background:#ebebea;border:0.3px solid #ddd;border-radius:4px;padding:3px 7px;font-size:7px;color:#aaa;display:flex;align-items:center;gap:4px;margin-bottom:4px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>Search district...</div>
+  <div style="margin-bottom:6px;"><span class="cs">Karrada</span><span class="cu">Mansour</span><span class="cu">Jadriya</span><span class="cu">Adhamiya</span><span class="cu">Zayouna</span><span class="cu">Kadhimiya</span></div>
+  <div class="sec">Shop address (optional)</div>
+  <div class="inp" style="font-size:7.5px;margin-bottom:3px;">Street 14, Building 3, Karrada</div>
+  <div style="font-size:6.5px;color:#aaa;line-height:1.4;margin-bottom:8px;">Helps customers know exactly where you are</div>
+  <div class="btn" style="font-size:7.5px;">Continue</div>
+</div>
+</div>
+<div class="sl">EN · Shop location</div>
+</div>
+
+<!-- EN Service area -->
+<div class="sc">
+<div class="phone" style="height:115mm;">
+<div class="sb">9:41</div>
+<div class="body" style="background:#fff;padding:8px 9px;overflow:hidden;">
+  <div class="pbar"><div class="pa"></div><div class="pa"></div><div class="pa"></div><div class="pa"></div><div class="pa"></div><div class="pa"></div></div>
+  <div style="font-size:10px;font-weight:500;color:#111;margin-bottom:2px;">Your service area</div>
+  <div style="font-size:6px;color:#fff;background:#1B4332;padding:3px 7px;border-radius:4px;margin-bottom:6px;line-height:1.4;">Controls which customer requests appear in your feed — not what you post</div>
+  <!-- Repair -->
+  <div style="background:#fff;border-radius:5px;border:0.3px solid #e5e5e5;padding:6px 7px;margin-bottom:4px;">
+    <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span style="font-size:7.5px;font-weight:500;flex:1;">Repair</span><span class="dist-badge">12 km</span></div>
+    <div style="height:3px;background:#eee;border-radius:2px;position:relative;"><div style="height:3px;background:#40916C;border-radius:2px;width:40%;"></div><div style="width:11px;height:11px;background:#fff;border:1.5px solid #40916C;border-radius:50%;position:absolute;top:-4px;left:38%;"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:6px;color:#aaa;margin-top:1px;"><span>1 km</span><span>50 km</span></div>
+  </div>
+  <!-- Parts nationwide ON -->
+  <div style="background:#fff;border-radius:5px;border:0.3px solid #e5e5e5;padding:6px 7px;margin-bottom:4px;">
+    <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span style="font-size:7.5px;font-weight:500;">Parts</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:0.3px solid #f0f0f0;">
+      <div><div style="font-size:7px;font-weight:500;">Show requests from all of Iraq</div><div style="font-size:6px;color:#888;">Ship nationwide</div></div>
+      <div style="width:28px;height:16px;background:#40916C;border-radius:20px;position:relative;flex-shrink:0;"><div style="position:absolute;width:12px;height:12px;background:#fff;border-radius:50%;top:2px;right:2px;"></div></div>
+    </div>
+    <div style="font-size:6.5px;color:#40916C;margin-top:4px;">&#10003; Nationwide — distance ignored</div>
+  </div>
+  <!-- Towing -->
+  <div style="background:#fff;border-radius:5px;border:0.3px solid #e5e5e5;padding:6px 7px;">
+    <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="2" stroke-linecap="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span style="font-size:7.5px;font-weight:500;flex:1;">Towing</span><span class="dist-badge">5 km</span></div>
+    <div style="height:3px;background:#eee;border-radius:2px;position:relative;"><div style="height:3px;background:#40916C;border-radius:2px;width:15%;"></div><div style="width:11px;height:11px;background:#fff;border:1.5px solid #40916C;border-radius:50%;position:absolute;top:-4px;left:13%;"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:6px;color:#aaa;margin-top:1px;"><span>1 km</span><span>30 km</span></div>
+  </div>
+</div>
+<div style="padding:5px 9px 8px;background:#fff;border-top:0.3px solid #eee;"><div class="btn" style="font-size:7.5px;">Continue</div></div>
+</div>
+<div class="sl">EN · Service area</div>
+</div>
+
+</div>
+</div>
+
+<!-- GROUP 2: SHOP MAIN SCREENS -->
+<div class="section page">
+  <div><div class="section-num">Group 2</div><div class="section-en">Shop — Feed, Bids, Chat, Profile</div></div>
+  <div class="section-ar">الورشة — الطلبات، العروض، الرسائل، الملف</div>
+</div>
+
+<!-- PAGE 4: Shop Feed + Place Bid -->
+<div class="page">
+<div class="page-header"><span>Shop Feed · Place Bid (Repair)</span><span>Fix It — Shop</span></div>
+<div class="pair">
+
+<!-- EN Feed -->
+<div class="sc">
+<div class="phone" style="height:118mm;">
+<div class="sb">9:41</div>
+<div class="hdr">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+    <div><div style="font-size:6px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Workshop</div><div style="font-size:10px;font-weight:500;color:#111;">Al-Amana</div></div>
+    <div style="display:flex;align-items:center;gap:4px;">
+      <div style="width:18px;height:18px;border-radius:5px;background:#eee;border:0.3px solid #ddd;display:flex;align-items:center;justify-content:center;position:relative;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg><div style="position:absolute;top:-2px;right:-2px;width:4px;height:4px;border-radius:50%;background:#1B4332;border:0.8px solid #fff;"></div></div>
+      <div class="av av-g" style="width:18px;height:18px;font-size:6.5px;">AS</div>
+    </div>
+  </div>
+  <div><span class="cs">All</span><span class="cu">Repair</span><span class="cu">Parts</span><span class="cu">Towing</span></div>
+</div>
+<div class="body">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:3px;"><div class="av av-o" style="width:16px;height:16px;font-size:6px;">KS</div><div><div style="font-size:7.5px;font-weight:500;">Khalid S.</div><div style="font-size:6px;color:#888;">2h &middot; Karrada &middot; 3.2km</div></div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;"><div class="tag-r">Repair &middot; Engine</div><div class="tag-n">New</div></div>
+    </div>
+    <div style="font-size:7px;color:#333;margin-bottom:3px;line-height:1.4;">Toyota Camry 2020. Knocking above 80 km/h.</div>
+    <div style="border-top:0.3px solid #eee;padding-top:3px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:6.5px;color:#888;">3 bids &middot; 38h left</span><div class="btn-sm">Place bid</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:3px;"><div class="av av-g" style="width:16px;height:16px;font-size:6px;">NA</div><div><div style="font-size:7.5px;font-weight:500;">Nora A.</div><div style="font-size:6px;color:#888;">5h &middot; Mansour &middot; 1.8km</div></div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;"><div class="tag-p">Parts &middot; Brakes &middot; New</div><div class="tag-s">Bid sent</div></div>
+    </div>
+    <div style="font-size:7px;color:#333;margin-bottom:3px;line-height:1.4;opacity:0.7;">Kia Sportage 2021. OEM brake pads. Delivery.</div>
+    <div style="border-top:0.3px solid #eee;padding-top:3px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:6.5px;color:#888;">6 bids &middot; 21h left</span><div class="btn-out" style="font-size:6.5px;padding:2px 6px;">Edit bid</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:3px;"><div class="av av-y" style="width:16px;height:16px;font-size:6px;">FM</div><div><div style="font-size:7.5px;font-weight:500;">Fahad M.</div><div style="font-size:6px;color:#888;">Now &middot; Palestine St &middot; 0.9km</div></div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;"><div class="tag-t">Towing</div><div class="tag-n">New 🔴</div></div>
+    </div>
+    <div style="font-size:7px;color:#333;margin-bottom:3px;line-height:1.4;">Broke down. Urgent tow to Karrada.</div>
+    <div style="border-top:0.3px solid #eee;padding-top:3px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:6.5px;color:#888;">1 bid &middot; 46h left</span><div class="btn-sm">Place bid</div></div>
+  </div>
+</div>
+<div class="navb"><div class="nia"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#40916C" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Feed</div><div class="ni" style="position:relative;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><div style="position:absolute;top:-2px;right:-2px;width:4px;height:4px;border-radius:50%;background:#1B4332;border:0.8px solid #fff;"></div>My Bids</div><div class="ni" style="position:relative;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="position:absolute;top:-2px;right:-2px;width:4px;height:4px;border-radius:50%;background:#EF4444;border:0.8px solid #fff;"></div>Inbox</div><div class="ni"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</div></div>
+</div>
+<div class="sl">EN · Shop feed</div>
+</div>
+
+<!-- AR Feed -->
+<div class="sc">
+<div class="phone phone-ar" style="height:118mm;">
+<div class="sb">9:41</div>
+<div class="hdr">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+    <div style="display:flex;align-items:center;gap:4px;">
+      <div class="av av-g" style="width:18px;height:18px;font-size:6.5px;">AS</div>
+      <div style="width:18px;height:18px;border-radius:5px;background:#eee;border:0.3px solid #ddd;display:flex;align-items:center;justify-content:center;position:relative;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg><div style="position:absolute;top:-2px;left:-2px;width:4px;height:4px;border-radius:50%;background:#1B4332;border:0.8px solid #fff;"></div></div>
+    </div>
+    <div style="text-align:right;"><div style="font-size:6px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">ورشة</div><div style="font-size:10px;font-weight:500;color:#111;">ورشة الأمانة</div></div>
+  </div>
+  <div><span class="cs">الكل</span><span class="cu">إصلاح</span><span class="cu">قطع غيار</span><span class="cu">سحب</span></div>
+</div>
+<div class="body">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;"><div class="tag-r">إصلاح &middot; محرك</div><div class="tag-n">جديد</div></div>
+      <div style="display:flex;align-items:center;gap:3px;"><div><div style="font-size:7.5px;font-weight:500;text-align:right;">خالد س.</div><div style="font-size:6px;color:#888;text-align:right;">٢ ساعة &middot; الكرادة &middot; 3.2كم</div></div><div class="av av-o" style="width:16px;height:16px;font-size:6px;">KS</div></div>
+    </div>
+    <div style="font-size:7px;color:#333;margin-bottom:3px;line-height:1.4;text-align:right;">تويوتا كامري 2020. طقطقة عند التسارع.</div>
+    <div style="border-top:0.3px solid #eee;padding-top:3px;display:flex;justify-content:space-between;align-items:center;"><div class="btn-sm">تقديم عرض</div><span style="font-size:6.5px;color:#888;">٣ عروض &middot; 38 ساعة</span></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;"><div class="tag-p">قطع &middot; فرامل &middot; جديدة</div><div class="tag-s">تم الإرسال</div></div>
+      <div style="display:flex;align-items:center;gap:3px;"><div><div style="font-size:7.5px;font-weight:500;text-align:right;">نورة أ.</div><div style="font-size:6px;color:#888;text-align:right;">٥ ساعات &middot; المنصور &middot; 1.8كم</div></div><div class="av av-g" style="width:16px;height:16px;font-size:6px;">NA</div></div>
+    </div>
+    <div style="font-size:7px;color:#333;margin-bottom:3px;line-height:1.4;text-align:right;opacity:0.7;">كيا سبورتاج 2021. فرامل أصلية. توصيل.</div>
+    <div style="border-top:0.3px solid #eee;padding-top:3px;display:flex;justify-content:space-between;align-items:center;"><div class="btn-out" style="font-size:6.5px;padding:2px 6px;">تعديل العرض</div><span style="font-size:6.5px;color:#888;">٦ عروض &middot; 21 ساعة</span></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;"><div class="tag-t">سحب</div><div class="tag-n">جديد 🔴</div></div>
+      <div style="display:flex;align-items:center;gap:3px;"><div><div style="font-size:7.5px;font-weight:500;text-align:right;">فهد م.</div><div style="font-size:6px;color:#888;text-align:right;">الآن &middot; شارع فلسطين &middot; 0.9كم</div></div><div class="av av-y" style="width:16px;height:16px;font-size:6px;">FM</div></div>
+    </div>
+    <div style="font-size:7px;color:#333;margin-bottom:3px;line-height:1.4;text-align:right;">وقفت على شارع فلسطين. سحب عاجل للكرادة.</div>
+    <div style="border-top:0.3px solid #eee;padding-top:3px;display:flex;justify-content:space-between;align-items:center;"><div class="btn-sm">تقديم عرض</div><span style="font-size:6.5px;color:#888;">١ عرض &middot; 46 ساعة</span></div>
+  </div>
+</div>
+<div class="navb"><div class="ni"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>الملف</div><div class="ni" style="position:relative;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="position:absolute;top:-2px;left:-2px;width:4px;height:4px;border-radius:50%;background:#EF4444;border:0.8px solid #fff;"></div>الرسائل</div><div class="ni" style="position:relative;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><div style="position:absolute;top:-2px;left:-2px;width:4px;height:4px;border-radius:50%;background:#1B4332;border:0.8px solid #fff;"></div>عروضي</div><div class="nia"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#40916C" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>الطلبات</div></div>
+</div>
+<div class="sl">عر · طلبات الورشة</div>
+</div>
+
+<!-- EN Place bid -->
+<div class="sc">
+<div class="phone" style="height:118mm;">
+<div class="sb">9:41</div>
+<div class="hdr" style="display:flex;align-items:center;gap:6px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg><div style="font-size:10px;font-weight:500;">Place a bid</div></div>
+<div class="body" style="overflow:hidden;">
+  <div style="background:#D8F3DC;border-radius:5px;padding:5px 7px;margin-bottom:5px;">
+    <div class="tag-r" style="margin-bottom:2px;">Repair &middot; Engine</div>
+    <div style="font-size:7.5px;font-weight:500;color:#1B4332;margin-bottom:1px;">Toyota Camry 2020 &mdash; Khalid S.</div>
+    <div style="font-size:7px;color:#40916C;">Knocking above 80 km/h. Oil checked.</div>
+  </div>
+  <div class="sec">Price estimate (IQD)</div>
+  <div class="inp" style="font-size:11px;font-weight:500;color:#1B4332;margin-bottom:2px;direction:ltr;">380,000</div>
+  <div style="font-size:6.5px;color:#aaa;margin-bottom:4px;">Can adjust after inspection</div>
+  <div class="sec">Estimated time</div>
+  <div style="display:flex;gap:3px;margin-bottom:4px;direction:ltr;"><div class="inp" style="width:26px;text-align:center;font-size:11px;font-weight:500;color:#1B4332;">3</div><div class="inp-v" style="flex:1;font-size:7.5px;">Hours <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div></div>
+  <div class="sec">Appointment date</div>
+  <div class="cal-mini">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;font-size:7px;font-weight:500;"><span>&#x25C0;</span><span>March 2026</span><span>&#x25B6;</span></div>
+    <div class="cal-grid" style="margin-bottom:2px;">
+      <div style="font-size:5.5px;color:#aaa;text-align:center;">Su</div><div style="font-size:5.5px;color:#aaa;text-align:center;">Mo</div><div style="font-size:5.5px;color:#aaa;text-align:center;">Tu</div><div style="font-size:5.5px;color:#aaa;text-align:center;">We</div><div style="font-size:5.5px;color:#aaa;text-align:center;">Th</div><div style="font-size:5.5px;color:#aaa;text-align:center;">Fr</div><div style="font-size:5.5px;color:#aaa;text-align:center;">Sa</div>
+    </div>
+    <div class="cal-grid">
+      <div class="cd cd-x"></div><div class="cd cd-x"></div><div class="cd cd-x"></div><div class="cd cd-x"></div><div class="cd cd-x"></div><div class="cd cd-x"></div><div class="cd">1</div>
+      <div class="cd">2</div><div class="cd">3</div><div class="cd">4</div><div class="cd">5</div><div class="cd">6</div><div class="cd">7</div><div class="cd">8</div>
+      <div class="cd">9</div><div class="cd">10</div><div class="cd">11</div><div class="cd">12</div><div class="cd">13</div><div class="cd">14</div><div class="cd">15</div>
+      <div class="cd">16</div><div class="cd">17</div><div class="cd">18</div><div class="cd">19</div><div class="cd">20</div><div class="cd">21</div><div class="cd">22</div>
+      <div class="cd">23</div><div class="cd">24</div><div class="cd">25</div><div class="cd">26</div><div class="cd">27</div><div class="cd cd-t">28</div><div class="cd cd-s">29</div>
+      <div class="cd">30</div><div class="cd">31</div>
+    </div>
+  </div>
+  <div class="sec">Appointment time</div>
+  <div class="inp-v" style="margin-bottom:4px;font-size:7.5px;">11:00 AM <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+  <div class="sec">Message to customer</div>
+  <div class="inp" style="min-height:18px;font-size:7px;line-height:1.4;">Rod knock. Sun 29 Mar 11am. 3hrs. Free diag.</div>
+</div>
+<div style="padding:5px 9px 8px;background:#fff;border-top:0.3px solid #eee;"><div class="btn" style="font-size:7.5px;">Submit bid</div></div>
+</div>
+<div class="sl">EN · Place bid</div>
+</div>
+
+<!-- AR Place bid -->
+<div class="sc">
+<div class="phone phone-ar" style="height:118mm;">
+<div class="sb">9:41</div>
+<div class="hdr" style="display:flex;align-items:center;gap:6px;"><div style="font-size:10px;font-weight:500;flex:1;text-align:right;">تقديم عرض</div><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+<div class="body" style="overflow:hidden;">
+  <div style="background:#D8F3DC;border-radius:5px;padding:5px 7px;margin-bottom:5px;text-align:right;">
+    <div class="tag-r" style="margin-bottom:2px;">إصلاح &middot; محرك</div>
+    <div style="font-size:7.5px;font-weight:500;color:#1B4332;margin-bottom:1px;">تويوتا كامري 2020 &mdash; خالد س.</div>
+    <div style="font-size:7px;color:#40916C;">طقطقة عند التسارع. الزيت تم فحصه.</div>
+  </div>
+  <div class="sec">السعر التقديري (دينار)</div>
+  <div class="inp" style="font-size:11px;font-weight:500;color:#1B4332;margin-bottom:2px;direction:ltr;text-align:left;">380,000</div>
+  <div style="font-size:6.5px;color:#aaa;margin-bottom:4px;text-align:right;">يمكن التعديل بعد الفحص</div>
+  <div class="sec">الوقت التقديري</div>
+  <div style="display:flex;gap:3px;margin-bottom:4px;direction:ltr;"><div class="inp" style="width:26px;text-align:center;font-size:11px;font-weight:500;color:#1B4332;">3</div><div class="inp-v" style="flex:1;font-size:7.5px;">ساعات <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div></div>
+  <div class="sec">تاريخ الموعد</div>
+  <div class="cal-mini">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;font-size:7px;font-weight:500;direction:ltr;"><span>&#x25C0;</span><span>مارس 2026</span><span>&#x25B6;</span></div>
+    <div class="cal-grid" style="margin-bottom:2px;">
+      <div style="font-size:5.5px;color:#aaa;text-align:center;">س</div><div style="font-size:5.5px;color:#aaa;text-align:center;">ح</div><div style="font-size:5.5px;color:#aaa;text-align:center;">ن</div><div style="font-size:5.5px;color:#aaa;text-align:center;">ث</div><div style="font-size:5.5px;color:#aaa;text-align:center;">ر</div><div style="font-size:5.5px;color:#aaa;text-align:center;">خ</div><div style="font-size:5.5px;color:#aaa;text-align:center;">ج</div>
+    </div>
+    <div class="cal-grid">
+      <div class="cd">1</div><div class="cd">2</div><div class="cd">3</div><div class="cd">4</div><div class="cd">5</div><div class="cd">6</div><div class="cd">7</div>
+      <div class="cd">8</div><div class="cd">9</div><div class="cd">10</div><div class="cd">11</div><div class="cd">12</div><div class="cd">13</div><div class="cd">14</div>
+      <div class="cd">15</div><div class="cd">16</div><div class="cd">17</div><div class="cd">18</div><div class="cd">19</div><div class="cd">20</div><div class="cd">21</div>
+      <div class="cd">22</div><div class="cd">23</div><div class="cd">24</div><div class="cd">25</div><div class="cd">26</div><div class="cd">27</div><div class="cd cd-t">28</div>
+      <div class="cd cd-s">29</div><div class="cd">30</div><div class="cd">31</div>
+    </div>
+  </div>
+  <div class="sec">وقت الموعد</div>
+  <div class="inp-v" style="margin-bottom:4px;font-size:7.5px;direction:ltr;justify-content:flex-start;gap:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg> 11:00 AM</div>
+  <div class="sec">رسالة للعميل</div>
+  <div class="inp" style="min-height:18px;font-size:7px;line-height:1.4;text-align:right;">يبدو طرق. الأحد 29 مارس 11ص. 3 ساعات. فحص مجاني.</div>
+</div>
+<div style="padding:5px 9px 8px;background:#fff;border-top:0.3px solid #eee;"><div class="btn" style="font-size:7.5px;">إرسال العرض</div></div>
+</div>
+<div class="sl">عر · تقديم عرض</div>
+</div>
+
+</div>
+</div>
+
+<!-- PAGE 5: My Bids + Chat + Shop Profile -->
+<div class="page">
+<div class="page-header"><span>My Bids · Chat · Shop Profile</span><span>Fix It — Shop</span></div>
+<div class="pair">
+
+<!-- EN My bids -->
+<div class="sc">
+<div class="phone" style="height:115mm;">
+<div class="sb">9:41</div>
+<div class="hdr" style="font-size:10px;font-weight:500;color:#111;">My Bids</div>
+<div class="body">
+  <div class="sec" style="margin-bottom:3px;">Waiting for response</div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+      <div><div class="tag-r" style="margin-bottom:1px;">Repair &middot; Engine</div><div style="font-size:7.5px;font-weight:500;">Toyota Camry 2020</div><div style="font-size:6.5px;color:#888;">Khalid S.</div></div>
+      <div style="text-align:right;"><div style="font-size:9px;font-weight:500;color:#1B4332;direction:ltr;">380K IQD</div><div style="display:flex;align-items:center;gap:2px;justify-content:flex-end;"><div class="dy"></div><span style="font-size:6.5px;color:#888;">Pending</span></div></div>
+    </div>
+    <div style="font-size:7px;color:#555;margin-bottom:3px;">Rod knock. Same day, free diag...</div>
+    <div style="display:flex;gap:3px;"><div class="btn-out" style="font-size:6.5px;padding:2px 6px;">Edit</div><div class="btn-red" style="font-size:6.5px;padding:2px 6px;">Withdraw</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+      <div><div class="tag-t" style="margin-bottom:1px;">Towing</div><div style="font-size:7.5px;font-weight:500;">Palestine St</div><div style="font-size:6.5px;color:#888;">Fahad M.</div></div>
+      <div style="text-align:right;"><div style="font-size:9px;font-weight:500;color:#1B4332;direction:ltr;">60K IQD</div><div style="display:flex;align-items:center;gap:2px;justify-content:flex-end;"><div class="dy"></div><span style="font-size:6.5px;color:#888;">Pending</span></div></div>
+    </div>
+    <div style="font-size:7px;color:#555;margin-bottom:3px;">Tow within 30 mins to Karrada.</div>
+    <div style="display:flex;gap:3px;"><div class="btn-out" style="font-size:6.5px;padding:2px 6px;">Edit</div><div class="btn-red" style="font-size:6.5px;padding:2px 6px;">Withdraw</div></div>
+  </div>
+  <div class="sec" style="margin:5px 0 3px;">Accepted</div>
+  <div class="card card-g">
+    <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+      <div><div class="tag-p" style="margin-bottom:1px;">Parts &middot; Brakes</div><div style="font-size:7.5px;font-weight:500;">Kia Sportage 2021</div><div style="font-size:6.5px;color:#888;">Nora A.</div></div>
+      <div style="text-align:right;"><div style="font-size:9px;font-weight:500;color:#1B4332;direction:ltr;">85K IQD</div><div style="display:flex;align-items:center;gap:2px;justify-content:flex-end;"><div class="dg"></div><span style="font-size:6.5px;color:#40916C;font-weight:500;">Accepted</span></div></div>
+    </div>
+    <div style="font-size:7px;color:#555;margin-bottom:3px;">OEM pads in stock. Delivery today.</div>
+    <div class="btn" style="font-size:7px;padding:4px;">Message customer</div>
+  </div>
+</div>
+<div class="navb"><div class="ni"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Feed</div><div class="nia" style="position:relative;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#40916C" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>My Bids</div><div class="ni" style="position:relative;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="position:absolute;top:-2px;right:-2px;width:4px;height:4px;border-radius:50%;background:#EF4444;border:0.8px solid #fff;"></div>Inbox</div><div class="ni"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</div></div>
+</div>
+<div class="sl">EN · My bids</div>
+</div>
+
+<!-- AR My bids -->
+<div class="sc">
+<div class="phone phone-ar" style="height:115mm;">
+<div class="sb">9:41</div>
+<div class="hdr" style="font-size:10px;font-weight:500;color:#111;text-align:right;">عروضي</div>
+<div class="body">
+  <div class="sec" style="margin-bottom:3px;text-align:right;">بانتظار الرد</div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+      <div style="direction:ltr;"><div style="font-size:9px;font-weight:500;color:#1B4332;">380K د.ع</div><div style="display:flex;align-items:center;gap:2px;"><div class="dy"></div><span style="font-size:6.5px;color:#888;">بانتظار</span></div></div>
+      <div style="text-align:right;"><div class="tag-r" style="margin-bottom:1px;">إصلاح &middot; محرك</div><div style="font-size:7.5px;font-weight:500;">تويوتا كامري 2020</div><div style="font-size:6.5px;color:#888;">خالد س.</div></div>
+    </div>
+    <div style="font-size:7px;color:#555;margin-bottom:3px;text-align:right;">يبدو طرق. نفس اليوم، مجاناً...</div>
+    <div style="display:flex;gap:3px;justify-content:flex-end;"><div class="btn-red" style="font-size:6.5px;padding:2px 6px;">سحب</div><div class="btn-out" style="font-size:6.5px;padding:2px 6px;">تعديل</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+      <div style="direction:ltr;"><div style="font-size:9px;font-weight:500;color:#1B4332;">60K د.ع</div><div style="display:flex;align-items:center;gap:2px;"><div class="dy"></div><span style="font-size:6.5px;color:#888;">بانتظار</span></div></div>
+      <div style="text-align:right;"><div class="tag-t" style="margin-bottom:1px;">سحب</div><div style="font-size:7.5px;font-weight:500;">شارع فلسطين</div><div style="font-size:6.5px;color:#888;">فهد م.</div></div>
+    </div>
+    <div style="font-size:7px;color:#555;margin-bottom:3px;text-align:right;">سحب خلال 30 دقيقة للكرادة.</div>
+    <div style="display:flex;gap:3px;justify-content:flex-end;"><div class="btn-red" style="font-size:6.5px;padding:2px 6px;">سحب</div><div class="btn-out" style="font-size:6.5px;padding:2px 6px;">تعديل</div></div>
+  </div>
+  <div class="sec" style="margin:5px 0 3px;text-align:right;">مقبول</div>
+  <div class="card card-g">
+    <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+      <div style="direction:ltr;"><div style="font-size:9px;font-weight:500;color:#1B4332;">85K د.ع</div><div style="display:flex;align-items:center;gap:2px;"><div class="dg"></div><span style="font-size:6.5px;color:#40916C;font-weight:500;">مقبول</span></div></div>
+      <div style="text-align:right;"><div class="tag-p" style="margin-bottom:1px;">قطع &middot; فرامل</div><div style="font-size:7.5px;font-weight:500;">كيا سبورتاج 2021</div><div style="font-size:6.5px;color:#888;">نورة أ.</div></div>
+    </div>
+    <div style="font-size:7px;color:#555;margin-bottom:3px;text-align:right;">الفرامل متوفرة. توصيل اليوم.</div>
+    <div class="btn" style="font-size:7px;padding:4px;">مراسلة العميل</div>
+  </div>
+</div>
+<div class="navb"><div class="ni"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>الملف</div><div class="ni" style="position:relative;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="position:absolute;top:-2px;left:-2px;width:4px;height:4px;border-radius:50%;background:#EF4444;border:0.8px solid #fff;"></div>الرسائل</div><div class="nia" style="position:relative;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#40916C" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>عروضي</div><div class="ni"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>الطلبات</div></div>
+</div>
+<div class="sl">عر · عروضي</div>
+</div>
+
+<!-- EN Chat -->
+<div class="sc">
+<div class="phone" style="height:115mm;">
+<div class="sb">9:41</div>
+<div class="hdr" style="display:flex;align-items:center;gap:6px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+  <div style="flex:1;"><div style="font-size:8.5px;font-weight:500;">Nora A.</div><div style="font-size:6.5px;color:#888;">Parts &middot; Brakes &middot; Kia Sportage</div></div>
+  <div style="padding:1px 6px;background:#D8F3DC;border-radius:20px;font-size:6.5px;font-weight:500;color:#1B4332;">Accepted</div>
+</div>
+<div class="body" style="display:flex;flex-direction:column;gap:5px;">
+  <div style="text-align:center;"><span style="font-size:6.5px;color:#888;background:#ebebea;padding:2px 7px;border-radius:20px;">Bid accepted &middot; Today 9:15am</span></div>
+  <div style="display:flex;justify-content:flex-end;"><div class="bubble-out">OEM pads in stock. Deliver 12&ndash;3pm. 85K IQD.<div class="ts">9:16am &#10003;&#10003;</div></div></div>
+  <div style="display:flex;justify-content:flex-start;"><div class="bubble-in">Perfect, 1pm works. Mansour St bldg 8.<div class="ts-in">9:22am</div></div></div>
+  <div style="display:flex;justify-content:flex-end;"><div class="bubble-out">Driver there at 1pm. Pay on delivery.<div class="ts">9:24am &#10003;&#10003;</div></div></div>
+  <div style="display:flex;justify-content:flex-start;"><div class="bubble-in">Great, thank you!<div class="ts-in">9:25am</div></div></div>
+</div>
+<div style="background:#fff;border-top:0.3px solid #eee;padding:5px 9px 8px;display:flex;gap:5px;align-items:center;">
+  <div style="flex:1;background:#ebebea;border-radius:20px;padding:5px 9px;font-size:7px;color:#aaa;border:0.3px solid #ddd;">Type a message...</div>
+  <div style="width:20px;height:20px;border-radius:50%;background:#1B4332;display:flex;align-items:center;justify-content:center;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+</div>
+</div>
+<div class="sl">EN · Chat</div>
+</div>
+
+<!-- EN Shop Profile -->
+<div class="sc">
+<div class="phone" style="height:115mm;">
+<div class="sb">9:41</div>
+<div style="background:#1B4332;padding:10px 9px 8px;display:flex;flex-direction:column;align-items:center;">
+  <div style="width:26px;height:26px;border-radius:7px;background:#D8F3DC;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#1B4332;margin-bottom:4px;">AS</div>
+  <div style="font-size:8.5px;font-weight:500;color:#fff;margin-bottom:1px;">Al-Amana Workshop</div>
+  <div style="font-size:6px;color:rgba(255,255,255,0.6);margin-bottom:4px;direction:ltr;">+964 7xx &middot; Baghdad, Karrada</div>
+  <div style="display:flex;align-items:center;gap:2px;"><svg width="8" height="8" viewBox="0 0 24 24" fill="#F59E0B"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span style="font-size:7px;color:rgba(255,255,255,0.8);">4.8 &middot; 213 reviews</span></div>
+</div>
+<div class="body" style="background:#f4f4f2;">
+  <div class="g3" style="margin-bottom:5px;">
+    <div class="stat"><div style="font-size:10px;font-weight:500;color:#1B4332;">47</div><div style="font-size:6px;color:#888;">Won</div></div>
+    <div class="stat"><div style="font-size:10px;font-weight:500;color:#1B4332;">213</div><div style="font-size:6px;color:#888;">Reviews</div></div>
+    <div class="stat"><div style="font-size:10px;font-weight:500;color:#1B4332;">4.8</div><div style="font-size:6px;color:#888;">Rating</div></div>
+  </div>
+  <div style="background:#fff;border-radius:5px;border:0.3px solid #e5e5e5;overflow:hidden;margin-bottom:4px;">
+    <div style="padding:4px 8px;display:flex;justify-content:space-between;align-items:center;border-bottom:0.3px solid #f0f0f0;font-size:7.5px;font-weight:500;"><span>Car makes &amp; years</span><span style="color:#40916C;font-weight:400;font-size:7px;">Edit</span></div>
+    <div style="padding:4px 8px;"><span class="cs" style="font-size:6px;padding:1px 5px;">Toyota</span><span class="cs" style="font-size:6px;padding:1px 5px;">Kia</span><span style="padding:1px 5px;background:#D8F3DC;border-radius:20px;font-size:6px;color:#1B4332;display:inline-block;">2010–2024</span></div>
+  </div>
+  <div style="background:#fff;border-radius:5px;border:0.3px solid #e5e5e5;overflow:hidden;margin-bottom:4px;">
+    <div style="padding:4px 8px;display:flex;justify-content:space-between;align-items:center;border-bottom:0.3px solid #f0f0f0;font-size:7.5px;font-weight:500;"><span>Repair categories</span><span style="color:#40916C;font-weight:400;font-size:7px;">Edit</span></div>
+    <div style="padding:4px 8px;"><span class="cs" style="font-size:6px;padding:1px 5px;">Engine</span><span class="cs" style="font-size:6px;padding:1px 5px;">Brakes</span></div>
+  </div>
+  <div style="background:#fff;border-radius:5px;border:0.3px solid #e5e5e5;overflow:hidden;margin-bottom:4px;">
+    <div style="padding:4px 8px;display:flex;justify-content:space-between;align-items:center;border-bottom:0.3px solid #f0f0f0;font-size:7.5px;font-weight:500;"><span>Parts categories</span><span style="color:#40916C;font-weight:400;font-size:7px;">Edit</span></div>
+    <div style="padding:4px 8px;"><span class="cs" style="font-size:6px;padding:1px 5px;">Engine pts</span><span class="cs" style="font-size:6px;padding:1px 5px;">Brakes</span></div>
+  </div>
+  <div style="background:#fff;border-radius:5px;border:0.3px solid #e5e5e5;overflow:hidden;">
+    <div class="prow" style="font-size:7.5px;"><span>Towing</span><span style="color:#40916C;font-size:7px;">On</span></div>
+    <div class="prow" style="font-size:7.5px;"><span>Delivery</span><span style="color:#40916C;font-size:7px;">On</span></div>
+    <div class="prow" style="font-size:7.5px;"><span style="color:#EF4444;">Log out</span></div>
+  </div>
+</div>
+<div class="navb"><div class="ni"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Feed</div><div class="ni" style="position:relative;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><div style="position:absolute;top:-2px;right:-2px;width:4px;height:4px;border-radius:50%;background:#1B4332;border:0.8px solid #fff;"></div>My Bids</div><div class="ni" style="position:relative;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="position:absolute;top:-2px;right:-2px;width:4px;height:4px;border-radius:50%;background:#EF4444;border:0.8px solid #fff;"></div>Inbox</div><div class="nia"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#40916C" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</div></div>
+</div>
+<div class="sl">EN · Shop profile</div>
+</div>
+
+</div>
+</div>
+
+</body>
+</html>

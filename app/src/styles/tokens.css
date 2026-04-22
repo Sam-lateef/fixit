@@ -1,0 +1,37 @@
+:root {
+  --color-primary: #1b4332;
+  --color-primary-mid: #40916c;
+  --color-primary-light: #d8f3dc;
+  --color-repair-bg: #d8f3dc;
+  --color-repair-text: #1b4332;
+  --color-parts-bg: #e8f0fe;
+  --color-parts-text: #1a5fc8;
+  --color-towing-bg: #fff8e6;
+  --color-towing-text: #b07a00;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-bg: #f4f4f2;
+  --color-surface: #ffffff;
+  --color-chip-default: #ebebea;
+  --color-border: #e5e5e5;
+  --color-text-primary: #111111;
+  --color-text-secondary: #555555;
+  --color-text-tertiary: #888888;
+  --radius-chip: 20px;
+  --radius-card: 14px;
+  --radius-input: 10px;
+  --radius-button: 11px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+}
+
+html[dir="rtl"] {
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+html[dir="ltr"] {
+  font-family: "Segoe UI", Arial, sans-serif;
+}

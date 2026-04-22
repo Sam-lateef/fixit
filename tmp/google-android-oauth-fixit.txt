@@ -1,0 +1,23 @@
+FixIT — Google Cloud → Credentials → OAuth client → Android
+
+Package name (must match app.json):
+  com.fixit.app
+
+SHA-1 certificate fingerprint (THIS MACHINE — Android debug keystore):
+  FB:70:52:7D:AD:EC:9E:E8:FC:A3:0D:46:DC:39:BE:55:CD:24:0A:C6
+
+Same SHA-1 without colons (if the form asks for hex only):
+  FB70527DADEC9EE8FCA30D46DC39BE55CD240AC6
+
+After you create the Android OAuth client, add to mobile/.env:
+  EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=<paste Android client id>.apps.googleusercontent.com
+
+Keep EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID as your Web client (unchanged).
+
+EAS / Play Store release builds use a DIFFERENT signing key. When you use EAS Build or Play App Signing,
+run from mobile/ after `eas login`:
+  npx eas-cli credentials -p android
+and add that SHA-1 to the same Android OAuth client (Google allows multiple fingerprints).
+
+Re-print debug SHA-1 anytime:
+  powershell -File mobile/scripts/print-android-debug-sha1.ps1

@@ -1,0 +1,30 @@
+# If the name is taken: change `app` and run `fly apps create <new-name>`
+app = "fixit-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  # With min 0 + auto_stop, Fly SIGINT-stops idle machines → cold starts / "API is down" between requests.
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  # App only listens after full `buildApp()` (routes, socket, cron). Cold starts + DB can exceed a short grace.
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "15s"
+    grace_period = "120s"
+    method = "GET"
+    path = "/health"
+
+# Migrations: run from repo root so npm workspaces resolve prisma after hoisted install.
+# Default Fly release timeout is 5m; triple npx migrate + sleep(30)+sleep(45) often exceeded that
+# (orchestrator: "timeout waiting for machine state" / never "destroyed"). 15m leaves room for
+# cold start + slow Postgres. One short retry still helps transient flycast/P1017 blips.
+[deploy]
+  release_command_timeout = "15m"
+  release_command = "sh -c 'cd /repo && (npm run db:migrate:deploy -w api || (sleep 20 && npm run db:migrate:deploy -w api))'"

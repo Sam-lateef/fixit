@@ -1,0 +1,314 @@
+================================================================================
+FIXIT SHOP - SCREENS AND UI ELEMENTS
+================================================================================
+
+
+SCREEN: Account type: Shop selected
+--------------------------------------------------------------------------------
+  1. I am a...
+  2. Choose your account type
+  3. Car owner
+  4. Post repair & parts requests
+  5. Shop / Workshop
+  6. Bid on customer requests
+  7. Continue as shop
+  8. EN · Account type (shop)
+  9. أنا...
+  10. اختر نوع حسابك للمتابعة
+  11. صاحب سيارة
+  12. انشر طلبات الإصلاح
+  13. ورشة / محل قطع غيار
+  14. قدّم عروض على الطلبات
+  15. تابع كورشة
+  16. عر · نوع الحساب (ورشة)
+  17. Shop Signup — What You Offer (Step 1) · Car Makes (Step 2)
+  18. Fix It — Shop
+
+
+SCREEN: What do you offer
+--------------------------------------------------------------------------------
+  1. What do you offer?
+  2. Step 1 of 6 · Select all that apply
+  3. Repair
+  4. Fix cars at your workshop
+  5. Parts
+  6. Sell spare parts
+  7. Towing
+  8. Roadside tow service
+  9. You'll set up categories for each service in the next steps
+  10. Continue
+  11. EN · What do you offer
+  12. شنو تقدم؟
+  13. الخطوة ١ من ٦ · اختر كل ما ينطبق عليك
+  14. إصلاح
+  15. تصليح السيارات في ورشتك
+  16. قطع غيار
+  17. بيع قطع الغيار
+  18. سحب
+  19. خدمة سحب السيارات
+  20. ستضبط الفئات لكل خدمة في الخطوات التالية
+  21. تابع
+  22. عر · شنو تقدم
+
+
+SCREEN: Car makes
+--------------------------------------------------------------------------------
+  1. Car makes & years
+  2. Step 2 of 6
+  3. Toyota
+  4. Kia
+  5. Popular in Iraq
+  6. Hyundai
+  7. Nissan
+  8. Honda
+  9. GMC
+  10. Isuzu
+  11. Mitsubishi
+  12. All brands
+  13. Search brand...
+  14. BMW
+  15. Chery
+  16. Lexus
+  17. Mercedes
+  18. Year range
+  19. From: 2010
+  20. To: 2024
+  21. 2 selected
+  22. Clear all
+  23. Continue
+  24. EN · Car makes
+  25. الماركات والسنوات
+  26. الخطوة ٢ من ٦
+  27. تويوتا
+  28. كيا
+  29. الأكثر انتشاراً في العراق
+  30. هيونداي
+
+
+SCREEN: Repair + Parts cats combined
+--------------------------------------------------------------------------------
+  1. Repair categories
+  2. Step 3 of 6 · What repair types do you handle?
+  3. Engine
+  4. Brakes
+  5. Electrical
+  6. AC
+  7. Tyres
+  8. Suspension
+  9. Body & Paint
+  10. Transmission
+  11. Exhaust
+  12. Oil & Fluids
+  13. Other
+  14. Parts categories
+  15. Step 4 of 6 · What parts do you sell?
+  16. Engine parts
+  17. Filters
+  18. Body parts
+  19. AC parts
+  20. Delivery available?
+  21. Yes
+  22. No
+  23. Continue
+  24. EN · Repair & Parts categories
+  25. فئات الإصلاح
+  26. الخطوة ٣ من ٦ · شنو تصلح؟
+  27. المحرك
+  28. الفرامل
+  29. الكهرباء
+  30. التكييف
+
+
+SCREEN: Shop Location
+--------------------------------------------------------------------------------
+  1. Shop location
+  2. Step 5 of 6
+  3. City
+  4. Baghdad
+  5. District / Area
+  6. Search district...
+  7. Karrada
+  8. Mansour
+  9. Jadriya
+  10. Adhamiya
+  11. Zayouna
+  12. Kadhimiya
+  13. Shop address (optional)
+  14. Street 14, Building 3, Karrada
+  15. Helps customers know exactly where you are
+  16. Continue
+  17. EN · Shop location
+
+
+SCREEN: Service area
+--------------------------------------------------------------------------------
+  1. Your service area
+  2. Controls which customer requests appear in your feed — not what you post
+  3. Repair
+  4. 12 km
+  5. 1 km
+  6. 50 km
+  7. Parts
+  8. Show requests from all of Iraq
+  9. Ship nationwide
+  10. ✓ Nationwide — distance ignored
+  11. Towing
+  12. 5 km
+  13. 30 km
+  14. Continue
+  15. EN · Service area
+  16. Group 2
+  17. Shop — Feed, Bids, Chat, Profile
+  18. الورشة — الطلبات، العروض، الرسائل، الملف
+  19. Shop Feed · Place Bid (Repair)
+  20. Fix It — Shop
+
+
+SCREEN: Feed
+--------------------------------------------------------------------------------
+  1. Workshop
+  2. Al-Amana
+  3. AS
+  4. All
+  5. Repair
+  6. Parts
+  7. Towing
+  8. KS
+  9. Khalid S.
+  10. 2h · Karrada · 3.2km
+  11. Repair · Engine
+  12. New
+  13. Toyota Camry 2020. Knocking above 80 km/h.
+  14. 3 bids · 38h left
+  15. Place bid
+  16. NA
+  17. Nora A.
+  18. 5h · Mansour · 1.8km
+  19. Parts · Brakes · New
+  20. Bid sent
+  21. Kia Sportage 2021. OEM brake pads. Delivery.
+  22. 6 bids · 21h left
+  23. Edit bid
+  24. FM
+  25. Fahad M.
+  26. Now · Palestine St · 0.9km
+  27. New 🔴
+  28. Broke down. Urgent tow to Karrada.
+  29. 1 bid · 46h left
+  30. Feed
+
+
+SCREEN: Place bid
+--------------------------------------------------------------------------------
+  1. Place a bid
+  2. Repair · Engine
+  3. Toyota Camry 2020 — Khalid S.
+  4. Knocking above 80 km/h. Oil checked.
+  5. Price estimate (IQD)
+  6. 380,000
+  7. Can adjust after inspection
+  8. Estimated time
+  9. Hours
+  10. Appointment date
+  11. ◀
+  12. March 2026
+  13. ▶
+  14. Su
+  15. Mo
+  16. Tu
+  17. We
+  18. Th
+  19. Fr
+  20. Sa
+  21. Appointment time
+  22. 11:00 AM
+  23. Message to customer
+  24. Rod knock. Sun 29 Mar 11am. 3hrs. Free diag.
+  25. Submit bid
+  26. EN · Place bid
+  27. تقديم عرض
+  28. إصلاح · محرك
+  29. تويوتا كامري 2020 — خالد س.
+  30. طقطقة عند التسارع. الزيت تم فحصه.
+
+
+SCREEN: My bids
+--------------------------------------------------------------------------------
+  1. My Bids
+  2. Waiting for response
+  3. Repair · Engine
+  4. Toyota Camry 2020
+  5. Khalid S.
+  6. 380K IQD
+  7. Pending
+  8. Rod knock. Same day, free diag...
+  9. Edit
+  10. Withdraw
+  11. Towing
+  12. Palestine St
+  13. Fahad M.
+  14. 60K IQD
+  15. Tow within 30 mins to Karrada.
+  16. Accepted
+  17. Parts · Brakes
+  18. Kia Sportage 2021
+  19. Nora A.
+  20. 85K IQD
+  21. OEM pads in stock. Delivery today.
+  22. Message customer
+  23. Feed
+  24. Inbox
+  25. Profile
+  26. EN · My bids
+  27. عروضي
+  28. بانتظار الرد
+  29. 380K د.ع
+  30. بانتظار
+
+
+SCREEN: Chat
+--------------------------------------------------------------------------------
+  1. Nora A.
+  2. Parts · Brakes · Kia Sportage
+  3. Accepted
+  4. Bid accepted · Today 9:15am
+  5. OEM pads in stock. Deliver 12–3pm. 85K IQD.
+  6. 9:16am ✓✓
+  7. Perfect, 1pm works. Mansour St bldg 8.
+  8. 9:22am
+  9. Driver there at 1pm. Pay on delivery.
+  10. 9:24am ✓✓
+  11. Great, thank you!
+  12. 9:25am
+  13. Type a message...
+  14. EN · Chat
+
+
+SCREEN: Shop Profile
+--------------------------------------------------------------------------------
+  1. AS
+  2. Al-Amana Workshop
+  3. +964 7xx · Baghdad, Karrada
+  4. 4.8 · 213 reviews
+  5. Won
+  6. Reviews
+  7. Rating
+  8. Car makes & years
+  9. Edit
+  10. Toyota
+  11. Kia
+  12. 2010–2024
+  13. Repair categories
+  14. Engine
+  15. Brakes
+  16. Parts categories
+  17. Engine pts
+  18. Towing
+  19. On
+  20. Delivery
+  21. Log out
+  22. Feed
+  23. My Bids
+  24. Inbox
+  25. Profile
+  26. EN · Shop profile
