@@ -61,6 +61,14 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "fixitApiBaseUrl": "",
+      "router": {},
+      "eas": {
+        "projectId": "02e337fc-7c3b-4b61-9459-1d40caba2caa"
+      }
+    },
+    "owner": "ekkoo"
   }
 }

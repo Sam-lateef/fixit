@@ -146,11 +146,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   label: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: theme.muted,
+    fontSize: 15,
+    fontWeight: "600",
+    color: theme.text,
     letterSpacing: 0.6,
     textTransform: "uppercase",
+    textAlign: "left",
   },
   labelSpaced: { marginTop: 14 },
   value: {

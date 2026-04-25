@@ -453,10 +453,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   fieldLabel: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "600",
-    color: theme.muted,
+    color: theme.text,
     marginBottom: 8,
+    textAlign: "left",
   },
   fieldInput: {
     borderWidth: 1,
@@ -467,6 +468,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.text,
     backgroundColor: theme.surface,
+    textAlign: "right",
   },
   sectionCard: {
     backgroundColor: theme.surface,

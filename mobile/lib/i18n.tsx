@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Updates from "expo-updates";
 import React, {
   createContext,
   useCallback,
@@ -40,12 +41,15 @@ export function I18nProvider({
     })();
   }, []);
 
-  /** Default locale is Arabic — RTL must apply on cold start, not only after toggling language. */
+  /** Flip native layout direction (flexDirection, writing direction on un-styled Text, etc.).
+   *  forceRTL persists to native I18nManager but the live RN root doesn't re-apply it until
+   *  the bridge reloads — so we reload the JS bundle when the RTL state actually changes. */
   useEffect(() => {
     const rtl = locale === "ar-iq";
     if (I18nManager.isRTL !== rtl) {
       I18nManager.allowRTL(rtl);
       I18nManager.forceRTL(rtl);
+      void Updates.reloadAsync();
     }
   }, [locale]);
 

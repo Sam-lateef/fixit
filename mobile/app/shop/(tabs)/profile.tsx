@@ -845,11 +845,12 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   fieldLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: theme.muted,
+    fontSize: 15,
+    fontWeight: "600",
+    color: theme.text,
     letterSpacing: 0.6,
     textTransform: "uppercase",
+    textAlign: "left",
   },
   fieldLabelSpaced: { marginTop: 14 },
   fieldInput: {
@@ -862,6 +863,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.text,
     backgroundColor: theme.bg,
+    textAlign: "left",
   },
   fieldStatic: {
     marginTop: 6,

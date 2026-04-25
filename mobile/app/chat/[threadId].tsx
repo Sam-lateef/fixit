@@ -10,8 +10,10 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { io, type Socket } from "socket.io-client";
 
+import { BrandHeaderGradient } from "@/components/BrandHeaderGradient";
 import { apiFetch } from "@/lib/api";
 import { getApiBaseUrl } from "@/lib/api-base";
 import { getToken } from "@/lib/auth-storage";
@@ -72,6 +74,7 @@ function formatTime(iso: string): string {
 
 export default function ChatThreadScreen(): React.ReactElement {
   const { t } = useI18n();
+  const insets = useSafeAreaInsets();
   const { threadId } = useLocalSearchParams<{ threadId: string }>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
@@ -206,29 +209,31 @@ export default function ChatThreadScreen(): React.ReactElement {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
     >
-      {/* Enhanced header */}
-      <View style={styles.headerBar}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <Text style={styles.backText}>‹</Text>
-        </Pressable>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerName} numberOfLines={1}>
-            {meta?.counterpartyName ?? t("chattingWith")}
-          </Text>
-          {meta?.postContext ? (
-            <Text style={styles.headerContext} numberOfLines={1}>
-              {meta.postContext}
+      {/* Brand green header — safe-area top padding pushes below status bar */}
+      <BrandHeaderGradient variant="hero" style={{ paddingTop: insets.top }}>
+        <View style={styles.headerBar}>
+          <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
+            <Text style={styles.backText}>‹</Text>
+          </Pressable>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerName} numberOfLines={1}>
+              {meta?.counterpartyName ?? t("chattingWith")}
             </Text>
-          ) : null}
-        </View>
-        {meta?.bidAccepted ? (
-          <View style={styles.acceptedBadge}>
-            <Text style={styles.acceptedText}>{t("bidAccepted")}</Text>
+            {meta?.postContext ? (
+              <Text style={styles.headerContext} numberOfLines={1}>
+                {meta.postContext}
+              </Text>
+            ) : null}
           </View>
-        ) : (
-          <View style={styles.headerSpacer} />
-        )}
-      </View>
+          {meta?.bidAccepted ? (
+            <View style={styles.acceptedBadge}>
+              <Text style={styles.acceptedText}>{t("bidAccepted")}</Text>
+            </View>
+          ) : (
+            <View style={styles.headerSpacer} />
+          )}
+        </View>
+      </BrandHeaderGradient>
 
       <FlatList
         ref={listRef}
@@ -269,7 +274,7 @@ export default function ChatThreadScreen(): React.ReactElement {
         }}
       />
 
-      <View style={styles.composer}>
+      <View style={[styles.composer, { paddingBottom: 10 + insets.bottom }]}>
         <TextInput
           style={styles.input}
           value={draft}
@@ -301,26 +306,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-    backgroundColor: theme.surface,
     gap: 8,
   },
   backBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: theme.bg,
+    backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
-  backText: { fontSize: 22, color: theme.primaryMid, fontWeight: "700", marginTop: -2 },
+  backText: { fontSize: 22, color: "#fff", fontWeight: "700", marginTop: -2 },
   headerCenter: { flex: 1 },
-  headerName: { fontWeight: "700", color: theme.text, fontSize: 16 },
-  headerContext: { fontSize: 12, color: theme.mutedLight, marginTop: 2 },
+  headerName: { fontWeight: "700", color: "#fff", fontSize: 16, textAlign: "left" },
+  headerContext: { fontSize: 12, color: "rgba(255,255,255,0.85)", marginTop: 2, textAlign: "left" },
   headerSpacer: { width: 48 },
   acceptedBadge: {
-    backgroundColor: theme.primaryLight,
+    backgroundColor: "rgba(255,255,255,0.9)",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -374,6 +376,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 16,
     color: theme.text,
+    textAlign: "left",
   },
   sendBtn: {
     backgroundColor: theme.primaryMid,

@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: theme.text,
     marginBottom: 10,
+    textAlign: "left",
   },
   search: {
     borderWidth: 1,
@@ -137,6 +138,7 @@ const styles = StyleSheet.create({
     color: theme.text,
     marginBottom: 8,
     backgroundColor: theme.surface,
+    textAlign: "left",
   },
   list: { maxHeight: 440 },
   row: {
@@ -151,7 +153,7 @@ const styles = StyleSheet.create({
   rowSelected: {
     backgroundColor: theme.primaryLight,
   },
-  rowText: { fontSize: 16, color: theme.text, flex: 1 },
+  rowText: { fontSize: 16, color: theme.text, flex: 1, textAlign: "left" },
   rowCheck: {
     fontSize: 16,
     fontWeight: "700",

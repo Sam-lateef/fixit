@@ -292,8 +292,8 @@ const styles = StyleSheet.create({
   summaryOwner: { fontSize: 13, color: theme.muted, marginTop: 2 },
   summaryDesc: { fontSize: 14, color: theme.text, marginTop: 6, lineHeight: 20 },
 
-  label: { fontSize: 14, fontWeight: "600", color: theme.text, marginBottom: 6, marginTop: 16 },
-  hint: { fontSize: 12, color: theme.mutedLight, marginTop: 4 },
+  label: { fontSize: 15, fontWeight: "600", color: theme.text, marginBottom: 6, marginTop: 16, textAlign: "left" },
+  hint: { fontSize: 12, color: theme.mutedLight, marginTop: 4, textAlign: "left" },
 
   input: {
     borderWidth: 1,
@@ -304,6 +304,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.text,
     backgroundColor: theme.surface,
+    textAlign: "left",
   },
   priceInput: { fontSize: 22, fontWeight: "700", writingDirection: "ltr" },
 

@@ -122,8 +122,8 @@ export default function OwnerDetailsScreen(): React.ReactElement {
 
 const styles = StyleSheet.create({
   screen: { padding: 20, backgroundColor: theme.surface },
-  h1: { fontSize: 22, fontWeight: "700", color: theme.text },
-  label: { marginTop: 16, color: theme.muted, fontSize: 14 },
+  h1: { fontSize: 22, fontWeight: "700", color: theme.text, textAlign: "left" },
+  label: { marginTop: 16, color: theme.text, fontSize: 15, fontWeight: "600", textAlign: "left" },
   input: {
     marginTop: 10,
     borderWidth: 1,
@@ -133,6 +133,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: theme.text,
+    textAlign: "left",
   },
   select: {
     marginTop: 10,
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: theme.surface,
   },
-  selectText: { fontSize: 16, color: theme.text },
+  selectText: { fontSize: 16, color: theme.text, textAlign: "left" },
   btn: {
     marginTop: 24,
     backgroundColor: theme.primaryMid,

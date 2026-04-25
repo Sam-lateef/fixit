@@ -65,6 +65,9 @@ export type OwnerPostEditorProps = {
   /** Pass true when rendered inside a tab with a transparent overlay header
    *  (create tab). Leave false (default) for stack screens with a normal header. */
   transparentHeader?: boolean;
+  /** When true, renders the form read-only: inputs/buttons are non-interactive
+   *  and the save button is hidden. Used to view requests that already have offers. */
+  readOnly?: boolean;
 };
 
 type PostForEdit = {
@@ -130,6 +133,7 @@ async function resolvePickedPhotos(photos: PickedPhoto[]): Promise<string[]> {
 export function OwnerPostEditor({
   editPostId,
   transparentHeader = false,
+  readOnly = false,
 }: OwnerPostEditorProps): React.ReactElement {
   const headerHeight = useHeaderHeight();
   const { t, locale } = useI18n();
@@ -285,7 +289,7 @@ export function OwnerPostEditor({
         ]);
         return;
       }
-      if (post.status !== "ACTIVE") {
+      if (post.status !== "ACTIVE" && !readOnly) {
         Alert.alert(t("errorTitle"), t("cannotEditPost"), [
           { text: "OK", onPress: () => router.back() },
         ]);
@@ -417,7 +421,7 @@ export function OwnerPostEditor({
     } finally {
       setLoadEditBusy(false);
     }
-  }, [editPostId, t]);
+  }, [editPostId, t, readOnly]);
 
   useEffect(() => {
     if (editPostId) return;
@@ -672,6 +676,12 @@ export function OwnerPostEditor({
         ]}
         keyboardShouldPersistTaps="handled"
       >
+        {readOnly ? (
+          <View style={styles.readOnlyBanner}>
+            <Text style={styles.readOnlyBannerText}>{t("viewOnlyBanner")}</Text>
+          </View>
+        ) : null}
+        <View pointerEvents={readOnly ? "none" : "auto"}>
         {/* First release: CARS only — category picker hidden */}
 
         {/* Service type */}
@@ -701,7 +711,7 @@ export function OwnerPostEditor({
 
         {/* ── NON-CARS simplified form ── */}
         {/* Area picker */}
-        <Text style={styles.subtleText}>{city}</Text>
+        <Text style={styles.subtleText}>{ownerCityLabel(city, locale)}</Text>
         <Text style={styles.label}>{t("district")}</Text>
         {districtLoadError ? <Text style={styles.errorText}>{districtLoadError}</Text> : null}
         {districts.length > 0 ? (
@@ -866,11 +876,7 @@ export function OwnerPostEditor({
               setPickerMode("make");
             }}>
               <Text
-                style={
-                  carMakeId || carMake.trim()
-                    ? styles.selectValue
-                    : styles.selectPlaceholder
-                }
+                style={carMakeId || carMake.trim() ? styles.selectValue : styles.selectPlaceholder}
               >
                 {carMakeId
                   ? catalogLabel(
@@ -894,11 +900,7 @@ export function OwnerPostEditor({
               setPickerMode("model");
             }}>
               <Text
-                style={
-                  carModelId || carModel.trim()
-                    ? styles.selectValue
-                    : styles.selectPlaceholder
-                }
+                style={carModelId || carModel.trim() ? styles.selectValue : styles.selectPlaceholder}
               >
                 {carModelId
                   ? catalogLabel(
@@ -1019,15 +1021,18 @@ export function OwnerPostEditor({
           ) : null}
         </View>
 
-        <Pressable
-          style={[styles.btn, busy && styles.btnDisabled]}
-          disabled={busy}
-          onPress={submit}
-        >
-          <Text style={styles.btnText}>{editPostId ? t("save") : t("post")}</Text>
-        </Pressable>
+        {readOnly ? null : (
+          <Pressable
+            style={[styles.btn, busy && styles.btnDisabled]}
+            disabled={busy}
+            onPress={submit}
+          >
+            <Text style={styles.btnText}>{editPostId ? t("save") : t("post")}</Text>
+          </Pressable>
+        )}
 
         </>
+        </View>
       </ScrollView>
       <Modal visible={pickerMode !== null} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
@@ -1132,12 +1137,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   scroll: { paddingHorizontal: 16, paddingBottom: 40 },
-  label: {
-    fontSize: 13,
+  readOnlyBanner: {
+    backgroundColor: theme.primaryLight,
+    borderRadius: theme.radiusMd,
+    padding: 12,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  readOnlyBannerText: {
+    color: theme.primary,
     fontWeight: "600",
-    color: theme.muted,
+    fontSize: 13,
+    textAlign: "left",
+  },
+  label: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: theme.text,
     marginBottom: 8,
     marginTop: 8,
+    textAlign: "left",
   },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 8 },
   chip: {
@@ -1161,11 +1180,13 @@ const styles = StyleSheet.create({
     color: theme.text,
     marginBottom: 8,
     backgroundColor: theme.surface,
+    textAlign: "left",
   },
   subtleText: {
     fontSize: 13,
     color: theme.mutedLight,
     marginBottom: 6,
+    textAlign: "left",
   },
   errorText: {
     color: theme.danger,
@@ -1183,10 +1204,12 @@ const styles = StyleSheet.create({
   selectValue: {
     fontSize: 16,
     color: theme.text,
+    textAlign: "left",
   },
   selectPlaceholder: {
     fontSize: 16,
     color: theme.mutedLight,
+    textAlign: "left",
   },
   area: { minHeight: 90, textAlignVertical: "top" },
   charCount: { fontSize: 12, color: theme.mutedLight, textAlign: "right", marginBottom: 4 },
@@ -1253,6 +1276,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: theme.text,
     marginBottom: 10,
+    textAlign: "left",
   },
   modalList: {
     maxHeight: 420,
@@ -1265,6 +1289,7 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 15,
     color: theme.text,
+    textAlign: "left",
   },
   loadingRow: {
     paddingVertical: 12,

@@ -213,8 +213,8 @@ export default function OwnerLocationScreen(): React.ReactElement {
 
 const styles = StyleSheet.create({
   screen: { padding: 20, backgroundColor: theme.surface },
-  h1: { fontSize: 22, fontWeight: "700", color: theme.text },
-  sub: { marginTop: 6, color: theme.muted, fontSize: 14 },
+  h1: { fontSize: 22, fontWeight: "700", color: theme.text, textAlign: "left" },
+  sub: { marginTop: 6, color: theme.muted, fontSize: 14, textAlign: "left" },
   select: {
     marginTop: 16,
     borderWidth: 1,
@@ -224,8 +224,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: theme.surface,
   },
-  selectText: { fontSize: 16, color: theme.text },
-  selectPlaceholder: { fontSize: 16, color: theme.mutedLight },
+  selectText: { fontSize: 16, color: theme.text, textAlign: "left" },
+  selectPlaceholder: { fontSize: 16, color: theme.mutedLight, textAlign: "left" },
   input: {
     marginTop: 16,
     borderWidth: 1,
@@ -235,6 +235,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 15,
     color: theme.text,
+    textAlign: "left",
   },
   btn: {
     marginTop: 20,
@@ -251,6 +252,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: theme.muted,
     lineHeight: 19,
+    textAlign: "left",
   },
   emptyBox: { marginTop: 12, gap: 12 },
   secondaryBtn: {

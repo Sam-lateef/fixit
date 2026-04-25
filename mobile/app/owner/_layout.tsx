@@ -12,6 +12,7 @@ export default function OwnerStackLayout(): React.ReactElement {
           headerShown: true,
           headerStyle: { backgroundColor: theme.surface },
           headerTintColor: theme.text,
+          headerBackTitle: "",
         }}
       />
       <Stack.Screen
@@ -20,6 +21,7 @@ export default function OwnerStackLayout(): React.ReactElement {
           headerShown: true,
           headerStyle: { backgroundColor: theme.surface },
           headerTintColor: theme.text,
+          headerBackTitle: "",
         }}
       />
     </Stack>

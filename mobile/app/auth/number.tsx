@@ -136,6 +136,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: theme.text,
+    textAlign: "left",
   },
   btn: {
     marginTop: 20,

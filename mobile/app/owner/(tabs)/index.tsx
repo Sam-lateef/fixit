@@ -187,12 +187,24 @@ export default function OwnerHomeScreen(): React.ReactElement {
         const hrs = Math.max(0, Math.round((exp - Date.now()) / 3600000));
         const hasBids = p.bids.length > 0;
         const carLine = carDetailLine(p);
-        const canEdit = p.status === "ACTIVE";
+        const canEdit = p.status === "ACTIVE" && !hasBids;
+        const openPost = (): void => {
+          const href = canEdit
+            ? `/owner/post/${p.id}`
+            : `/owner/post/${p.id}?view=1`;
+          router.push(href as Href);
+        };
 
         return (
           <View style={styles.card}>
-            {/* Top row: tag + category | time + delete */}
-            <View style={styles.row}>
+            {/* Top row: tag + category | time + delete — tappable to open the request */}
+            <Pressable
+              onPress={openPost}
+              style={({ pressed }) => [
+                styles.row,
+                pressed ? styles.cardBodyPressed : null,
+              ]}
+            >
               <View style={styles.tagRow}>
                 <View style={[styles.tag, { backgroundColor: tag.bg }]}>
                   <Text style={[styles.tagText, { color: tag.fg }]}>
@@ -221,7 +233,7 @@ export default function OwnerHomeScreen(): React.ReactElement {
                   <FontAwesome name="times" size={16} color={theme.danger} />
                 </Pressable>
               </View>
-            </View>
+            </Pressable>
 
             <View style={styles.cardBody}>
               {p.photoUrls?.length > 0 ? (
@@ -240,15 +252,10 @@ export default function OwnerHomeScreen(): React.ReactElement {
                   </View>
                   {/* Text content on the right */}
                   <Pressable
-                    onPress={() => {
-                      if (canEdit) {
-                        router.push(`/owner/post/${p.id}` as Href);
-                      }
-                    }}
-                    disabled={!canEdit}
+                    onPress={openPost}
                     style={({ pressed }) => [
                       styles.textFlex,
-                      canEdit && pressed ? styles.cardBodyPressed : null,
+                      pressed ? styles.cardBodyPressed : null,
                     ]}
                   >
                     {carLine ? <Text style={styles.carLine}>{carLine}</Text> : null}
@@ -261,14 +268,9 @@ export default function OwnerHomeScreen(): React.ReactElement {
                 </View>
               ) : (
                 <Pressable
-                  onPress={() => {
-                    if (canEdit) {
-                      router.push(`/owner/post/${p.id}` as Href);
-                    }
-                  }}
-                  disabled={!canEdit}
+                  onPress={openPost}
                   style={({ pressed }) => [
-                    canEdit && pressed ? styles.cardBodyPressed : null,
+                    pressed ? styles.cardBodyPressed : null,
                   ]}
                 >
                   {carLine ? <Text style={styles.carLine}>{carLine}</Text> : null}
@@ -288,11 +290,6 @@ export default function OwnerHomeScreen(): React.ReactElement {
                   key={b.id}
                   style={[styles.bid, best ? styles.bidBest : styles.bidOther]}
                 >
-                  {best ? (
-                    <View style={styles.bestPill}>
-                      <Text style={styles.bestPillText}>{t("bestBid")}</Text>
-                    </View>
-                  ) : null}
                   <Pressable
                     onPress={() =>
                       router.push(`/owner/shop/${b.shop.id}` as Href)
@@ -413,6 +410,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: theme.text,
     marginBottom: 6,
+    textAlign: "left",
   },
   row: {
     flexDirection: "row",
@@ -430,16 +428,17 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: theme.primaryMid,
   },
-  muted: { color: theme.muted, fontSize: 13 },
-  bidCount: { color: theme.mutedLight, fontSize: 12 },
+  muted: { color: theme.muted, fontSize: 13, textAlign: "left" },
+  bidCount: { color: theme.mutedLight, fontSize: 12, textAlign: "left" },
   deleteBtn: { padding: 4 },
-  postTitle: { marginTop: 8, color: theme.text, fontSize: 15, fontWeight: "700" },
-  desc: { marginTop: 4, color: theme.muted, fontSize: 14 },
+  postTitle: { marginTop: 8, color: theme.text, fontSize: 15, fontWeight: "700", textAlign: "left" },
+  desc: { marginTop: 4, color: theme.muted, fontSize: 14, textAlign: "left" },
   waiting: {
     marginTop: 12,
     color: theme.mutedLight,
     fontSize: 14,
     fontStyle: "italic",
+    textAlign: "left",
   },
   bid: {
     marginTop: 10,
@@ -456,12 +455,12 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
   },
   bestPill: {
-    alignSelf: "flex-start",
+    alignSelf: "flex-end",
     backgroundColor: theme.primary,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
-    marginBottom: 6,
+    marginTop: 6,
   },
   bestPillText: {
     color: "#fff",
@@ -477,9 +476,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: theme.text,
     marginBottom: 2,
+    textAlign: "left",
   },
-  price: { fontWeight: "700", color: theme.text, fontSize: 15 },
-  msg: { marginTop: 4, color: theme.muted, fontSize: 14 },
+  price: { fontWeight: "700", color: theme.text, fontSize: 15, textAlign: "left" },
+  msg: { marginTop: 4, color: theme.muted, fontSize: 14, textAlign: "left" },
   btnRow: {
     flexDirection: "row",
     gap: 8,

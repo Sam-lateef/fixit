@@ -69,12 +69,7 @@ function RootLayoutNav(): React.ReactElement {
 
   return (
     <ThemeProvider value={dark ? fixitDark : fixitLight}>
-      <View
-        style={{
-          flex: 1,
-          direction: isRtl ? "rtl" : "ltr",
-        }}
-      >
+      <View style={{ flex: 1, direction: isRtl ? "rtl" : "ltr" }}>
         <StatusBar style={dark ? "light" : "dark"} />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />

@@ -199,6 +199,7 @@ const s = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: theme.text,
+    textAlign: "left",
   },
   input: {
     marginTop: 8,
@@ -209,6 +210,7 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 15,
     color: theme.text,
+    textAlign: "left",
   },
   select: {
     marginTop: 8,
@@ -219,9 +221,9 @@ const s = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: theme.surface,
   },
-  selectText: { fontSize: 16, color: theme.text },
-  selectPlaceholder: { fontSize: 16, color: theme.mutedLight },
-  hint: { marginTop: 10, fontSize: 13, color: theme.muted },
+  selectText: { fontSize: 16, color: theme.text, textAlign: "left" },
+  selectPlaceholder: { fontSize: 16, color: theme.mutedLight, textAlign: "left" },
+  hint: { marginTop: 10, fontSize: 13, color: theme.muted, textAlign: "left" },
   err: { marginTop: 12, color: theme.danger, fontSize: 13 },
   btn: {
     marginTop: 28,
