@@ -19,15 +19,11 @@
     "android": "npm run android -w mobile",
     "ios": "npm run ios -w mobile"
   },
+  "version": "1.0.0",
   "devDependencies": {
     "concurrently": "^9.1.2"
   },
-  "version": "1.0.0",
   "dependencies": {
-    "expo": "~54.0.33",
-    "expo-updates": "~29.0.16",
-    "mobile": "^1.0.0",
-    "react": "19.1.0",
-    "react-native": "0.81.5"
+    "fixit": "file:"
   }
 }
