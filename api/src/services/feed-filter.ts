@@ -36,6 +36,45 @@ export function normalizeCityKey(raw: string): string {
   return raw.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+/** Case- and whitespace-insensitive tag normalization (carMake, repair/parts category). */
+export function normTag(raw: string): string {
+  return raw.trim().toLowerCase();
+}
+
+/** True for posts the owner saved with the catch-all "Other" repair/parts category.
+ *  OwnerPostEditor returns "general" when the user picks "Other" with no free text;
+ *  any other unknown value (custom typed by the user) also acts as "Other". */
+export function isCatchAllCategory(value: string, knownSlugs: string[]): boolean {
+  const v = normTag(value);
+  if (v === "general" || v === "other") return true;
+  return !knownSlugs.map(normTag).includes(v);
+}
+
+/** Slugs the mobile app's chip pickers know about. Keep in sync with
+ *  `mobile/lib/taxonomy-labels.ts` REPAIR_CATEGORY_SLUGS / PARTS_CATEGORY_SLUGS. */
+export const REPAIR_CATEGORY_SLUGS = [
+  "Engine",
+  "Brakes",
+  "Electrical",
+  "AC",
+  "Tyres",
+  "Suspension",
+  "Body & Paint",
+  "Transmission",
+  "Exhaust",
+  "Oil & Fluids",
+  "Other",
+];
+export const PARTS_CATEGORY_SLUGS = [
+  "Engine parts",
+  "Brakes",
+  "Filters",
+  "Electrical",
+  "Suspension",
+  "Body parts",
+  "Other",
+];
+
 /**
  * Distance from shop district to post coordinates; null when not computable
  * or when parts+nationwide treats distance as N/A for the matched feed.
@@ -145,7 +184,8 @@ export function filterPostsForShop(
     if (post.serviceType === "TOWING" && !shop.offersTowing) continue;
 
     if (post.carMake && shop.carMakes.length > 0) {
-      if (!shop.carMakes.includes(post.carMake)) continue;
+      const shopMakes = shop.carMakes.map(normTag);
+      if (!shopMakes.includes(normTag(post.carMake))) continue;
     }
 
     if (post.carYear) {
@@ -156,18 +196,27 @@ export function filterPostsForShop(
     if (
       post.serviceType === "REPAIR" &&
       post.repairCategory &&
-      shop.repairCategories.length > 0 &&
-      !shop.repairCategories.includes(post.repairCategory)
+      shop.repairCategories.length > 0
     ) {
-      continue;
+      const shopCats = shop.repairCategories.map(normTag);
+      const postCat = normTag(post.repairCategory);
+      // Generic / "Other" / custom-typed posts match shops that accept Other jobs.
+      const matched = isCatchAllCategory(post.repairCategory, REPAIR_CATEGORY_SLUGS)
+        ? shopCats.includes("other")
+        : shopCats.includes(postCat);
+      if (!matched) continue;
     }
     if (
       post.serviceType === "PARTS" &&
       post.partsCategory &&
-      shop.partsCategories.length > 0 &&
-      !shop.partsCategories.includes(post.partsCategory)
+      shop.partsCategories.length > 0
     ) {
-      continue;
+      const shopCats = shop.partsCategories.map(normTag);
+      const postCat = normTag(post.partsCategory);
+      const matched = isCatchAllCategory(post.partsCategory, PARTS_CATEGORY_SLUGS)
+        ? shopCats.includes("other")
+        : shopCats.includes(postCat);
+      if (!matched) continue;
     }
 
     if (post.serviceType === "PARTS" && shop.partsNationwide) {

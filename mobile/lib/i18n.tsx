@@ -8,7 +8,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { I18nManager } from "react-native";
+import { DevSettings, I18nManager } from "react-native";
 
 import { arIq, en, LocaleId, StringKey } from "./strings";
 
@@ -31,6 +31,7 @@ export function I18nProvider({
   children: React.ReactNode;
 }): React.ReactElement {
   const [locale, setLocaleState] = useState<LocaleId>("ar-iq");
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -38,20 +39,29 @@ export function I18nProvider({
       if (stored === "en" || stored === "ar-iq") {
         setLocaleState(stored);
       }
+      setHydrated(true);
     })();
   }, []);
 
   /** Flip native layout direction (flexDirection, writing direction on un-styled Text, etc.).
    *  forceRTL persists to native I18nManager but the live RN root doesn't re-apply it until
-   *  the bridge reloads — so we reload the JS bundle when the RTL state actually changes. */
+   *  the bridge reloads — in dev we use DevSettings.reload(), in production Updates.reloadAsync()
+   *  (Updates throws in dev because expo-updates isn't configured for dev builds).
+   *  Wait for AsyncStorage to hydrate first — otherwise the default "ar-iq" can trigger
+   *  forceRTL before the stored "en" loads, causing a reload ping-pong loop. */
   useEffect(() => {
+    if (!hydrated) return;
     const rtl = locale === "ar-iq";
     if (I18nManager.isRTL !== rtl) {
       I18nManager.allowRTL(rtl);
       I18nManager.forceRTL(rtl);
-      void Updates.reloadAsync();
+      if (__DEV__) {
+        DevSettings.reload();
+      } else {
+        void Updates.reloadAsync();
+      }
     }
-  }, [locale]);
+  }, [locale, hydrated]);
 
   const setLocale = useCallback((loc: LocaleId) => {
     setLocaleState(loc);

@@ -1,7 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useHeaderHeight } from "@react-navigation/elements";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -641,8 +641,35 @@ export function OwnerPostEditor({
             method: "POST",
             body: JSON.stringify(body),
           });
+          // Clear the form so the create tab doesn't pre-fill the next request
+          // with the previous one's data (the tab stays mounted in expo-router).
+          setTitle("");
+          setServiceType("REPAIR");
+          setDescription("");
+          setRepairCat(null);
+          setRepairOther("");
+          setPartsCat(null);
+          setPartsOther("");
+          setConditionNew(false);
+          setConditionUsed(false);
+          setDeliveryNeeded(null);
+          setCarMakeId("");
+          setCarModelId("");
+          setCarMake("");
+          setCarModel("");
+          setCarYear("");
+          setTowingFrom("");
+          setTowingLat(BAGHDAD_FALLBACK.lat);
+          setTowingLng(BAGHDAD_FALLBACK.lng);
+          setTowingTo("");
+          setTowingNotes("");
+          setUrgency("ASAP");
+          setPickedPhotos([]);
           Alert.alert(t("postCreated"), "", [
-            { text: "OK", onPress: () => router.back() },
+            {
+              text: "OK",
+              onPress: () => router.replace("/owner" as Href),
+            },
           ]);
         }
       } catch (e) {
@@ -1035,7 +1062,10 @@ export function OwnerPostEditor({
         </View>
       </ScrollView>
       <Modal visible={pickerMode !== null} animationType="slide" transparent>
-        <View style={styles.modalBackdrop}>
+        <KeyboardAvoidingView
+          style={styles.modalBackdrop}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>
               {pickerMode === "make"
@@ -1124,7 +1154,7 @@ export function OwnerPostEditor({
               <Text style={styles.modalCloseBtnText}>{t("cancel")}</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </KeyboardAvoidingView>
   );

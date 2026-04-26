@@ -1,7 +1,9 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Tabs } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
+import { OwnerTabHeaderBackground } from "@/components/BrandHeaderGradient";
 import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
 
@@ -9,12 +11,18 @@ export default function ShopTabsLayout(): React.ReactElement {
   const { t } = useI18n();
 
   return (
+    <>
+    <StatusBar style="light" />
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: theme.primaryMid,
         tabBarInactiveTintColor: theme.mutedLight,
-        headerStyle: { backgroundColor: theme.surface },
-        headerTintColor: theme.text,
+        headerTransparent: true,
+        headerBackground: () => <OwnerTabHeaderBackground />,
+        headerStyle: { backgroundColor: "transparent" },
+        headerTintColor: "#fff",
+        headerTitleStyle: { color: "#fff", fontWeight: "700" },
+        headerShadowVisible: false,
         tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.border },
       }}
     >
@@ -55,5 +63,6 @@ export default function ShopTabsLayout(): React.ReactElement {
         }}
       />
     </Tabs>
+    </>
   );
 }

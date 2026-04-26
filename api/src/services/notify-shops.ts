@@ -1,5 +1,11 @@
 import type { Post, Shop, User, District } from "@prisma/client";
 import { prisma } from "../db/prisma.js";
+import {
+  isCatchAllCategory,
+  normTag,
+  PARTS_CATEGORY_SLUGS,
+  REPAIR_CATEGORY_SLUGS,
+} from "./feed-filter.js";
 import { haversineKm } from "./haversine.js";
 import { sendPush } from "./fcm.js";
 
@@ -90,17 +96,26 @@ async function shopShouldSeePost(
   if (post.serviceType === "PARTS" && !shop.offersParts) return false;
 
   if (post.carMake && shop.carMakes.length > 0) {
-    if (!shop.carMakes.includes(post.carMake)) return false;
+    const shopMakes = shop.carMakes.map(normTag);
+    if (!shopMakes.includes(normTag(post.carMake))) return false;
   }
   if (post.carYear) {
     if (shop.carYearMin && post.carYear < shop.carYearMin) return false;
     if (shop.carYearMax && post.carYear > shop.carYearMax) return false;
   }
   if (post.serviceType === "REPAIR" && post.repairCategory) {
-    if (!shop.repairCategories.includes(post.repairCategory)) return false;
+    const shopCats = shop.repairCategories.map(normTag);
+    const matched = isCatchAllCategory(post.repairCategory, REPAIR_CATEGORY_SLUGS)
+      ? shopCats.includes("other")
+      : shopCats.includes(normTag(post.repairCategory));
+    if (!matched) return false;
   }
   if (post.serviceType === "PARTS" && post.partsCategory) {
-    if (!shop.partsCategories.includes(post.partsCategory)) return false;
+    const shopCats = shop.partsCategories.map(normTag);
+    const matched = isCatchAllCategory(post.partsCategory, PARTS_CATEGORY_SLUGS)
+      ? shopCats.includes("other")
+      : shopCats.includes(normTag(post.partsCategory));
+    if (!matched) return false;
   }
   if (post.serviceType === "PARTS" && shop.partsNationwide) return true;
 

@@ -1,5 +1,8 @@
 {
   "android": {
     "package": "com.ekkoo.fixit"
+  },
+  "ios": {
+    "bundleIdentifier": "com.ekkoo.fixit"
   }
 }

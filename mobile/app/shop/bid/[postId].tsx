@@ -76,8 +76,6 @@ export default function ShopBidScreen(): React.ReactElement {
   const [price, setPrice] = useState(initialPrice ?? "");
   const [estimatedQty, setEstimatedQty] = useState("");
   const [durationUnit, setDurationUnit] = useState<DurationUnit>("HOURS");
-  const [appointmentDate, setAppointmentDate] = useState("");
-  const [appointmentTime, setAppointmentTime] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("");
   const [deliveryWindow, setDeliveryWindow] = useState("");
   const [message, setMessage] = useState(initialMessage ?? "");
@@ -144,9 +142,6 @@ export default function ShopBidScreen(): React.ReactElement {
         if (isParts) {
           if (deliveryDate) body.deliveryDate = deliveryDate;
           if (deliveryWindow) body.deliveryWindow = deliveryWindow;
-        } else {
-          if (appointmentDate) body.appointmentDate = appointmentDate;
-          if (appointmentTime) body.appointmentTime = appointmentTime;
         }
         const url = isEditing
           ? `/api/v1/bids/${bidId}`
@@ -352,26 +347,7 @@ export default function ShopBidScreen(): React.ReactElement {
                 onChangeText={setDeliveryWindow}
               />
             </>
-          ) : (
-            <>
-              <Text style={styles.label}>{t("appointmentDate")}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="2026-04-10"
-                placeholderTextColor={theme.mutedLight}
-                value={appointmentDate}
-                onChangeText={setAppointmentDate}
-              />
-              <Text style={styles.label}>{t("appointmentTime")}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="11:00 AM"
-                placeholderTextColor={theme.mutedLight}
-                value={appointmentTime}
-                onChangeText={setAppointmentTime}
-              />
-            </>
-          )}
+          ) : null}
 
           {/* Message */}
           <Text style={styles.label}>{t("messageToCustomer")}</Text>

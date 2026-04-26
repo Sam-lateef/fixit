@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -63,7 +65,10 @@ export function SearchablePickerModal({
       transparent
       onRequestClose={onRequestClose}
     >
-      <View style={styles.backdrop}>
+      <KeyboardAvoidingView
+        style={styles.backdrop}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <View style={styles.card}>
           <Text style={styles.title}>{title}</Text>
           {searchOn ? (
@@ -104,7 +109,7 @@ export function SearchablePickerModal({
             <Text style={styles.cancelText}>{cancelLabel}</Text>
           </Pressable>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

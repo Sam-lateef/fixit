@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 
+import { OwnerTabHeaderBackground } from "@/components/BrandHeaderGradient";
 import { HeaderBackButton, HeaderLogoutButton } from "@/components/SessionHeaderButtons";
 import { theme } from "@/lib/theme";
 
@@ -14,8 +15,11 @@ export default function AuthLayout(): React.ReactElement {
     <Stack
       screenOptions={{
         headerShown: true,
-        headerStyle: { backgroundColor: theme.surface },
-        headerTintColor: theme.text,
+        headerTransparent: true,
+        headerBackground: () => <OwnerTabHeaderBackground />,
+        headerStyle: { backgroundColor: "transparent" },
+        headerTintColor: "#fff",
+        headerTitleStyle: { color: "#fff", fontWeight: "700" as const },
         headerShadowVisible: false,
         contentStyle: { backgroundColor: theme.surface },
       }}

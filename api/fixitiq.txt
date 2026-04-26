@@ -1,0 +1,41 @@
+DATABASE_URL=postgresql://fixit:fixit123@localhost:5432/fixit
+JWT_SECRET=change_me_to_long_random_string
+JWT_EXPIRES_IN=30d
+PORT=3000
+API_URL=http://localhost:3000
+APP_URL=http://localhost:5173
+
+# Infobip 2FA WhatsApp — production OTP for Iraq (see Docs/fixit_auth_infobip.md)
+INFOBIP_OTP_CHANNEL=whatsapp
+INFOBIP_BASE_URL=y4448p.api.infobip.com
+INFOBIP_API_KEY=918d300b4bcf70daba0855c71c13b1a4-f5804570-0b2f-4a5a-969b-be77bae55af3
+INFOBIP_APP_ID=095D0D54D34A2F4A23417677D73AD22C
+INFOBIP_MSG_ID=AAC3C7272DD8342460534C7934FB5775
+# Same digits as Infobip message senderId (no leading +)
+INFOBIP_SENDER=447860088970
+
+# Development only: accept this OTP for any phone (never enable in production)
+DEV_OTP_BYPASS_CODE=000000
+
+# No real phone in dev: mock send + bypass verify (never in production)
+DEV_ALLOW_MOCK_AUTH=true
+DEV_MOCK_PHONE=+9647000000000
+
+# Mobile dev: POST /api/v1/dev/session — JWT without OTP (never in production)
+DEV_ALLOW_SESSION_LOGIN=true
+
+# Firebase Admin JSON string — optional; push skipped if unset
+FIREBASE_SERVICE_ACCOUNT_JSON=
+
+# Cloudflare R2 — optional; use LOCAL_UPLOAD_DIR for local file URLs instead
+
+
+# Local uploads (public URL prefix must match what app can load, e.g. API_URL/uploads)
+LOCAL_UPLOAD_DIR=./uploads
+
+
+R2_ACCOUNT_ID=01d36e58b071ebc0e36a152e2631ae82
+R2_BUCKET_NAME=fixit-pics
+R2_ACCESS_KEY_ID=303582d2cefc5a89df01493312b9fbd9   
+R2_SECRET_ACCESS_KEY=730a1abc50fe786ef2628de1cd8598c87dfe84df7e858ccdf8783dc3fb4fbb7a
+R2_PUBLIC_URL=https://pub-5fa96b2489084d9cb398fb0430b0b214.r2.dev  

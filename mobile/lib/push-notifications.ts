@@ -54,10 +54,25 @@ export async function openAppNotificationSettings(): Promise<void> {
   }
 }
 
+type EasConfig = { projectId?: unknown } | undefined;
+
+function readExpoProjectId(): string | undefined {
+  const extra = Constants.expoConfig?.extra as
+    | { eas?: EasConfig }
+    | undefined;
+  const id = extra?.eas?.projectId;
+  return typeof id === "string" && id.length > 0 ? id : undefined;
+}
+
 /**
  * Call after the user is authenticated.
- * Requests permission, gets the raw FCM/APNs device token,
- * and saves it to the backend via PUT /api/v1/users/me.
+ * Requests permission, fetches an Expo push token (works for both iOS via APNs
+ * and Android via FCM — Expo handles platform delivery), and saves it to the
+ * backend via PUT /api/v1/users/me.
+ *
+ * Backend should send pushes via Expo's API:
+ *   POST https://exp.host/--/api/v2/push/send
+ *   body: [{ to: expoPushToken, title, body, data }]
  */
 export async function registerPushToken(): Promise<void> {
   if (Platform.OS === "web") return;
@@ -75,16 +90,24 @@ export async function registerPushToken(): Promise<void> {
       return; // User declined — silent, no error
     }
 
-    // Get the raw device push token (FCM on Android, APNs on iOS)
-    // Requires google-services.json (Android) / APNs config (iOS)
-    const tokenData = await Notifications.getDevicePushTokenAsync();
-    const fcmToken = tokenData.data as string;
+    const projectId = readExpoProjectId();
+    if (!projectId) {
+      console.warn(
+        "[push] EAS projectId missing in app config; skipping push registration",
+      );
+      return;
+    }
 
-    if (!fcmToken) return;
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+    const expoPushToken = tokenData.data;
 
+    if (!expoPushToken) return;
+
+    // Field still named `fcmToken` for backend compatibility — backend should
+    // detect "ExponentPushToken[...]" prefix and route via Expo's push API.
     await apiFetch("/api/v1/users/me", {
       method: "PUT",
-      body: JSON.stringify({ fcmToken }),
+      body: JSON.stringify({ fcmToken: expoPushToken }),
     });
   } catch (e) {
     // Graceful no-op — push is optional, don't crash the app

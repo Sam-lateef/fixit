@@ -1,7 +1,7 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { Tabs } from "expo-router";
+import { router, Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { type GestureResponderEvent, Pressable, StyleSheet, View } from "react-native";
+import { type GestureResponderEvent, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { OwnerTabHeaderBackground } from "@/components/BrandHeaderGradient";
 import { useI18n } from "@/lib/i18n";
@@ -44,6 +44,21 @@ export default function OwnerTabsLayout(): React.ReactElement {
         name="create"
         options={{
           title: t("newPost"),
+          headerLeft: () => (
+            <Pressable
+              hitSlop={12}
+              style={styles.cancelBtn}
+              onPress={() => {
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
+                  router.replace("/owner");
+                }
+              }}
+            >
+              <Text style={styles.cancelBtnText}>{t("cancel")}</Text>
+            </Pressable>
+          ),
           tabBarButton: ({ onPress }) => (
             <Pressable
               style={styles.fabWrap}
@@ -80,6 +95,8 @@ export default function OwnerTabsLayout(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
+  cancelBtn: { paddingVertical: 6, paddingHorizontal: 14 },
+  cancelBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   fabWrap: {
     top: -14,
     justifyContent: "center",

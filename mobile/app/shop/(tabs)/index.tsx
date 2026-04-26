@@ -208,8 +208,27 @@ export default function ShopFeedScreen(): React.ReactElement {
     return null;
   };
 
+  const hasMyBid = useCallback(
+    (p: Post): boolean =>
+      shopId !== null && p.bids.some((b) => b.shopId === shopId),
+    [shopId],
+  );
+
+  /** Sort: posts where this shop already placed an offer come first (so the
+   *  shop sees their active conversations at the top). Stable for the rest. */
+  const sortMyBidsFirst = useCallback(
+    (list: Post[]): Post[] => {
+      const mine = list.filter(hasMyBid);
+      const rest = list.filter((p) => !hasMyBid(p));
+      return [...mine, ...rest];
+    },
+    [hasMyBid],
+  );
+
   const sections: FeedSection[] = useMemo(() => {
-    const out: FeedSection[] = [{ key: "matched", title: t("feedForYou"), data: posts }];
+    const out: FeedSection[] = [
+      { key: "matched", title: t("feedForYou"), data: sortMyBidsFirst(posts) },
+    ];
     if (morePosts.length > 0) {
       const moreTitle =
         moreCity !== null
@@ -222,11 +241,11 @@ export default function ShopFeedScreen(): React.ReactElement {
         key: "more",
         title: moreTitle,
         hint: moreHint,
-        data: morePosts,
+        data: sortMyBidsFirst(morePosts),
       });
     }
     return out;
-  }, [posts, morePosts, moreCity, moreHasNational, t]);
+  }, [posts, morePosts, moreCity, moreHasNational, t, sortMyBidsFirst]);
 
   return (
     <ShopPremiumGate>
@@ -481,8 +500,6 @@ const styles = StyleSheet.create({
     borderColor: theme.border,
   },
   cardMore: {
-    borderLeftWidth: 3,
-    borderLeftColor: theme.primaryMid,
     backgroundColor: "rgba(46, 125, 50, 0.04)",
   },
   cardTopRow: {

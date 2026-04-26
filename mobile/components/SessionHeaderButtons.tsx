@@ -5,7 +5,6 @@ import { Pressable, StyleSheet, Text } from "react-native";
 import { hrefAuthWelcome } from "@/lib/routes-href";
 import { signOutFromApp } from "@/lib/sign-out";
 import { useI18n } from "@/lib/i18n";
-import { theme } from "@/lib/theme";
 
 export function HeaderBackButton(): ReactElement {
   const { t } = useI18n();
@@ -50,6 +49,6 @@ export function HeaderLogoutButton(): ReactElement {
 
 const styles = StyleSheet.create({
   btn: { paddingVertical: 6, paddingHorizontal: 4 },
-  backText: { fontSize: 16, color: theme.text, fontWeight: "600" },
-  logoutText: { fontSize: 15, color: theme.danger, fontWeight: "700" },
+  backText: { fontSize: 16, color: "#fff", fontWeight: "600" },
+  logoutText: { fontSize: 15, color: "#fff", fontWeight: "700" },
 });
