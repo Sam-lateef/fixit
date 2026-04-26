@@ -49,8 +49,6 @@ export default function ShopSubscriptionScreen(): React.ReactElement {
       <Stack.Screen
         options={{
           title: t("shopSubscriptionSection"),
-          headerStyle: { backgroundColor: theme.surface },
-          headerTintColor: theme.text,
         }}
       />
       {isLoading ? (

@@ -1,5 +1,4 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useFocusEffect } from "@react-navigation/native";
 import { router, type Href } from "expo-router";
 import { useCallback, useState } from "react";
@@ -81,7 +80,6 @@ function carDetailLine(post: Post): string | null {
 }
 
 export default function OwnerHomeScreen(): React.ReactElement {
-  const headerHeight = useHeaderHeight();
   const { t } = useI18n();
   const [posts, setPosts] = useState<Post[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -159,10 +157,7 @@ export default function OwnerHomeScreen(): React.ReactElement {
     <FlatList
       data={posts}
       keyExtractor={(item) => item.id}
-      contentContainerStyle={[
-        styles.list,
-        { paddingTop: 8 + headerHeight },
-      ]}
+      contentContainerStyle={styles.list}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }

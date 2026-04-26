@@ -1,13 +1,12 @@
 import { Stack } from "expo-router";
 
-import { OwnerTabHeaderBackground } from "@/components/BrandHeaderGradient";
 import { useI18n } from "@/lib/i18n";
+import { theme } from "@/lib/theme";
 
 const brandHeaderOptions = {
   headerShown: true,
-  headerTransparent: true,
-  headerBackground: () => <OwnerTabHeaderBackground />,
-  headerStyle: { backgroundColor: "transparent" },
+  headerTransparent: false,
+  headerStyle: { backgroundColor: theme.primary },
   headerTintColor: "#fff",
   headerTitleStyle: { color: "#fff", fontWeight: "700" as const },
   headerShadowVisible: false,

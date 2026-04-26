@@ -1,15 +1,14 @@
 import { Stack } from "expo-router";
 
-import { OwnerTabHeaderBackground } from "@/components/BrandHeaderGradient";
 import { useI18n } from "@/lib/i18n";
+import { theme } from "@/lib/theme";
 
 export default function OwnerStackLayout(): React.ReactElement {
   const { t } = useI18n();
   const stackedScreenOptions = {
     headerShown: true,
-    headerTransparent: true,
-    headerBackground: () => <OwnerTabHeaderBackground />,
-    headerStyle: { backgroundColor: "transparent" },
+    headerTransparent: false,
+    headerStyle: { backgroundColor: theme.primary },
     headerTintColor: "#fff",
     headerTitleStyle: { color: "#fff", fontWeight: "700" as const },
     headerShadowVisible: false,

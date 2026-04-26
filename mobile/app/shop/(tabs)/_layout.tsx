@@ -3,7 +3,6 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-import { OwnerTabHeaderBackground } from "@/components/BrandHeaderGradient";
 import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
 
@@ -17,9 +16,8 @@ export default function ShopTabsLayout(): React.ReactElement {
       screenOptions={{
         tabBarActiveTintColor: theme.primaryMid,
         tabBarInactiveTintColor: theme.mutedLight,
-        headerTransparent: true,
-        headerBackground: () => <OwnerTabHeaderBackground />,
-        headerStyle: { backgroundColor: "transparent" },
+        headerTransparent: false,
+        headerStyle: { backgroundColor: theme.primary },
         headerTintColor: "#fff",
         headerTitleStyle: { color: "#fff", fontWeight: "700" },
         headerShadowVisible: false,

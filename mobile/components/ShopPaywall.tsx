@@ -65,7 +65,6 @@ export function ShopPaywall(): React.ReactElement {
 
   return (
     <ScrollView contentContainerStyle={styles.screen}>
-      <Text style={styles.title}>{t("paywallTitle")}</Text>
       <Text style={styles.subtitle}>{t("paywallSubtitle")}</Text>
       {__DEV__ ? (
         <Text style={styles.hint}>Entitlement id: {SHOP_ENTITLEMENT_ID}</Text>

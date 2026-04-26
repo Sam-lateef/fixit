@@ -1,4 +1,3 @@
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -40,7 +39,6 @@ type UserMe = {
 };
 
 export default function OwnerProfileScreen(): React.ReactElement {
-  const headerHeight = useHeaderHeight();
   const { t, locale, setLocale } = useI18n();
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [user, setUser] = useState<UserMe | null>(null);
@@ -260,7 +258,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
     <>
       <ScrollView
         style={styles.scrollRoot}
-        contentContainerStyle={[styles.scroll, { paddingTop: headerHeight + 8 }]}
+        contentContainerStyle={styles.scroll}
       >
         <View style={[styles.sectionCard, styles.sectionCardFirst]}>
           <View style={styles.fieldBlock}>
