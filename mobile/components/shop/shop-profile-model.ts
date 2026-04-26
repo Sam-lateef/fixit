@@ -27,6 +27,6 @@ export type ShopProfilePayload = {
     phone: string | null;
     city: string | null;
     address: string | null;
-    district: { name: string; nameAr: string } | null;
+    district: { id: string; name: string; nameAr: string; city: string } | null;
   };
 };

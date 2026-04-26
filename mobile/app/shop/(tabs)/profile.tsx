@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   Keyboard,
+  KeyboardAvoidingView,
   Linking,
   Modal,
   Platform,
@@ -22,6 +23,7 @@ import type { ShopProfilePayload } from "@/components/shop/shop-profile-model";
 import { ShopServiceOverview } from "@/components/shop/ShopServiceOverview";
 import { useSubscription } from "@/hooks/useSubscription";
 import { apiFetch } from "@/lib/api";
+import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { openAppNotificationSettings } from "@/lib/push-notifications";
 import { promptDeleteAccount } from "@/lib/delete-account";
 import { isValidWhatsappE164 } from "@/lib/whatsapp-e164";
@@ -30,6 +32,7 @@ import { signOutFromApp } from "@/lib/sign-out";
 import { useI18n } from "@/lib/i18n";
 import type { LocaleId, StringKey } from "@/lib/strings";
 import {
+  IRAQ_OWNER_CITIES,
   ownerCityLabel,
   partsCategoryLabel,
   repairCategoryLabel,
@@ -148,6 +151,17 @@ export default function ShopProfileScreen(): React.ReactElement {
   const [makeSearchQuery, setMakeSearchQuery] = useState("");
   const [yearMinDraft, setYearMinDraft] = useState("");
   const [yearMaxDraft, setYearMaxDraft] = useState("");
+  // Location editor state
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [editCity, setEditCity] = useState("");
+  const [editDistrictId, setEditDistrictId] = useState<string | null>(null);
+  const [editAddress, setEditAddress] = useState("");
+  const [editDistricts, setEditDistricts] = useState<
+    { id: string; name: string; nameAr: string; city: string }[]
+  >([]);
+  const [editDistrictsLoading, setEditDistrictsLoading] = useState(false);
+  const [editCityPickerOpen, setEditCityPickerOpen] = useState(false);
+  const [editDistrictPickerOpen, setEditDistrictPickerOpen] = useState(false);
 
   const load = useCallback(async () => {
     shopDevLog("GET /api/v1/shops/me start");
@@ -254,6 +268,75 @@ export default function ShopProfileScreen(): React.ReactElement {
       setYearMaxDraft(yt != null ? String(yt) : "");
     }
     setEditSection(section);
+  };
+
+  const openLocationEdit = (): void => {
+    if (!shop) return;
+    setEditCity(shop.user.city ?? "");
+    setEditDistrictId(shop.user.district?.id ?? null);
+    setEditAddress(shop.user.address ?? "");
+    setLocationModalOpen(true);
+  };
+
+  // Load district list when city changes inside the location editor.
+  useEffect(() => {
+    if (!locationModalOpen || !editCity) {
+      setEditDistricts([]);
+      return;
+    }
+    setEditDistrictsLoading(true);
+    void (async () => {
+      try {
+        const list = await fetchDistrictsForCity(editCity);
+        setEditDistricts(list);
+        // If the current selected district doesn't belong to this city, clear it.
+        if (
+          editDistrictId &&
+          !list.some((d) => d.id === editDistrictId)
+        ) {
+          setEditDistrictId(null);
+        }
+      } catch {
+        setEditDistricts([]);
+      } finally {
+        setEditDistrictsLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationModalOpen, editCity]);
+
+  const saveLocationEdit = (): void => {
+    if (!shop) return;
+    if (!editCity) {
+      Alert.alert(t("errorTitle"), t("city"));
+      return;
+    }
+    if (!editDistrictId) {
+      Alert.alert(t("errorTitle"), t("pickDistrict"));
+      return;
+    }
+    setSaving(true);
+    void (async () => {
+      try {
+        await apiFetch("/api/v1/users/me", {
+          method: "PUT",
+          body: JSON.stringify({
+            city: editCity,
+            districtId: editDistrictId,
+            address: editAddress.trim(),
+          }),
+        });
+        setLocationModalOpen(false);
+        await load();
+      } catch (e) {
+        Alert.alert(
+          t("errorTitle"),
+          e instanceof Error ? e.message : t("updateFailed"),
+        );
+      } finally {
+        setSaving(false);
+      }
+    })();
   };
 
   const togglePending = (item: string): void => {
@@ -547,16 +630,14 @@ export default function ShopProfileScreen(): React.ReactElement {
               autoCorrect={false}
               returnKeyType="done"
             />
-            {locationText.length > 0 ? (
-              <>
-                <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
-                  {t("city")} · {t("district")}
-                </Text>
-                <Text style={styles.fieldStatic} numberOfLines={3}>
-                  {locationText}
-                </Text>
-              </>
-            ) : null}
+            <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
+              {t("city")} · {t("district")}
+            </Text>
+            <Pressable onPress={openLocationEdit}>
+              <Text style={styles.fieldStatic} numberOfLines={3}>
+                {locationText.length > 0 ? `${locationText}  ›` : `${t("pickDistrict")}  ›`}
+              </Text>
+            </Pressable>
             {shop.user.address?.trim() ? (
               <>
                 <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
@@ -667,18 +748,6 @@ export default function ShopProfileScreen(): React.ReactElement {
           </Pressable>
         </View>
 
-        <Pressable
-          style={styles.deleteAccountCard}
-          disabled={deleteBusy || saving}
-          onPress={() => promptDeleteAccount(t, setLocale, setDeleteBusy)}
-        >
-          {deleteBusy ? (
-            <ActivityIndicator color={theme.danger} />
-          ) : (
-            <Text style={styles.deleteAccountText}>{t("deleteAccount")}</Text>
-          )}
-        </Pressable>
-
         {/* Logout */}
         <Pressable
           style={styles.logoutCard}
@@ -690,6 +759,18 @@ export default function ShopProfileScreen(): React.ReactElement {
           }}
         >
           <Text style={styles.logoutText}>{t("logout")}</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.deleteAccountCard}
+          disabled={deleteBusy || saving}
+          onPress={() => promptDeleteAccount(t, setLocale, setDeleteBusy)}
+        >
+          {deleteBusy ? (
+            <ActivityIndicator color={theme.danger} />
+          ) : (
+            <Text style={styles.deleteAccountText}>{t("deleteAccount")}</Text>
+          )}
         </Pressable>
       </ScrollView>
 
@@ -755,6 +836,124 @@ export default function ShopProfileScreen(): React.ReactElement {
         onRequestClose={() => setServicePicker(null)}
         cancelLabel={t("cancel")}
         busy={false}
+      />
+
+      {/* Location edit modal */}
+      <Modal
+        visible={locationModalOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setLocationModalOpen(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={0}
+        >
+          <SafeAreaView style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {t("city")} · {t("district")}
+              </Text>
+              <Pressable onPress={() => setLocationModalOpen(false)} hitSlop={8}>
+                <Text style={styles.modalClose}>✕</Text>
+              </Pressable>
+            </View>
+
+            <ScrollView
+              style={styles.locationModalScroll}
+              contentContainerStyle={styles.locationModalBody}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text style={styles.locationFieldLabel}>{t("city")}</Text>
+              <Pressable
+                style={styles.locationSelectInput}
+                onPress={() => setEditCityPickerOpen(true)}
+              >
+                <Text style={editCity ? styles.locationSelectValue : styles.locationSelectPlaceholder}>
+                  {editCity ? `${ownerCityLabel(editCity, locale)}  ›` : `${t("city")}  ›`}
+                </Text>
+              </Pressable>
+
+              <Text style={[styles.locationFieldLabel, styles.locationFieldSpaced]}>
+                {t("district")}
+              </Text>
+              {editDistrictsLoading ? (
+                <View style={styles.locationLoading}>
+                  <ActivityIndicator size="small" color={theme.primaryMid} />
+                </View>
+              ) : (
+                <Pressable
+                  style={[styles.locationSelectInput, !editCity && styles.locationSelectDisabled]}
+                  disabled={!editCity || editDistricts.length === 0}
+                  onPress={() => setEditDistrictPickerOpen(true)}
+                >
+                  <Text style={editDistrictId ? styles.locationSelectValue : styles.locationSelectPlaceholder}>
+                    {(() => {
+                      if (!editDistrictId) return `${t("pickDistrict")}  ›`;
+                      const d = editDistricts.find((x) => x.id === editDistrictId);
+                      if (!d) return `${t("pickDistrict")}  ›`;
+                      return `${locale === "ar-iq" && d.nameAr ? d.nameAr : d.name}  ›`;
+                    })()}
+                  </Text>
+                </Pressable>
+              )}
+
+              <Text style={[styles.locationFieldLabel, styles.locationFieldSpaced]}>
+                {t("address")}
+              </Text>
+              <TextInput
+                style={styles.locationInput}
+                value={editAddress}
+                onChangeText={setEditAddress}
+                placeholder={t("address")}
+                placeholderTextColor={theme.mutedLight}
+                multiline
+                maxLength={500}
+              />
+            </ScrollView>
+
+            <Pressable
+              style={[styles.modalSaveBtn, saving && styles.modalSaveBtnDisabled]}
+              onPress={saveLocationEdit}
+              disabled={saving}
+            >
+              <Text style={styles.modalSaveBtnText}>{t("save")}</Text>
+            </Pressable>
+          </SafeAreaView>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <SearchablePickerModal
+        visible={editCityPickerOpen}
+        title={t("city")}
+        items={IRAQ_OWNER_CITIES.map((c) => ({
+          id: c,
+          label: ownerCityLabel(c, locale),
+        }))}
+        onSelect={(id) => {
+          setEditCity(id);
+          setEditCityPickerOpen(false);
+        }}
+        onRequestClose={() => setEditCityPickerOpen(false)}
+        cancelLabel={t("cancel")}
+        searchPlaceholder={t("search")}
+      />
+
+      <SearchablePickerModal
+        visible={editDistrictPickerOpen}
+        title={t("district")}
+        items={editDistricts.map((d) => ({
+          id: d.id,
+          label: locale === "ar-iq" && d.nameAr ? d.nameAr : d.name,
+        }))}
+        onSelect={(id) => {
+          setEditDistrictId(id);
+          setEditDistrictPickerOpen(false);
+        }}
+        onRequestClose={() => setEditDistrictPickerOpen(false)}
+        cancelLabel={t("cancel")}
+        searchPlaceholder={t("search")}
       />
 
       {/* Edit chip picker modal */}
@@ -1108,4 +1307,41 @@ const styles = StyleSheet.create({
   },
   modalSaveBtnDisabled: { opacity: 0.6 },
   modalSaveBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+
+  // Location editor modal
+  locationModalScroll: { maxHeight: "80%" },
+  locationModalBody: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 16 },
+  locationFieldLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: theme.muted,
+    marginBottom: 6,
+    textAlign: "left",
+  },
+  locationFieldSpaced: { marginTop: 16 },
+  locationSelectInput: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: theme.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: theme.surface,
+  },
+  locationSelectDisabled: { opacity: 0.55 },
+  locationSelectValue: { fontSize: 16, color: theme.text, textAlign: "left" },
+  locationSelectPlaceholder: { fontSize: 16, color: theme.mutedLight, textAlign: "left" },
+  locationLoading: { paddingVertical: 16, alignItems: "center" },
+  locationInput: {
+    minHeight: 80,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: theme.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: theme.text,
+    textAlignVertical: "top",
+    textAlign: "left",
+    backgroundColor: theme.surface,
+  },
 });

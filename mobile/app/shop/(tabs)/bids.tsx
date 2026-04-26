@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 
+import { PostRemoteImage } from "@/components/PostRemoteImage";
 import { ShopPremiumGate } from "@/components/ShopPremiumGate";
 import { apiFetch, formatIqd } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -28,6 +29,7 @@ type BidRow = {
     status: string;
     carMake: string | null;
     carYear: number | null;
+    photoUrls: string[];
   };
 };
 
@@ -45,7 +47,7 @@ function statusTag(
 }
 
 export default function ShopBidsScreen(): React.ReactElement {
-  const { t } = useI18n();
+  const { t, isRtl } = useI18n();
   const [bids, setBids] = useState<BidRow[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -109,36 +111,67 @@ export default function ShopBidsScreen(): React.ReactElement {
         }
         renderItem={({ item: b }) => {
           const tag = statusTag(b.status, t);
+          const photo = b.post.photoUrls?.[0];
           return (
             <View style={styles.card}>
-              <View style={styles.row}>
-                <Text style={styles.type}>
-                  {b.post.serviceType === "REPAIR"
-                    ? t("repair")
-                    : b.post.serviceType === "PARTS"
-                      ? t("parts")
-                      : t("towing")}
-                </Text>
-                <View style={[styles.badge, { backgroundColor: tag.bg }]}>
-                  <Text style={[styles.badgeText, { color: tag.fg }]}>
-                    {tag.label}
-                  </Text>
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: `/shop/bid/${b.post.id}` as Href,
+                    params: {
+                      view: "1",
+                      bidId: b.id,
+                      initialPrice: String(b.priceEstimate),
+                      initialMessage: b.message ?? "",
+                    },
+                  } as never)
+                }
+                style={({ pressed }) => [
+                  styles.cardBody,
+                  pressed && styles.cardBodyPressed,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.headerRow,
+                    isRtl && styles.headerRowRtl,
+                  ]}
+                >
+                  {photo ? (
+                    <PostRemoteImage uri={photo.trim()} style={styles.thumb} />
+                  ) : null}
+                  <View style={styles.headerText}>
+                    <View style={styles.row}>
+                      <Text style={styles.type}>
+                        {b.post.serviceType === "REPAIR"
+                          ? t("repair")
+                          : b.post.serviceType === "PARTS"
+                            ? t("parts")
+                            : t("towing")}
+                      </Text>
+                      <View style={[styles.badge, { backgroundColor: tag.bg }]}>
+                        <Text style={[styles.badgeText, { color: tag.fg }]}>
+                          {tag.label}
+                        </Text>
+                      </View>
+                    </View>
+                    {(b.post.carMake || b.post.carYear) ? (
+                      <Text style={styles.carInfo}>
+                        {[b.post.carMake, b.post.carYear].filter(Boolean).join(" · ")}
+                      </Text>
+                    ) : null}
+                  </View>
                 </View>
-              </View>
-              {(b.post.carMake || b.post.carYear) ? (
-                <Text style={styles.carInfo}>
-                  {[b.post.carMake, b.post.carYear].filter(Boolean).join(" · ")}
+                <Text style={styles.desc} numberOfLines={2}>
+                  {b.post.description}
                 </Text>
-              ) : null}
-              <Text style={styles.desc} numberOfLines={2}>
-                {b.post.description}
-              </Text>
-              <Text style={styles.price}>{formatIqd(b.priceEstimate)}</Text>
-              {b.message ? (
-                <Text style={styles.msg} numberOfLines={2}>
-                  {b.message}
-                </Text>
-              ) : null}
+                <Text style={styles.price}>{formatIqd(b.priceEstimate)}</Text>
+                {b.message ? (
+                  <Text style={styles.msg} numberOfLines={2}>
+                    {b.message}
+                  </Text>
+                ) : null}
+              </Pressable>
               <View style={styles.actions}>
                 {b.status === "PENDING" ? (
                   <>
@@ -206,11 +239,24 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.surface,
     borderRadius: theme.radiusLg,
-    padding: 14,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: theme.border,
+    overflow: "hidden",
   },
+  cardBody: { padding: 14 },
+  cardBodyPressed: { opacity: 0.7 },
+  headerRow: { flexDirection: "row", gap: 12 },
+  // Under RTL, RN auto-flips "row" to right-to-left visually. Use "row-reverse"
+  // there to keep the photo on the left so it doesn't compete with Arabic text.
+  headerRowRtl: { flexDirection: "row-reverse" },
+  thumb: {
+    width: 64,
+    height: 64,
+    borderRadius: theme.radiusMd,
+    backgroundColor: theme.chip,
+  },
+  headerText: { flex: 1, justifyContent: "center" },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -223,7 +269,13 @@ const styles = StyleSheet.create({
   desc: { marginTop: 8, color: theme.muted, fontSize: 14 },
   price: { marginTop: 8, fontWeight: "700", color: theme.text, fontSize: 16 },
   msg: { marginTop: 4, color: theme.muted, fontSize: 13 },
-  actions: { flexDirection: "row", gap: 8, marginTop: 10 },
+  actions: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+    paddingTop: 4,
+  },
   actionBtn: {
     paddingVertical: 8,
     paddingHorizontal: 14,

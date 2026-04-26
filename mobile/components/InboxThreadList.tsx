@@ -11,6 +11,10 @@ import {
 
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import {
+  partsCategoryLabel,
+  repairCategoryLabel,
+} from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
 
 export type InboxThreadListProps = {
@@ -22,7 +26,16 @@ type ThreadRow = {
   id: string;
   updatedAt: string;
   bid: {
-    post: { description: string; userId: string };
+    post: {
+      description: string;
+      userId: string;
+      serviceType: string;
+      repairCategory: string | null;
+      partsCategory: string | null;
+      carMake: string | null;
+      carModel: string | null;
+      carYear: number | null;
+    };
     shop: { name: string; userId: string };
   };
   lastMessage: { content: string; createdAt: string; senderId: string } | null;
@@ -42,7 +55,7 @@ function formatThreadTime(iso: string): string {
 
 export function InboxThreadList(props: InboxThreadListProps): React.ReactElement {
   const contentTopInset = props.contentTopInset ?? 0;
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [threads, setThreads] = useState<ThreadRow[]>([]);
   const [myUserId, setMyUserId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -101,6 +114,28 @@ export function InboxThreadList(props: InboxThreadListProps): React.ReactElement
             ? formatThreadTime(item.updatedAt)
             : "";
         const hasUnread = (item.unreadCount ?? 0) > 0;
+
+        const categoryLabel = (() => {
+          const svc = item.bid.post.serviceType.toUpperCase();
+          if (svc === "REPAIR" && item.bid.post.repairCategory) {
+            return repairCategoryLabel(item.bid.post.repairCategory, locale);
+          }
+          if (svc === "PARTS" && item.bid.post.partsCategory) {
+            return partsCategoryLabel(item.bid.post.partsCategory, locale);
+          }
+          if (svc === "TOWING") return t("towing");
+          return null;
+        })();
+        const carLabel = [
+          item.bid.post.carMake,
+          item.bid.post.carModel,
+          item.bid.post.carYear,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+        const subtitleParts = [categoryLabel, carLabel || null].filter(Boolean);
+        const subtitle = subtitleParts.length > 0 ? subtitleParts.join(" · ") : null;
         return (
           <Pressable
             style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
@@ -123,6 +158,11 @@ export function InboxThreadList(props: InboxThreadListProps): React.ReactElement
                 </Text>
                 <Text style={styles.time}>{timeStr}</Text>
               </View>
+              {subtitle ? (
+                <Text style={styles.subtitle} numberOfLines={1}>
+                  {subtitle}
+                </Text>
+              ) : null}
               <View style={styles.bottomRow}>
                 <Text style={[styles.preview, hasUnread && styles.previewUnread]} numberOfLines={1}>
                   {preview}
@@ -176,6 +216,13 @@ const styles = StyleSheet.create({
   title: { fontWeight: "600", color: theme.text, fontSize: 15, flex: 1, marginRight: 8, textAlign: "left" },
   titleUnread: { fontWeight: "700" },
   time: { fontSize: 12, color: theme.mutedLight, flexShrink: 0, textAlign: "left" },
+  subtitle: {
+    fontSize: 13,
+    color: theme.primary,
+    fontWeight: "600",
+    marginTop: 2,
+    textAlign: "left",
+  },
   bottomRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 3 },
   preview: { fontSize: 14, color: theme.muted, flex: 1, marginRight: 8, textAlign: "left" },
   previewUnread: { color: theme.text },
