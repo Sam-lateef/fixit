@@ -34,9 +34,27 @@ export default function ShopAreaStep(): React.ReactElement {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
+  function parseSignupYear(value: unknown): number | undefined {
+    if (typeof value !== "string") {
+      return undefined;
+    }
+    const t = value.trim();
+    if (t.length === 0) {
+      return undefined;
+    }
+    const n = parseInt(t, 10);
+    if (Number.isNaN(n)) {
+      return undefined;
+    }
+    return n;
+  }
+
   function handleCreate(): void {
     setErr("");
     setBusy(true);
+
+    const carYearMin = parseSignupYear(prev.yearFrom);
+    const carYearMax = parseSignupYear(prev.yearTo);
 
     const body = {
       name: prev.shopName,
@@ -45,8 +63,8 @@ export default function ShopAreaStep(): React.ReactElement {
       offersParts,
       offersTowing,
       carMakes: (prev.makes as string[]) ?? [],
-      yearFrom: (prev.yearFrom as string) || undefined,
-      yearTo: (prev.yearTo as string) || undefined,
+      carYearMin,
+      carYearMax,
       repairCategories: offersRepair
         ? (prev.repairCategories as string[]) ?? []
         : [],

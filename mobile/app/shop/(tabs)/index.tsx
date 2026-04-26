@@ -1,10 +1,10 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { router, type Href } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  FlatList,
   Pressable,
   RefreshControl,
+  SectionList,
   StyleSheet,
   Text,
   View,
@@ -71,6 +71,13 @@ type ShopMe = {
   offersTowing: boolean;
 };
 
+type FeedSection = {
+  key: string;
+  title: string;
+  hint?: string;
+  data: Post[];
+};
+
 type FilterTab = "ALL" | "REPAIR" | "PARTS" | "TOWING";
 
 function serviceTagStyle(type: string): { bg: string; fg: string } {
@@ -106,21 +113,64 @@ export default function ShopFeedScreen(): React.ReactElement {
   const [shopId, setShopId] = useState<string | null>(null);
   const [shop, setShop] = useState<ShopMe | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [morePosts, setMorePosts] = useState<Post[]>([]);
+  const [moreCity, setMoreCity] = useState<string | null>(null);
+  const [moreHasNational, setMoreHasNational] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterTab>("ALL");
+  const [loadError, setLoadError] = useState("");
 
-  const load = useCallback(async (activeFilter: FilterTab) => {
-    try {
-      const { shop: s } = await apiFetch<{ shop: ShopMe }>("/api/v1/shops/me");
-      setShopId(s.id);
-      setShop(s);
-      const query = activeFilter === "ALL" ? "" : `?serviceType=${activeFilter}`;
-      const { posts: list } = await apiFetch<{ posts: Post[] }>(`/api/v1/feed${query}`);
-      setPosts(list);
-    } catch {
-      /* stay empty when API is unreachable */
-    }
-  }, []);
+  const load = useCallback(
+    async (activeFilter: FilterTab) => {
+      setLoadError("");
+      try {
+        const { shop: s } = await apiFetch<{ shop: ShopMe }>("/api/v1/shops/me");
+        setShopId(s.id);
+        setShop(s);
+      } catch (e) {
+        setShopId(null);
+        setShop(null);
+        setPosts([]);
+        setMorePosts([]);
+        setMoreCity(null);
+        setMoreHasNational(false);
+        setLoadError(
+          e instanceof Error && e.message.trim().length > 0
+            ? e.message
+            : t("feedCouldNotLoad"),
+        );
+        return;
+      }
+      try {
+        const query = activeFilter === "ALL" ? "" : `?serviceType=${activeFilter}`;
+        const res = await apiFetch<{
+          posts: Post[] | undefined;
+          morePosts?: Post[];
+          moreCity?: string | null;
+          moreHasNational?: boolean;
+        }>(`/api/v1/feed${query}`);
+        setPosts(Array.isArray(res.posts) ? res.posts : []);
+        setMorePosts(Array.isArray(res.morePosts) ? res.morePosts : []);
+        setMoreCity(
+          typeof res.moreCity === "string" && res.moreCity.trim().length > 0
+            ? res.moreCity.trim()
+            : null,
+        );
+        setMoreHasNational(res.moreHasNational === true);
+      } catch (e) {
+        setPosts([]);
+        setMorePosts([]);
+        setMoreCity(null);
+        setMoreHasNational(false);
+        setLoadError(
+          e instanceof Error && e.message.trim().length > 0
+            ? e.message
+            : t("feedCouldNotLoad"),
+        );
+      }
+    },
+    [t],
+  );
 
   useEffect(() => {
     void load(filter);
@@ -158,12 +208,35 @@ export default function ShopFeedScreen(): React.ReactElement {
     return null;
   };
 
+  const sections: FeedSection[] = useMemo(() => {
+    const out: FeedSection[] = [{ key: "matched", title: t("feedForYou"), data: posts }];
+    if (morePosts.length > 0) {
+      const moreTitle =
+        moreCity !== null
+          ? t("feedMoreSectionTitle").replace(/\{\{city\}\}/g, moreCity)
+          : t("feedMoreNationalTitle");
+      const moreHint = moreHasNational
+        ? t("feedMoreSectionHintNational")
+        : t("feedMoreSectionHint");
+      out.push({
+        key: "more",
+        title: moreTitle,
+        hint: moreHint,
+        data: morePosts,
+      });
+    }
+    return out;
+  }, [posts, morePosts, moreCity, moreHasNational, t]);
+
   return (
     <ShopPremiumGate>
-      <FlatList
-        data={posts}
+      <View style={styles.screenRoot}>
+      <SectionList
+        style={styles.listFlex}
+        sections={sections}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -184,10 +257,35 @@ export default function ShopFeedScreen(): React.ReactElement {
             </View>
           </View>
         }
+        renderSectionHeader={({ section: sec }) => {
+          if (sec.key === "matched" && morePosts.length === 0) {
+            return null;
+          }
+          return (
+            <View style={styles.sectionHeaderWrap}>
+              <Text style={styles.sectionHeaderTitle}>{sec.title}</Text>
+              {sec.hint != null && sec.hint.length > 0 ? (
+                <Text style={styles.sectionHeaderHint}>{sec.hint}</Text>
+              ) : null}
+            </View>
+          );
+        }}
+        renderSectionFooter={({ section: sec }) => {
+          if (sec.key === "matched" && sec.data.length === 0 && morePosts.length > 0) {
+            return <Text style={styles.sectionFooterEmpty}>{t("feedNoMatchingPosts")}</Text>;
+          }
+          if (sec.key === "more" && sec.data.length === 0) {
+            return <Text style={styles.sectionFooterEmpty}>{t("feedMoreEmpty")}</Text>;
+          }
+          return null;
+        }}
         ListEmptyComponent={
-          <Text style={styles.empty}>{t("noPosts")}</Text>
+          <Text style={[styles.empty, loadError ? styles.emptyError : null]}>
+            {loadError.length > 0 ? loadError : t("noPosts")}
+          </Text>
         }
-        renderItem={({ item: p }) => {
+        renderItem={({ item: p, section }) => {
+          const inMoreSection = section.key === "more";
           const hasBid = shopId !== null && p.bids.some((b) => b.shopId === shopId);
           const tag = serviceTagStyle(p.serviceType);
           const cat = categoryLabel(p);
@@ -200,7 +298,13 @@ export default function ShopFeedScreen(): React.ReactElement {
           };
 
           return (
-            <View style={[styles.card, hasBid && styles.cardDimmed]}>
+            <View
+              style={[
+                styles.card,
+                hasBid && styles.cardDimmed,
+                inMoreSection && styles.cardMore,
+              ]}
+            >
               <Pressable onPress={openBid}>
               {/* Top row: service tag + badges + distance */}
               <View style={styles.cardTopRow}>
@@ -310,12 +414,39 @@ export default function ShopFeedScreen(): React.ReactElement {
           );
         }}
       />
+      </View>
     </ShopPremiumGate>
   );
 }
 
 const styles = StyleSheet.create({
+  screenRoot: { flex: 1, backgroundColor: theme.bg },
+  /** SectionList must fill the tab or rows never get a scroll viewport (Android). */
+  listFlex: { flex: 1 },
   list: { padding: 16, paddingBottom: 32, backgroundColor: theme.bg },
+
+  sectionHeaderWrap: {
+    marginTop: 8,
+    marginBottom: 10,
+    paddingTop: 4,
+  },
+  sectionHeaderTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: theme.text,
+  },
+  sectionHeaderHint: {
+    fontSize: 12,
+    color: theme.muted,
+    marginTop: 4,
+    lineHeight: 17,
+  },
+  sectionFooterEmpty: {
+    fontSize: 13,
+    color: theme.muted,
+    marginBottom: 14,
+    fontStyle: "italic",
+  },
 
   categoryBanner: {
     backgroundColor: theme.primaryLight,
@@ -339,6 +470,7 @@ const styles = StyleSheet.create({
   tabTextActive: { color: "#fff" },
 
   empty: { color: theme.muted, marginTop: 24, textAlign: "center" },
+  emptyError: { color: theme.danger, fontWeight: "600" },
 
   card: {
     backgroundColor: theme.surface,
@@ -347,6 +479,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: theme.border,
+  },
+  cardMore: {
+    borderLeftWidth: 3,
+    borderLeftColor: theme.primaryMid,
+    backgroundColor: "rgba(46, 125, 50, 0.04)",
   },
   cardTopRow: {
     flexDirection: "row",

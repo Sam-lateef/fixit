@@ -81,6 +81,17 @@ export const en = {
   loading: "Loading…",
   search: "Search",
   noPosts: "No posts yet.",
+  feedCouldNotLoad: "Could not load requests. Check connection and pull to retry.",
+  feedForYou: "Your matches",
+  feedMoreSectionTitle: "More · {{city}}",
+  feedMoreSectionHint:
+    "Same city: outside your filters or radius. You may not be able to bid on every item.",
+  feedMoreSectionHintNational:
+    "Includes requests in other cities when your area has fewer open posts.",
+  feedMoreNationalTitle: "More requests",
+  feedMoreEmpty: "No other requests in this city right now.",
+  feedNoMatchingPosts: "Nothing matches your filters yet — check More below.",
+  carYearsInvalid: "Use years 1950–2035, “from” ≤ “to”, or leave fields blank.",
   pickDistrict: "Pick a district",
   pickCityFirst: "Choose your city above, then tap your district.",
   districtOtherHint:
@@ -321,6 +332,17 @@ export const arIq: Record<keyof typeof en, string> = {
   loading: "جاري التحميل…",
   search: "بحث",
   noPosts: "لا توجد طلبات بعد.",
+  feedCouldNotLoad: "تعذّر تحميل الطلبات. تحقق من الاتصال واسحب للتحديث.",
+  feedForYou: "طلبات تطابق فلاترك",
+  feedMoreSectionTitle: "المزيد · {{city}}",
+  feedMoreSectionHint:
+    "نفس المحافظة: خارج فلاترك أو نطاق الخدمة. قد لا يكون كل طلب متاحاً للمزايدة.",
+  feedMoreSectionHintNational:
+    "قد تُعرض طلبات من محافظات أخرى عندما يكون عدد الطلبات المفتوحة قليلاً في منطقتك.",
+  feedMoreNationalTitle: "المزيد من الطلبات",
+  feedMoreEmpty: "لا توجد طلبات أخرى في هذه المحافظة حالياً.",
+  feedNoMatchingPosts: "لا شيء يطابق فلاترك حالياً — انظر «المزيد» أدناه.",
+  carYearsInvalid: "أدخل سنوات بين 1950 و2035، «من» أصغر أو يساوي «إلى»، أو اترك الحقلين فارغين.",
   pickDistrict: "اختر المنطقة",
   pickCityFirst: "اختر المحافظة أعلاه، ثم اضغط منطقتك.",
   districtOtherHint:

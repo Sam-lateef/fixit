@@ -53,9 +53,16 @@ const coverImageUrlSchema = z
   .union([z.string().max(2048), z.null()])
   .optional();
 
+const yearFieldUpdate = z
+  .union([z.number().int().min(1950).max(2035), z.null()])
+  .optional();
+
 const updateShopSchema = createShopSchema.partial().extend({
   name: z.string().min(1).max(120).optional(),
   coverImageUrl: coverImageUrlSchema,
+  /** Allow null on PATCH to clear year filters (partial() alone rejects null). */
+  carYearMin: yearFieldUpdate,
+  carYearMax: yearFieldUpdate,
 });
 
 export async function registerShopRoutes(fastify: FastifyInstance): Promise<void> {

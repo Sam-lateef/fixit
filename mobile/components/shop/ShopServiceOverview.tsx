@@ -55,7 +55,7 @@ export function ShopServiceOverview(props: ShopServiceOverviewProps): ReactEleme
 
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t("carMakes")}</Text>
+          <Text style={styles.sectionTitle}>{t("carMakesYears")}</Text>
           {!readOnly && props.onEditMakes ? (
             <Pressable onPress={props.onEditMakes}>
               <Text style={styles.editLink}>{t("editCategories")}</Text>

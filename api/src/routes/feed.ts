@@ -2,7 +2,11 @@ import type { FastifyInstance } from "fastify";
 import { ServiceType } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../db/prisma.js";
-import { filterPostsForShop } from "../services/feed-filter.js";
+import {
+  buildMoreFeedEntries,
+  filterPostsForShop,
+  resolveShopCityForFeed,
+} from "../services/feed-filter.js";
 
 export async function registerFeedRoutes(
   fastify: FastifyInstance,
@@ -19,6 +23,8 @@ export async function registerFeedRoutes(
           serviceType: z.nativeEnum(ServiceType).optional(),
           page: z.coerce.number().int().min(1).optional(),
           limit: z.coerce.number().int().min(1).max(50).optional(),
+          morePage: z.coerce.number().int().min(1).optional(),
+          moreLimit: z.coerce.number().int().min(1).max(50).optional(),
         })
         .safeParse(request.query);
       if (!q.success) {
@@ -26,6 +32,8 @@ export async function registerFeedRoutes(
       }
       const page = q.data.page ?? 1;
       const limit = q.data.limit ?? 20;
+      const morePage = q.data.morePage ?? 1;
+      const moreLimit = q.data.moreLimit ?? 25;
 
       const shop = await prisma.shop.findUnique({
         where: { userId: request.userId },
@@ -45,11 +53,30 @@ export async function registerFeedRoutes(
         include: { district: true, user: true, bids: true },
       });
 
-      const filtered = filterPostsForShop(shop, posts);
+      const matched = filterPostsForShop(shop, posts);
       const start = (page - 1) * limit;
-      const slice = filtered.slice(start, start + limit);
+      const slice = matched.slice(start, start + limit);
 
-      return { posts: slice };
+      const { entries: moreFull, cityMatchedCount } = buildMoreFeedEntries(
+        shop,
+        posts,
+        matched,
+      );
+      const moreStart = (morePage - 1) * moreLimit;
+      const moreSlice = moreFull.slice(moreStart, moreStart + moreLimit);
+
+      const resolvedCity = resolveShopCityForFeed(shop);
+      const moreCity = resolvedCity.length > 0 ? resolvedCity : null;
+      const moreHasNational = moreFull.length > cityMatchedCount;
+
+      return {
+        posts: slice,
+        morePosts: moreSlice,
+        matchedTotal: matched.length,
+        moreTotal: moreFull.length,
+        moreCity,
+        moreHasNational,
+      };
     },
   );
 }

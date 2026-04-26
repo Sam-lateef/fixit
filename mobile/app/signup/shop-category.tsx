@@ -1,11 +1,11 @@
 import { router, type Href } from "expo-router";
-import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useLayoutEffect, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { useI18n } from "@/lib/i18n";
 import type { ServiceCategory } from "@/lib/service-category";
-import { SERVICE_CATEGORIES } from "@/lib/service-category";
+import { SERVICE_CATEGORIES_SIGNUP_VISIBLE } from "@/lib/service-category";
 import type { StringKey } from "@/lib/strings";
 import { theme } from "@/lib/theme";
 
@@ -29,6 +29,24 @@ export default function ShopCategoryStep(): React.ReactElement {
   const { t } = useI18n();
   const [selected, setSelected] = useState<ServiceCategory | null>(null);
 
+  useLayoutEffect(() => {
+    if (SERVICE_CATEGORIES_SIGNUP_VISIBLE.length === 1) {
+      const only = SERVICE_CATEGORIES_SIGNUP_VISIBLE[0];
+      router.replace({
+        pathname: "/signup/shop" as Href,
+        params: { data: JSON.stringify({ category: only }) },
+      } as never);
+    }
+  }, []);
+
+  if (SERVICE_CATEGORIES_SIGNUP_VISIBLE.length === 1) {
+    return (
+      <View style={s.skipWrap}>
+        <ActivityIndicator size="large" color={theme.primaryMid} />
+      </View>
+    );
+  }
+
   function handleContinue(): void {
     if (!selected) return;
     router.push({
@@ -47,7 +65,7 @@ export default function ShopCategoryStep(): React.ReactElement {
       <Text style={s.sub}>{t("chooseCategorySubtitle")}</Text>
 
       <View style={s.cards}>
-        {SERVICE_CATEGORIES.map((cat) => {
+        {SERVICE_CATEGORIES_SIGNUP_VISIBLE.map((cat) => {
           const on = selected === cat;
           return (
             <Pressable
@@ -83,6 +101,12 @@ export default function ShopCategoryStep(): React.ReactElement {
 }
 
 const s = StyleSheet.create({
+  skipWrap: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: theme.surface,
+  },
   container: { padding: 20, paddingBottom: 40, backgroundColor: theme.surface },
   heading: { fontSize: 22, fontWeight: "700", color: theme.text },
   sub: { fontSize: 14, color: theme.muted, marginTop: 4, marginBottom: 4 },

@@ -95,10 +95,37 @@ function currentForSection(shop: ShopProfilePayload, section: EditSection): stri
 }
 
 function titleKeyForSection(section: EditSection): StringKey | null {
-  if (section === "makes") return "carMakes";
+  if (section === "makes") return "carMakesYears";
   if (section === "repair") return "repairCategories";
   if (section === "parts") return "partsCategories";
   return null;
+}
+
+type YearDraftParse =
+  | { ok: true; min: number | null; max: number | null }
+  | { ok: false };
+
+function parseShopYearDraft(minStr: string, maxStr: string): YearDraftParse {
+  function cell(raw: string): number | null | "invalid" {
+    const t = raw.trim();
+    if (t.length === 0) {
+      return null;
+    }
+    const n = parseInt(t, 10);
+    if (Number.isNaN(n) || n < 1950 || n > 2035) {
+      return "invalid";
+    }
+    return n;
+  }
+  const min = cell(minStr);
+  const max = cell(maxStr);
+  if (min === "invalid" || max === "invalid") {
+    return { ok: false };
+  }
+  if (min !== null && max !== null && min > max) {
+    return { ok: false };
+  }
+  return { ok: true, min, max };
 }
 
 export default function ShopProfileScreen(): React.ReactElement {
@@ -119,6 +146,8 @@ export default function ShopProfileScreen(): React.ReactElement {
   const [catalogMakes, setCatalogMakes] = useState<CatalogMake[]>([]);
   const [catalogMakesLoading, setCatalogMakesLoading] = useState(false);
   const [makeSearchQuery, setMakeSearchQuery] = useState("");
+  const [yearMinDraft, setYearMinDraft] = useState("");
+  const [yearMaxDraft, setYearMaxDraft] = useState("");
 
   const load = useCallback(async () => {
     shopDevLog("GET /api/v1/shops/me start");
@@ -218,6 +247,12 @@ export default function ShopProfileScreen(): React.ReactElement {
   const openEdit = (section: EditSection): void => {
     if (!shop) return;
     setPendingSelection(new Set(currentForSection(shop, section)));
+    if (section === "makes") {
+      const yf = shop.carYearMin ?? shop.yearFrom;
+      const yt = shop.carYearMax ?? shop.yearTo;
+      setYearMinDraft(yf != null ? String(yf) : "");
+      setYearMaxDraft(yt != null ? String(yt) : "");
+    }
     setEditSection(section);
   };
 
@@ -232,12 +267,27 @@ export default function ShopProfileScreen(): React.ReactElement {
 
   const saveEdit = (): void => {
     if (!shop || !editSection) return;
-    setSaving(true);
     const items = Array.from(pendingSelection);
+    let yearPatch: { min: number | null; max: number | null } | null = null;
+    if (editSection === "makes") {
+      const parsed = parseShopYearDraft(yearMinDraft, yearMaxDraft);
+      if (!parsed.ok) {
+        Alert.alert(t("errorTitle"), t("carYearsInvalid"));
+        return;
+      }
+      yearPatch = { min: parsed.min, max: parsed.max };
+    }
+    setSaving(true);
     void (async () => {
       try {
         const body: Record<string, unknown> = {};
-        if (editSection === "makes") body.carMakes = items;
+        if (editSection === "makes") {
+          body.carMakes = items;
+          if (yearPatch !== null) {
+            body.carYearMin = yearPatch.min;
+            body.carYearMax = yearPatch.max;
+          }
+        }
         if (editSection === "repair") body.repairCategories = items;
         if (editSection === "parts") body.partsCategories = items;
         await apiFetch("/api/v1/shops/me", {
@@ -744,7 +794,31 @@ export default function ShopProfileScreen(): React.ReactElement {
                   contentContainerStyle={styles.modalMakesScrollContent}
                   keyboardShouldPersistTaps="handled"
                 >
-                  <Text style={styles.modalSubheading}>{t("popularInIraq")}</Text>
+                  <Text style={styles.modalSubheading}>{t("yearRange")}</Text>
+                  <View style={styles.modalYearRow}>
+                    <TextInput
+                      style={styles.modalYearInput}
+                      value={yearMinDraft}
+                      onChangeText={setYearMinDraft}
+                      placeholder={t("from")}
+                      placeholderTextColor={theme.mutedLight}
+                      keyboardType="number-pad"
+                      maxLength={4}
+                    />
+                    <Text style={styles.modalYearDash}>—</Text>
+                    <TextInput
+                      style={styles.modalYearInput}
+                      value={yearMaxDraft}
+                      onChangeText={setYearMaxDraft}
+                      placeholder={t("to")}
+                      placeholderTextColor={theme.mutedLight}
+                      keyboardType="number-pad"
+                      maxLength={4}
+                    />
+                  </View>
+                  <Text style={[styles.modalSubheading, styles.modalSubheadingSpaced]}>
+                    {t("popularInIraq")}
+                  </Text>
                   <View style={styles.modalChips}>
                     {POPULAR_MAKES.map((item) => {
                       const on = pendingSelection.has(item);
@@ -962,7 +1036,27 @@ const styles = StyleSheet.create({
   },
   modalLoading: { paddingVertical: 24, alignItems: "center" },
   modalMakesScroll: { maxHeight: 360 },
-  modalMakesScrollContent: { paddingBottom: 24 },
+  modalMakesScrollContent: { paddingTop: 12, paddingBottom: 24 },
+  modalYearRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 18,
+    marginBottom: 16,
+  },
+  modalYearInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: theme.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: theme.text,
+    textAlign: "center",
+    backgroundColor: theme.bg,
+  },
+  modalYearDash: { color: theme.muted, fontSize: 18 },
   modalSubheading: {
     paddingHorizontal: 18,
     fontSize: 12,

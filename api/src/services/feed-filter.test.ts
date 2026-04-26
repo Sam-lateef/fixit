@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { filterPostsForShop } from "./feed-filter.js";
+import {
+  buildMoreFeedEntries,
+  filterPostsForShop,
+  moreFeedEntriesInShopCity,
+} from "./feed-filter.js";
 import type { PostForFeed, ShopForFeed } from "./feed-filter.js";
 
 function shop(over: Partial<ShopForFeed> = {}): ShopForFeed {
@@ -135,4 +139,139 @@ test("filterPostsForShop parts nationwide bypasses distance", () => {
   const out = filterPostsForShop(s, [p]);
   assert.equal(out.length, 1);
   assert.equal(out[0].distanceKm, null);
+});
+
+test("moreFeedEntriesInShopCity lists same-city posts not in matched", () => {
+  const s = shop({ repairRadiusKm: 50 });
+  const matchedPost = post({ id: "m1", carMake: "Toyota" });
+  const farSameCity = post({
+    id: "x1",
+    carMake: "Kia",
+    lat: 35,
+    lng: 45,
+    district: {
+      id: "d3",
+      name: "Other",
+      nameAr: "",
+      city: "Baghdad",
+      cityAr: "",
+      lat: 35,
+      lng: 45,
+    },
+  });
+  const matched = filterPostsForShop(s, [matchedPost, farSameCity]);
+  assert.equal(matched.length, 1);
+  const more = moreFeedEntriesInShopCity(s, [matchedPost, farSameCity], matched);
+  assert.equal(more.length, 1);
+  assert.equal(more[0].id, "x1");
+});
+
+test("moreFeedEntriesInShopCity is empty when city cannot be resolved", () => {
+  const base = shop();
+  const s: ShopForFeed = {
+    ...base,
+    user: {
+      ...base.user,
+      city: null,
+      district: null,
+    },
+  };
+  const p = post();
+  const matched = filterPostsForShop(s, [p]);
+  const more = moreFeedEntriesInShopCity(s, [p], matched);
+  assert.equal(more.length, 0);
+});
+
+test("moreFeedEntriesInShopCity uses district city when user.city missing", () => {
+  const base = shop();
+  const s = shop({
+    user: { ...base.user, city: null, district: base.user.district },
+    repairRadiusKm: 50,
+    carMakes: ["Toyota"],
+  });
+  const kia = post({
+    id: "k1",
+    carMake: "Kia",
+    lat: 35,
+    lng: 45,
+    district: {
+      id: "d9",
+      name: "Far",
+      nameAr: "",
+      city: "Baghdad",
+      cityAr: "",
+      lat: 35,
+      lng: 45,
+    },
+  });
+  const matched = filterPostsForShop(s, [kia]);
+  assert.equal(matched.length, 0);
+  const more = moreFeedEntriesInShopCity(s, [kia], matched);
+  assert.equal(more.length, 1);
+  assert.equal(more[0].id, "k1");
+});
+
+test("filterPostsForShop allows any repair category when shop repair list empty", () => {
+  const s = shop({ repairCategories: [] });
+  const p = post({ repairCategory: "Suspension" });
+  const out = filterPostsForShop(s, [p]);
+  assert.equal(out.length, 1);
+});
+
+test("moreFeedEntriesInShopCity matches city case-insensitively", () => {
+  const base = shop();
+  const s = shop({
+    user: { ...base.user, city: "baghdad" },
+    repairRadiusKm: 50,
+    carMakes: ["Toyota"],
+  });
+  const p = post({
+    id: "low",
+    carMake: "Kia",
+    district: { id: "d2", name: "M", nameAr: "", city: "Baghdad", cityAr: "", lat: 33.34, lng: 44.36 },
+  });
+  const matched = filterPostsForShop(s, [p]);
+  assert.equal(matched.length, 0);
+  const more = moreFeedEntriesInShopCity(s, [p], matched);
+  assert.equal(more.length, 1);
+});
+
+test("buildMoreFeedEntries fills with national posts after same-city rows", () => {
+  const s = shop({ repairRadiusKm: 1, carMakes: ["Toyota"] });
+  const baghdadKia = post({
+    id: "k1",
+    carMake: "Kia",
+    lat: 33.32,
+    lng: 44.43,
+    district: {
+      id: "d2",
+      name: "Mansour",
+      nameAr: "",
+      city: "Baghdad",
+      cityAr: "",
+      lat: 33.34,
+      lng: 44.36,
+    },
+  });
+  const basraToyota = post({
+    id: "b1",
+    carMake: "Toyota",
+    lat: 30.5,
+    lng: 47.8,
+    district: {
+      id: "bs",
+      name: "Zubayr",
+      nameAr: "",
+      city: "Basra",
+      cityAr: "",
+      lat: 30.38,
+      lng: 47.71,
+    },
+  });
+  const matched = filterPostsForShop(s, [baghdadKia, basraToyota]);
+  assert.equal(matched.length, 0);
+  const { entries, cityMatchedCount } = buildMoreFeedEntries(s, [baghdadKia, basraToyota], matched);
+  assert.equal(cityMatchedCount, 1);
+  assert.equal(entries.length, 2);
+  assert.ok(entries.some((e) => e.id === "b1"));
 });
