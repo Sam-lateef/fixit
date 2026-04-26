@@ -295,6 +295,7 @@ export async function registerPostRoutes(fastify: FastifyInstance): Promise<void
         where: { id, status: { not: "DELETED" } },
         include: {
           user: { select: { name: true } },
+          district: { select: { name: true, nameAr: true, city: true } },
           bids: { where: { status: { not: "WITHDRAWN" } }, select: { shopId: true } },
         },
       });

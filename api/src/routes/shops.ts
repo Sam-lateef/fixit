@@ -132,13 +132,18 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
       if (!shop) {
         return reply.status(404).send({ error: "Shop not found" });
       }
+      // bidsWon column was never incremented; compute live from accepted bids.
+      const bidsWon = await prisma.bid.count({
+        where: { shopId: shop.id, status: "ACCEPTED" },
+      });
       shopDebugLog(request, {
         op: "GET shops/me ok",
         shopId: shop.id,
         name: shop.name,
+        bidsWon,
         cover: coverUrlHint(shop.coverImageUrl),
       });
-      return { shop };
+      return { shop: { ...shop, bidsWon } };
     },
   );
 
@@ -157,7 +162,10 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
       if (!shop) {
         return reply.status(404).send({ error: "Shop not found" });
       }
-      return { shop };
+      const bidsWon = await prisma.bid.count({
+        where: { shopId: shop.id, status: "ACCEPTED" },
+      });
+      return { shop: { ...shop, bidsWon } };
     },
   );
 
