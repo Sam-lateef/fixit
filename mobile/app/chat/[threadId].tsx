@@ -206,7 +206,7 @@ export default function ChatThreadScreen(): React.ReactElement {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
     >
       {/* Brand green header — safe-area top padding pushes below status bar */}

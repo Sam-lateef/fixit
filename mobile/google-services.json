@@ -9,16 +9,16 @@
       "client_info": {
         "mobilesdk_app_id": "1:925833254957:android:86b7c90b3b0d6404d000a4",
         "android_client_info": {
-          "package_name": "com.fixitiq.app"
+          "package_name": "com.fixit.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "925833254957-obsthabbl3u7o4n8hn4v9mr7ggo404uc.apps.googleusercontent.com",
+          "client_id": "925833254957-j4mbmvhpshrgljua5j2uc534an20ev79.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.fixitiq.app",
-            "certificate_hash": "655a1e49fe5fc6e7462dee15b80c0929a948b63c"
+            "package_name": "com.fixit.app",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
           }
         },
         {
@@ -42,7 +42,7 @@
               "client_id": "925833254957-4de1a17l3dt2u0v2dc5fc7staobvv3t3.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.fixitiq.app"
+                "bundle_id": "com.fixit.app"
               }
             }
           ]
