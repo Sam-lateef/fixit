@@ -17,6 +17,7 @@ import { setToken } from "@/lib/auth-storage";
 import { isFirebaseClientConfigured } from "@/lib/firebase";
 import { shouldUseNativeGoogleSignIn } from "@/lib/google-oauth-redirect";
 import { useI18n } from "@/lib/i18n";
+import { registerPushToken } from "@/lib/push-notifications";
 import type { BackendAuthResponse } from "@/lib/social-auth";
 import { signInWithAppleNative } from "@/lib/social-auth";
 import { theme } from "@/lib/theme";
@@ -68,6 +69,7 @@ export default function AuthWelcomeScreen(): React.ReactElement {
   function handleGoogleSignedIn(res: BackendAuthResponse): void {
     void (async () => {
       await setToken(res.token);
+      void registerPushToken(); // fire-and-forget — don't block login
       navigateAfterLogin(res);
     })();
   }
@@ -78,6 +80,7 @@ export default function AuthWelcomeScreen(): React.ReactElement {
     try {
       const res = await signInWithAppleNative();
       await setToken(res.token);
+      void registerPushToken(); // fire-and-forget — don't block login
       navigateAfterLogin(res);
     } catch (e) {
       setErr(e instanceof Error ? e.message : t("authSignInFailed"));
