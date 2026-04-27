@@ -138,6 +138,15 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
       const bidsWon = await prisma.bid.count({
         where: { shopId: shop.id, status: "ACCEPTED" },
       });
+      // Resolve servedDistrictIds -> { id, name, nameAr, city } so the
+      // mobile profile can render actual district names (not just a count).
+      const servedDistricts =
+        shop.servedDistrictIds.length > 0
+          ? await prisma.district.findMany({
+              where: { id: { in: shop.servedDistrictIds } },
+              select: { id: true, name: true, nameAr: true, city: true },
+            })
+          : [];
       shopDebugLog(request, {
         op: "GET shops/me ok",
         shopId: shop.id,
@@ -145,7 +154,7 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
         bidsWon,
         cover: coverUrlHint(shop.coverImageUrl),
       });
-      return { shop: { ...shop, bidsWon } };
+      return { shop: { ...shop, bidsWon, servedDistricts } };
     },
   );
 
@@ -167,7 +176,14 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
       const bidsWon = await prisma.bid.count({
         where: { shopId: shop.id, status: "ACCEPTED" },
       });
-      return { shop: { ...shop, bidsWon } };
+      const servedDistricts =
+        shop.servedDistrictIds.length > 0
+          ? await prisma.district.findMany({
+              where: { id: { in: shop.servedDistrictIds } },
+              select: { id: true, name: true, nameAr: true, city: true },
+            })
+          : [];
+      return { shop: { ...shop, bidsWon, servedDistricts } };
     },
   );
 

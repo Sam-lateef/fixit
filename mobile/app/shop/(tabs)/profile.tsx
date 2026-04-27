@@ -30,6 +30,7 @@ import { ShopServiceOverview } from "@/components/shop/ShopServiceOverview";
 import { useSubscription } from "@/hooks/useSubscription";
 import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
+import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "@/lib/legal-public-urls";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { openAppNotificationSettings } from "@/lib/push-notifications";
 import { promptDeleteAccount } from "@/lib/delete-account";
@@ -783,11 +784,27 @@ export default function ShopProfileScreen(): React.ReactElement {
               {t("servedDistricts")}
             </Text>
             <Pressable onPress={openServedEdit} hitSlop={8}>
-              <Text style={styles.fieldStatic} numberOfLines={2}>
-                {shop.servedDistrictIds.length > 0
-                  ? `${shop.servedDistrictIds.length}  ›`
-                  : `${t("servedDistrictsAny")}  ›`}
-              </Text>
+              {shop.servedDistrictIds.length === 0 ||
+              shop.servedDistricts.length === 0 ? (
+                <Text style={styles.fieldStatic}>
+                  {shop.servedDistrictIds.length === 0
+                    ? `${t("servedDistrictsAny")}  ›`
+                    : `${shop.servedDistrictIds.length}  ›`}
+                </Text>
+              ) : (
+                <View style={styles.servedChipRow}>
+                  {shop.servedDistricts.map((d) => {
+                    const label =
+                      locale === "ar-iq" && d.nameAr ? d.nameAr : d.name;
+                    return (
+                      <View key={d.id} style={styles.servedChip}>
+                        <Text style={styles.servedChipText}>{label}</Text>
+                      </View>
+                    );
+                  })}
+                  <Text style={styles.servedChevron}>›</Text>
+                </View>
+              )}
             </Pressable>
           </View>
         ) : null}
@@ -876,7 +893,7 @@ export default function ShopProfileScreen(): React.ReactElement {
         <View style={styles.sectionCard}>
           <Pressable
             style={styles.settingRow}
-            onPress={() => void Linking.openURL("https://fixitiq.com/privacy")}
+            onPress={() => void Linking.openURL(LEGAL_PRIVACY_URL)}
           >
             <Text style={styles.settingLabel}>{t("privacyPolicy")}</Text>
             <Text style={styles.settingChevron}>›</Text>
@@ -884,7 +901,7 @@ export default function ShopProfileScreen(): React.ReactElement {
           <View style={styles.settingDivider} />
           <Pressable
             style={styles.settingRow}
-            onPress={() => void Linking.openURL("https://fixitiq.com/terms")}
+            onPress={() => void Linking.openURL(LEGAL_TERMS_URL)}
           >
             <Text style={styles.settingLabel}>{t("termsOfService")}</Text>
             <Text style={styles.settingChevron}>›</Text>
@@ -1620,6 +1637,23 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     textAlign: "left",
   },
+  // Served-districts read-only chip row (matches ShopServiceOverview's chip
+  // styling — small, light gray pills).
+  servedChipRow: {
+    marginTop: 6,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 8,
+  },
+  servedChip: {
+    backgroundColor: theme.chip,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  servedChipText: { fontSize: 13, color: theme.text, fontWeight: "500" },
+  servedChevron: { fontSize: 18, color: theme.muted, paddingHorizontal: 4 },
   settingOn: { color: theme.primaryMid },
   settingDivider: { height: StyleSheet.hairlineWidth, backgroundColor: theme.border },
 

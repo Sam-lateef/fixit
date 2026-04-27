@@ -24,6 +24,9 @@ export type ShopProfilePayload = {
   partsCategories: string[];
   /** Districts the shop covers. Empty = whole city. */
   servedDistrictIds: string[];
+  /** Resolved district details for `servedDistrictIds` (server-side lookup
+   *  so the profile can render names without an extra round-trip). */
+  servedDistricts: { id: string; name: string; nameAr: string; city: string }[];
   user: {
     name: string | null;
     phone: string | null;
