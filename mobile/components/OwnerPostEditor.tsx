@@ -657,7 +657,6 @@ export function OwnerPostEditor({
           setTowingLng(BAGHDAD_FALLBACK.lng);
           setTowingTo("");
           setTowingNotes("");
-          setUrgency("ASAP");
           setPickedPhotos([]);
           Alert.alert(t("postCreated"), "", [
             {

@@ -68,6 +68,14 @@ type ShopMe = {
   offersRepair: boolean;
   offersParts: boolean;
   offersTowing: boolean;
+  carMakes: string[];
+  carYearMin: number | null;
+  carYearMax: number | null;
+  yearFrom: number | null;
+  yearTo: number | null;
+  repairCategories: string[];
+  partsCategories: string[];
+  user: { city: string | null };
 };
 
 type FeedSection = {
@@ -105,6 +113,51 @@ function serviceTypeLabel(
     return t("towing");
   }
   return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+}
+
+type Mismatches = {
+  city: boolean;
+  carMake: boolean;
+  carYear: boolean;
+  category: boolean;
+};
+
+function computeMismatches(p: Post, shop: ShopMe | null): Mismatches {
+  const empty = { city: false, carMake: false, carYear: false, category: false };
+  if (!shop) return empty;
+  // City mismatch: post is in a different city than the shop's user city.
+  const shopCity = shop.user.city?.trim().toLowerCase() ?? "";
+  const postCity = p.district?.city.trim().toLowerCase() ?? "";
+  const cityMismatch =
+    shopCity.length > 0 && postCity.length > 0 && shopCity !== postCity;
+  // Car make: shop has restricted list AND post specifies a make not in it.
+  const carMake = p.carMake?.trim().toLowerCase() ?? "";
+  const shopMakes = shop.carMakes.map((m) => m.toLowerCase());
+  const carMakeMismatch =
+    carMake.length > 0 &&
+    shopMakes.length > 0 &&
+    !shopMakes.includes(carMake);
+  // Car year: shop has a range AND post year is outside it. Use new
+  // carYearMin/Max if present, else legacy yearFrom/yearTo.
+  const yMin = shop.carYearMin ?? shop.yearFrom;
+  const yMax = shop.carYearMax ?? shop.yearTo;
+  const carYearMismatch =
+    p.carYear !== null &&
+    ((yMin != null && p.carYear < yMin) || (yMax != null && p.carYear > yMax));
+  // Category: only when shop has a restrictive list for this service type.
+  const svc = p.serviceType.toUpperCase();
+  let categoryMismatch = false;
+  if (svc === "REPAIR" && p.repairCategory && shop.repairCategories.length > 0) {
+    categoryMismatch = !shop.repairCategories.includes(p.repairCategory);
+  } else if (svc === "PARTS" && p.partsCategory && shop.partsCategories.length > 0) {
+    categoryMismatch = !shop.partsCategories.includes(p.partsCategory);
+  }
+  return {
+    city: cityMismatch,
+    carMake: carMakeMismatch,
+    carYear: carYearMismatch,
+    category: categoryMismatch,
+  };
 }
 
 export default function ShopFeedScreen(): React.ReactElement {
@@ -237,22 +290,15 @@ export default function ShopFeedScreen(): React.ReactElement {
       { key: "matched", title: t("feedForYou"), data: sortMyBidsFirst(posts) },
     ];
     if (morePosts.length > 0) {
-      const moreTitle =
-        moreCity !== null
-          ? t("feedMoreSectionTitle").replace(/\{\{city\}\}/g, moreCity)
-          : t("feedMoreNationalTitle");
-      const moreHint = moreHasNational
-        ? t("feedMoreSectionHintNational")
-        : t("feedMoreSectionHint");
       out.push({
         key: "more",
-        title: moreTitle,
-        hint: moreHint,
+        title: t("feedMoreSectionTitle"),
+        hint: t("feedMoreSectionHint"),
         data: sortMyBidsFirst(morePosts),
       });
     }
     return out;
-  }, [posts, morePosts, moreCity, moreHasNational, t, sortMyBidsFirst]);
+  }, [posts, morePosts, t, sortMyBidsFirst]);
 
   return (
     <ShopPremiumGate>
@@ -316,6 +362,7 @@ export default function ShopFeedScreen(): React.ReactElement {
           const hrs = hoursLeft(p.expiresAt);
           const isTowing = p.serviceType.toUpperCase() === "TOWING";
           const postIsNew = isNew(p.createdAt);
+          const mm = inMoreSection ? computeMismatches(p, shop) : null;
 
           const openBid = (): void => {
             router.push(`/shop/bid/${p.id}` as Href);
@@ -333,7 +380,13 @@ export default function ShopFeedScreen(): React.ReactElement {
               {/* Top row: service tag + badges + distance */}
               <View style={styles.cardTopRow}>
                 <View style={styles.tagRow}>
-                  <View style={[styles.serviceTag, { backgroundColor: tag.bg }]}>
+                  <View
+                    style={[
+                      styles.serviceTag,
+                      { backgroundColor: tag.bg },
+                      mm?.category && styles.mismatchOutline,
+                    ]}
+                  >
                     <Text style={[styles.serviceTagText, { color: tag.fg }]}>
                       {serviceTypeLabel(p.serviceType, t)}
                       {cat ? ` · ${cat}` : ""}
@@ -401,12 +454,24 @@ export default function ShopFeedScreen(): React.ReactElement {
                       {p.description}
                     </Text>
                     {showCar ? (
-                      <Text style={styles.carInfo} numberOfLines={1}>
+                      <Text
+                        style={[
+                          styles.carInfo,
+                          (mm?.carMake || mm?.carYear) && styles.mismatchOutline,
+                        ]}
+                        numberOfLines={1}
+                      >
                         {carLine}
                       </Text>
                     ) : null}
                     {showLocation ? (
-                      <Text style={styles.locationInfo} numberOfLines={1}>
+                      <Text
+                        style={[
+                          styles.locationInfo,
+                          mm?.city && styles.mismatchOutline,
+                        ]}
+                        numberOfLines={1}
+                      >
                         {locationLine}
                       </Text>
                     ) : null}
@@ -481,16 +546,27 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingTop: 4,
   },
+  // textAlign:"left" auto-flips to right under I18nManager.isRTL — matches
+  // the RTL pattern used elsewhere in the app.
   sectionHeaderTitle: {
     fontSize: 16,
     fontWeight: "800",
     color: theme.text,
+    textAlign: "left",
   },
   sectionHeaderHint: {
     fontSize: 12,
     color: theme.muted,
     marginTop: 4,
     lineHeight: 17,
+    textAlign: "left",
+  },
+  // Applied to the post card field that fails to match the shop profile
+  // (city, car make, year, or repair/parts category) in the More section.
+  mismatchOutline: {
+    borderWidth: 1,
+    borderColor: theme.danger,
+    borderRadius: theme.radiusMd,
   },
   sectionFooterEmpty: {
     fontSize: 13,
