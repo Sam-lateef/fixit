@@ -24,3 +24,9 @@ web/admin/.env.local
 android/
 ios/
 .capacitor/
+
+# Manual DB snapshots (until Supabase migration brings real PITR backups).
+# Files contain prod data — never commit.
+backups/
+*.dump
+*.sql.gz
