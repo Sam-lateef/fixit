@@ -174,7 +174,6 @@ export function filterPostsForShop(
   shop: ShopForFeed,
   posts: PostForFeed[],
 ): FeedEntry[] {
-  const shopDistrict = shop.user.district;
   const results: FeedEntry[] = [];
 
   for (const post of posts) {
@@ -219,31 +218,28 @@ export function filterPostsForShop(
       if (!matched) continue;
     }
 
+    // Parts shops with nationwide delivery bypass the city check.
     if (post.serviceType === "PARTS" && shop.partsNationwide) {
       results.push({ ...post, distanceKm: null });
       continue;
     }
 
-    if (!post.lat || !post.lng || !shopDistrict) {
-      results.push({ ...post, distanceKm: null });
-      continue;
-    }
+    // City-based filter (district is informational only).
+    // Reasoning: a Baghdad shop should not see Erbil requests, but within
+    // the same city, district shouldn't matter. The previous radius check
+    // could exclude same-city posts (when districts were geographically
+    // far apart) and could let through cross-city posts (when border
+    // districts of two cities happened to be close).
+    const shopCity = resolveShopCityForFeed(shop);
+    const postCity = post.district?.city?.trim() ?? "";
+    if (shopCity.length === 0 || postCity.length === 0) continue;
+    if (normalizeCityKey(shopCity) !== normalizeCityKey(postCity)) continue;
 
-    const distKm = computeDistanceKmForPost(shop, post);
-    if (distKm === null) {
-      continue;
-    }
-
-    const radius =
-      post.serviceType === "REPAIR"
-        ? shop.repairRadiusKm
-        : post.serviceType === "PARTS"
-          ? shop.partsRadiusKm
-          : shop.towingRadiusKm;
-
-    if (distKm > radius) continue;
-
-    results.push({ ...post, distanceKm: distKm });
+    // Distance is still computed for display on the card (informational).
+    results.push({
+      ...post,
+      distanceKm: computeDistanceKmForPost(shop, post),
+    });
   }
 
   results.sort(sortFeedEntries);

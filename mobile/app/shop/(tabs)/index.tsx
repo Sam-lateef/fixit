@@ -16,6 +16,7 @@ import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import type { StringKey } from "@/lib/strings";
 import {
+  ownerCityLabel,
   partsCategoryLabel,
   repairCategoryLabel,
 } from "@/lib/taxonomy-labels";
@@ -38,7 +39,9 @@ type Post = {
   repairCategory: string | null;
   partsCategory: string | null;
   carMake: string | null;
+  carModel: string | null;
   carYear: number | null;
+  towingToAddress: string | null;
   description: string;
   distanceKm: number | null;
   expiresAt: string;
@@ -46,21 +49,17 @@ type Post = {
   photoUrls: string[];
   bids: Array<{ shopId: string }>;
   user: { name: string | null };
+  district: {
+    name: string;
+    nameAr: string | null;
+    city: string;
+  } | null;
 };
 
 const NEW_THRESHOLD_HOURS = 2;
 
 function isNew(createdAt: string): boolean {
   return Date.now() - new Date(createdAt).getTime() < NEW_THRESHOLD_HOURS * 3_600_000;
-}
-
-function userInitials(name: string | null): string {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w.charAt(0).toUpperCase())
-    .join("");
 }
 
 type ShopMe = {
@@ -363,58 +362,83 @@ export default function ShopFeedScreen(): React.ReactElement {
                 ) : null}
               </View>
 
-              {/* User row: avatar + name */}
+              {/* User name */}
               <View style={styles.userRow}>
-                <View style={styles.userAvatar}>
-                  <Text style={styles.userAvatarText}>{userInitials(p.user.name)}</Text>
-                </View>
                 <Text style={styles.userName} numberOfLines={1}>
                   {p.user.name ?? "—"}
                 </Text>
               </View>
 
               {/* Title + description, thumbnail: right in English, left in Arabic (RTL mirrors row-reverse) */}
-              {p.photoUrls?.length > 0 ? (
-                <View style={styles.contentRow}>
-                  <View style={styles.thumbWrap}>
-                    <PostImageLightbox
-                      uri={p.photoUrls[0].trim()}
-                      thumbnailStyle={styles.thumb}
-                    />
-                    {p.photoUrls.length > 1 ? (
-                      <View style={styles.moreOverlay}>
-                        <Text style={styles.moreText}>+{p.photoUrls.length - 1}</Text>
-                      </View>
-                    ) : null}
-                  </View>
-                  <View style={styles.textFlex}>
+              {(() => {
+                const carLine = [p.carMake, p.carModel, p.carYear]
+                  .filter(Boolean)
+                  .join(" · ");
+                const showCar = carLine.length > 0;
+                const cityLabel = p.district
+                  ? ownerCityLabel(p.district.city, locale)
+                  : "";
+                const districtLabel = p.district
+                  ? locale === "ar-iq" && p.district.nameAr
+                    ? p.district.nameAr
+                    : p.district.name
+                  : "";
+                const locationLine = [cityLabel, districtLabel]
+                  .filter((s) => s.length > 0)
+                  .join(" · ");
+                const showLocation = locationLine.length > 0;
+                const towToAddr =
+                  p.serviceType.toUpperCase() === "TOWING"
+                    ? p.towingToAddress?.trim() ?? ""
+                    : "";
+                const showTowTo = towToAddr.length > 0;
+                const textBlock = (
+                  <>
                     {p.title ? (
                       <Text style={styles.title} numberOfLines={1}>{p.title}</Text>
                     ) : null}
                     <Text style={styles.desc} numberOfLines={2}>
                       {p.description}
                     </Text>
+                    {showCar ? (
+                      <Text style={styles.carInfo} numberOfLines={1}>
+                        {carLine}
+                      </Text>
+                    ) : null}
+                    {showLocation ? (
+                      <Text style={styles.locationInfo} numberOfLines={1}>
+                        {locationLine}
+                      </Text>
+                    ) : null}
+                    {showTowTo ? (
+                      <Text style={styles.towToInfo} numberOfLines={2}>
+                        {t("towToLabel")}: {towToAddr}
+                      </Text>
+                    ) : null}
+                  </>
+                );
+                return p.photoUrls?.length > 0 ? (
+                  <View style={styles.contentRow}>
+                    <View style={styles.thumbWrap}>
+                      <PostImageLightbox
+                        uri={p.photoUrls[0].trim()}
+                        thumbnailStyle={styles.thumb}
+                      />
+                      {p.photoUrls.length > 1 ? (
+                        <View style={styles.moreOverlay}>
+                          <Text style={styles.moreText}>+{p.photoUrls.length - 1}</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <View style={styles.textFlex}>{textBlock}</View>
                   </View>
-                </View>
-              ) : (
-                <>
-                  {p.title ? (
-                    <Text style={styles.title} numberOfLines={1}>{p.title}</Text>
-                  ) : null}
-                  <Text style={styles.desc} numberOfLines={2}>
-                    {p.description}
-                  </Text>
-                </>
-              )}
+                ) : (
+                  textBlock
+                );
+              })()}
               </Pressable>
 
               <Pressable onPress={openBid}>
-              {/* Car info */}
-              {(p.carMake || p.carYear) ? (
-                <Text style={styles.carInfo}>
-                  {[p.carMake, p.carYear].filter(Boolean).join(" · ")}
-                </Text>
-              ) : null}
 
               {/* Bottom row: bids + time left + button */}
               <View style={styles.bottomRow}>
@@ -541,7 +565,26 @@ const styles = StyleSheet.create({
 
   title: { marginTop: 10, color: theme.text, fontSize: 15, fontWeight: "700", lineHeight: 20, textAlign: "left" },
   desc: { marginTop: 4, color: theme.muted, fontSize: 14, lineHeight: 20, textAlign: "left" },
-  carInfo: { marginTop: 4, fontSize: 13, color: theme.mutedLight },
+  carInfo: {
+    marginTop: 6,
+    fontSize: 14,
+    fontWeight: "600",
+    color: theme.text,
+    textAlign: "left",
+  },
+  locationInfo: {
+    marginTop: 2,
+    fontSize: 13,
+    color: theme.muted,
+    textAlign: "left",
+  },
+  towToInfo: {
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: "600",
+    color: theme.towingText,
+    textAlign: "left",
+  },
 
   bottomRow: {
     flexDirection: "row",
@@ -595,16 +638,6 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 10,
   },
-  userAvatar: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: theme.chip,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  userAvatarText: { fontSize: 9, fontWeight: "700", color: theme.muted },
   userName: { fontSize: 13, color: theme.muted, flex: 1 },
   contentRow: {
     flexDirection: "row-reverse",

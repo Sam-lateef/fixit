@@ -15,9 +15,19 @@ import {
 import { PostImageLightbox } from "@/components/PostImageLightbox";
 import { apiFetch, formatIqd } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import { ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
 
-type Shop = { id: string; name: string; rating: number; coverImageUrl?: string | null };
+type Shop = {
+  id: string;
+  name: string;
+  rating: number;
+  coverImageUrl?: string | null;
+  user?: {
+    city: string | null;
+    district: { name: string; nameAr: string | null } | null;
+  };
+};
 type Bid = {
   id: string;
   priceEstimate: number;
@@ -80,7 +90,7 @@ function carDetailLine(post: Post): string | null {
 }
 
 export default function OwnerHomeScreen(): React.ReactElement {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [posts, setPosts] = useState<Post[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -304,6 +314,26 @@ export default function OwnerHomeScreen(): React.ReactElement {
                     ]}
                   >
                     <Text style={styles.shopName}>{b.shop.name}</Text>
+                    {(() => {
+                      const shopUser = b.shop.user;
+                      const cityLabel = shopUser?.city
+                        ? ownerCityLabel(shopUser.city, locale)
+                        : "";
+                      const districtLabel = shopUser?.district
+                        ? locale === "ar-iq" && shopUser.district.nameAr
+                          ? shopUser.district.nameAr
+                          : shopUser.district.name
+                        : "";
+                      const line = [cityLabel, districtLabel]
+                        .filter((s) => s.length > 0)
+                        .join(" · ");
+                      if (line.length === 0) return null;
+                      return (
+                        <Text style={styles.shopLocation} numberOfLines={1}>
+                          {line}
+                        </Text>
+                      );
+                    })()}
                     <Text style={styles.price}>{formatIqd(b.priceEstimate)}</Text>
                     {b.message ? (
                       <Text style={styles.msg}>{b.message}</Text>
@@ -485,6 +515,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: theme.text,
     marginBottom: 2,
+    textAlign: "left",
+  },
+  shopLocation: {
+    fontSize: 12,
+    color: theme.muted,
+    marginBottom: 4,
     textAlign: "left",
   },
   price: { fontWeight: "700", color: theme.text, fontSize: 15, textAlign: "left" },

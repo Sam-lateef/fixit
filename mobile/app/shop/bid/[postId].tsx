@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 
-import { PostRemoteImage } from "@/components/PostRemoteImage";
+import { PostImageLightbox } from "@/components/PostImageLightbox";
 import { ShopPremiumGate } from "@/components/ShopPremiumGate";
 import { apiFetch, formatIqd } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -49,8 +49,6 @@ type Post = {
   user: { name: string | null };
 };
 
-type DurationUnit = "HOURS" | "DAYS";
-
 function serviceTagStyle(type: string): { bg: string; fg: string } {
   const upper = type.toUpperCase();
   if (upper === "PARTS") return { bg: theme.partsBg, fg: theme.partsText };
@@ -74,8 +72,6 @@ export default function ShopBidScreen(): React.ReactElement {
 
   const [post, setPost] = useState<Post | null>(null);
   const [price, setPrice] = useState(initialPrice ?? "");
-  const [estimatedQty, setEstimatedQty] = useState("");
-  const [durationUnit, setDurationUnit] = useState<DurationUnit>("HOURS");
   const [deliveryDate, setDeliveryDate] = useState("");
   const [deliveryWindow, setDeliveryWindow] = useState("");
   const [message, setMessage] = useState(initialMessage ?? "");
@@ -137,8 +133,6 @@ export default function ShopBidScreen(): React.ReactElement {
           priceEstimate: Math.round(n),
           message: msg || undefined,
         };
-        if (estimatedQty) body.estimatedQty = Number(estimatedQty);
-        if (estimatedQty) body.durationUnit = durationUnit;
         if (isParts) {
           if (deliveryDate) body.deliveryDate = deliveryDate;
           if (deliveryWindow) body.deliveryWindow = deliveryWindow;
@@ -296,35 +290,6 @@ export default function ShopBidScreen(): React.ReactElement {
           />
           <Text style={styles.hint}>{t("canAdjust")}</Text>
 
-          {/* Estimated time */}
-          <Text style={styles.label}>{t("estimatedTime")}</Text>
-          <View style={styles.timeRow}>
-            <TextInput
-              style={[styles.input, styles.timeInput]}
-              keyboardType="number-pad"
-              placeholder="2"
-              placeholderTextColor={theme.mutedLight}
-              value={estimatedQty}
-              onChangeText={setEstimatedQty}
-            />
-            <Pressable
-              style={[styles.unitChip, durationUnit === "HOURS" && styles.unitChipActive]}
-              onPress={() => setDurationUnit("HOURS")}
-            >
-              <Text style={[styles.unitChipText, durationUnit === "HOURS" && styles.unitChipTextActive]}>
-                {t("hours")}
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[styles.unitChip, durationUnit === "DAYS" && styles.unitChipActive]}
-              onPress={() => setDurationUnit("DAYS")}
-            >
-              <Text style={[styles.unitChipText, durationUnit === "DAYS" && styles.unitChipTextActive]}>
-                {t("days")}
-              </Text>
-            </Pressable>
-          </View>
-
           {/* Date/time fields — different labels for parts vs repair/towing */}
           {isParts ? (
             <>
@@ -383,10 +348,10 @@ export default function ShopBidScreen(): React.ReactElement {
             <View style={styles.photosBlock}>
               <Text style={styles.photosLabel}>{t("photos")}</Text>
               {post.photoUrls.map((url, i) => (
-                <PostRemoteImage
+                <PostImageLightbox
                   key={`${url}-${i}`}
                   uri={url.trim()}
-                  style={styles.photoFull}
+                  thumbnailStyle={styles.photoFull}
                 />
               ))}
             </View>
@@ -504,18 +469,6 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   priceInput: { fontSize: 22, fontWeight: "700", writingDirection: "ltr" },
-
-  timeRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  timeInput: { flex: 1 },
-  unitChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: theme.chip,
-  },
-  unitChipActive: { backgroundColor: theme.primary },
-  unitChipText: { fontSize: 14, fontWeight: "600", color: theme.muted },
-  unitChipTextActive: { color: "#fff" },
 
   area: { minHeight: 100, textAlignVertical: "top" },
   charCount: { fontSize: 12, color: theme.mutedLight, textAlign: "right", marginTop: 4 },

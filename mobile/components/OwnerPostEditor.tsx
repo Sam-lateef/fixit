@@ -183,7 +183,6 @@ export function OwnerPostEditor({
   const [towingLng, setTowingLng] = useState(BAGHDAD_FALLBACK.lng);
   const [towingTo, setTowingTo] = useState("");
   const [towingNotes, setTowingNotes] = useState("");
-  const [urgency, setUrgency] = useState<"ASAP" | "WITHIN_HOUR">("ASAP");
   const [locating, setLocating] = useState(false);
 
   const [pickedPhotos, setPickedPhotos] = useState<PickedPhoto[]>([]);
@@ -341,9 +340,6 @@ export function OwnerPostEditor({
         setTowingFrom(post.towingFromAddress ?? "");
         setTowingTo(post.towingToAddress ?? "");
         setTowingNotes(post.description);
-        if (post.urgency === "WITHIN_HOUR" || post.urgency === "ASAP") {
-          setUrgency(post.urgency);
-        }
       }
 
       setPickedPhotos(post.photoUrls.map((uri) => ({ uri })));
@@ -588,7 +584,6 @@ export function OwnerPostEditor({
             patch.towingFromAddress = towingFrom.trim() || "Baghdad";
             if (towingTo.trim()) patch.towingToAddress = towingTo.trim();
             patch.description = towingDesc || towingFrom.trim() || "Towing request";
-            patch.urgency = urgency;
             if (districtId) patch.districtId = districtId;
           }
           await apiFetch(`/api/v1/posts/${editPostId}`, {
@@ -633,7 +628,6 @@ export function OwnerPostEditor({
             body.towingFromAddress = towingFrom.trim() || "Baghdad";
             if (towingTo.trim()) body.towingToAddress = towingTo.trim();
             body.description = towingDesc || towingFrom.trim() || "Towing request";
-            body.urgency = urgency;
             if (districtId) body.districtId = districtId;
           }
 
@@ -1013,25 +1007,6 @@ export function OwnerPostEditor({
               multiline
               placeholderTextColor={theme.mutedLight}
             />
-            <Text style={styles.label}>{t("urgency")}</Text>
-            <View style={styles.row}>
-              <Pressable
-                style={[styles.chip, urgency === "ASAP" && styles.chipOn]}
-                onPress={() => setUrgency("ASAP")}
-              >
-                <Text style={[styles.chipText, urgency === "ASAP" && styles.chipTextOn]}>
-                  {t("asap")}
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[styles.chip, urgency === "WITHIN_HOUR" && styles.chipOn]}
-                onPress={() => setUrgency("WITHIN_HOUR")}
-              >
-                <Text style={[styles.chipText, urgency === "WITHIN_HOUR" && styles.chipTextOn]}>
-                  {t("withinHour")}
-                </Text>
-              </Pressable>
-            </View>
           </>
         ) : null}
 

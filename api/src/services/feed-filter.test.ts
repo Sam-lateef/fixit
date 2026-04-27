@@ -114,11 +114,42 @@ test("filterPostsForShop keeps post within repair radius", () => {
   assert.ok(out[0].distanceKm !== null);
 });
 
-test("filterPostsForShop drops post outside radius", () => {
-  const s = shop({ repairRadiusKm: 1 });
-  const p = post();
+test("filterPostsForShop drops post in a different city", () => {
+  // District is informational only — filtering is by city. A Baghdad shop
+  // should not see Erbil posts even if other filters match.
+  const s = shop();
+  const p = post({
+    district: {
+      id: "d-erbil",
+      name: "Erbil Center",
+      nameAr: "",
+      city: "Erbil",
+      cityAr: "",
+      lat: 36.19,
+      lng: 44.0,
+    },
+  });
   const out = filterPostsForShop(s, [p]);
   assert.equal(out.length, 0);
+});
+
+test("filterPostsForShop keeps same-city post regardless of district distance", () => {
+  // Same city, far district — should still pass (district distance is
+  // informational, not a filter).
+  const s = shop();
+  const p = post({
+    district: {
+      id: "d-far",
+      name: "Far Baghdad",
+      nameAr: "",
+      city: "Baghdad",
+      cityAr: "",
+      lat: 33.9,
+      lng: 44.9,
+    },
+  });
+  const out = filterPostsForShop(s, [p]);
+  assert.equal(out.length, 1);
 });
 
 test("filterPostsForShop parts nationwide bypasses distance", () => {

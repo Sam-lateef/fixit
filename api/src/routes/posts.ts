@@ -176,7 +176,12 @@ export async function registerPostRoutes(fastify: FastifyInstance): Promise<void
         include: {
           bids: {
             where: { status: { not: "WITHDRAWN" } },
-            include: { shop: true, chatThread: { select: { id: true } } },
+            include: {
+              // Include the shop's user.city and user.district so the owner
+              // sees where each bidding shop is located on the bid card.
+              shop: { include: { user: { include: { district: true } } } },
+              chatThread: { select: { id: true } },
+            },
           },
         },
         orderBy: { createdAt: "desc" },

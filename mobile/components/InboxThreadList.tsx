@@ -1,3 +1,4 @@
+import { useNavigation } from "@react-navigation/native";
 import { router, type Href } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -56,6 +57,7 @@ function formatThreadTime(iso: string): string {
 export function InboxThreadList(props: InboxThreadListProps): React.ReactElement {
   const contentTopInset = props.contentTopInset ?? 0;
   const { t, locale } = useI18n();
+  const navigation = useNavigation();
   const [threads, setThreads] = useState<ThreadRow[]>([]);
   const [myUserId, setMyUserId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -76,6 +78,17 @@ export function InboxThreadList(props: InboxThreadListProps): React.ReactElement
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Refresh when the tab regains focus so unread badges clear after the user
+  // returns from a thread. Uses navigation.addListener instead of
+  // useFocusEffect — the latter has known iOS Fabric issues with FlatList +
+  // RefreshControl (facebook/react-native#37308).
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      void load();
+    });
+    return unsubscribe;
+  }, [navigation, load]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -139,18 +152,21 @@ export function InboxThreadList(props: InboxThreadListProps): React.ReactElement
         return (
           <Pressable
             style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-            onPress={() => router.push(`/chat/${item.id}` as Href)}
+            onPress={() => {
+              // Optimistically clear the unread badge so the user sees an
+              // immediate response. The server-side mark-read happens via
+              // socket on the chat screen, and the next focus refresh will
+              // confirm the count from the server.
+              if ((item.unreadCount ?? 0) > 0) {
+                setThreads((prev) =>
+                  prev.map((th) =>
+                    th.id === item.id ? { ...th, unreadCount: 0 } : th,
+                  ),
+                );
+              }
+              router.push(`/chat/${item.id}` as Href);
+            }}
           >
-            {/* Avatar circle */}
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {(isOwner ? item.bid.shop.name : item.bid.post.description)
-                  .trim()
-                  .charAt(0)
-                  .toUpperCase()}
-              </Text>
-            </View>
-
             <View style={styles.content}>
               <View style={styles.topRow}>
                 <Text style={[styles.title, hasUnread && styles.titleUnread]} numberOfLines={1}>
@@ -201,16 +217,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   cardPressed: { opacity: 0.85 },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  avatarText: { fontSize: 18, fontWeight: "700", color: theme.primary },
   content: { flex: 1 },
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   title: { fontWeight: "600", color: theme.text, fontSize: 15, flex: 1, marginRight: 8, textAlign: "left" },
