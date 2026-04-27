@@ -75,7 +75,12 @@ type ShopMe = {
   yearTo: number | null;
   repairCategories: string[];
   partsCategories: string[];
-  user: { city: string | null };
+  user: {
+    city: string | null;
+    // Server feed filter falls back to user.district.city when user.city is
+    // empty (shops often have district set before city is duplicated on user).
+    district: { city: string } | null;
+  };
 };
 
 type FeedSection = {
@@ -125,9 +130,14 @@ type Mismatches = {
 function computeMismatches(p: Post, shop: ShopMe | null): Mismatches {
   const empty = { city: false, carMake: false, carYear: false, category: false };
   if (!shop) return empty;
-  // City mismatch: post is in a different city than the shop's user city.
-  const shopCity = shop.user.city?.trim().toLowerCase() ?? "";
-  const postCity = p.district?.city.trim().toLowerCase() ?? "";
+  // Shop city — fall back to user.district.city when user.city is empty
+  // (mirrors server-side resolveShopCityForFeed in api/services/feed-filter.ts).
+  const shopCity = (
+    shop.user.city?.trim() ||
+    shop.user.district?.city?.trim() ||
+    ""
+  ).toLowerCase();
+  const postCity = (p.district?.city.trim() ?? "").toLowerCase();
   const cityMismatch =
     shopCity.length > 0 && postCity.length > 0 && shopCity !== postCity;
   // Car make: shop has restricted list AND post specifies a make not in it.
@@ -573,6 +583,8 @@ const styles = StyleSheet.create({
     color: theme.muted,
     marginBottom: 14,
     fontStyle: "italic",
+    // textAlign:"left" auto-flips to right under I18nManager.isRTL.
+    textAlign: "left",
   },
 
   categoryBanner: {
