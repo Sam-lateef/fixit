@@ -71,7 +71,7 @@ export function SearchablePickerModal({
     >
       <KeyboardAvoidingView
         style={styles.backdrop}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         {/* Tap-outside-to-dismiss area */}
         <Pressable style={styles.dismissArea} onPress={onRequestClose} />
@@ -152,7 +152,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.surface,
     textAlign: "left",
   },
-  list: { maxHeight: 440 },
+  // Let the list flex inside the card so KAV can shrink the card
+  // when the keyboard opens — fixes hidden options on the search.
+  list: { flexShrink: 1 },
   row: {
     flexDirection: "row",
     alignItems: "center",
