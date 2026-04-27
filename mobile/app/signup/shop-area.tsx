@@ -33,6 +33,9 @@ export default function ShopAreaStep(): React.ReactElement {
   const [districtsLoading, setDistrictsLoading] = useState(true);
   const [districtsError, setDistrictsError] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // "Serve all districts" toggle. ON (default) saves servedDistrictIds: []
+  // which the server treats as "serve whole city".
+  const [serveAll, setServeAll] = useState(true);
   const [partsNationwide, setPartsNationwide] = useState(false);
 
   const [busy, setBusy] = useState(false);
@@ -84,7 +87,7 @@ export default function ShopAreaStep(): React.ReactElement {
 
   function handleCreate(): void {
     setErr("");
-    if (selected.size === 0 && !(offersParts && partsNationwide)) {
+    if (!serveAll && selected.size === 0 && !(offersParts && partsNationwide)) {
       setErr(t("servedDistrictsRequired"));
       return;
     }
@@ -112,7 +115,7 @@ export default function ShopAreaStep(): React.ReactElement {
       city: prev.city,
       districtId: prev.districtId,
       address: (prev.address as string) || undefined,
-      servedDistrictIds: Array.from(selected),
+      servedDistrictIds: serveAll ? [] : Array.from(selected),
       partsNationwide: offersParts ? partsNationwide : false,
     };
 
@@ -163,32 +166,47 @@ export default function ShopAreaStep(): React.ReactElement {
 
       <View style={s.section}>
         <Text style={s.sectionTitle}>{t("servedDistricts")}</Text>
-        <Text style={s.sectionHint}>{t("servedDistrictsHint")}</Text>
 
-        {districtsLoading ? (
-          <ActivityIndicator color={theme.primaryMid} style={{ marginTop: 16 }} />
-        ) : districtsError ? (
-          <Text style={s.err}>{districtsError}</Text>
-        ) : districts.length === 0 ? (
-          <Text style={s.err}>{t("districtEmptyHelp")}</Text>
-        ) : (
-          <View style={s.chips}>
-            {districts.map((d) => {
-              const on = selected.has(d.id);
-              return (
-                <Pressable
-                  key={d.id}
-                  style={[s.chip, on && s.chipOn]}
-                  onPress={() => toggle(d.id)}
-                >
-                  <Text style={[s.chipText, on && s.chipTextOn]}>
-                    {districtLabel(d)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        )}
+        <View style={s.toggleRow}>
+          <Text style={s.toggleLabel}>{t("serveAllDistricts")}</Text>
+          <Switch
+            value={serveAll}
+            onValueChange={setServeAll}
+            trackColor={{ false: theme.border, true: theme.primaryMid }}
+            thumbColor="#fff"
+            ios_backgroundColor={theme.border}
+          />
+        </View>
+
+        {!serveAll ? (
+          <>
+            <Text style={s.sectionHint}>{t("servedDistrictsHint")}</Text>
+            {districtsLoading ? (
+              <ActivityIndicator color={theme.primaryMid} style={{ marginTop: 16 }} />
+            ) : districtsError ? (
+              <Text style={s.err}>{districtsError}</Text>
+            ) : districts.length === 0 ? (
+              <Text style={s.err}>{t("districtEmptyHelp")}</Text>
+            ) : (
+              <View style={s.chips}>
+                {districts.map((d) => {
+                  const on = selected.has(d.id);
+                  return (
+                    <Pressable
+                      key={d.id}
+                      style={[s.chip, on && s.chipOn]}
+                      onPress={() => toggle(d.id)}
+                    >
+                      <Text style={[s.chipText, on && s.chipTextOn]}>
+                        {districtLabel(d)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+          </>
+        ) : null}
       </View>
 
       {err !== "" && <Text style={s.err}>{err}</Text>}

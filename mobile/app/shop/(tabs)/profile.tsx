@@ -178,9 +178,10 @@ export default function ShopProfileScreen(): React.ReactElement {
   const [editDistrictsLoading, setEditDistrictsLoading] = useState(false);
   const [editCityPickerOpen, setEditCityPickerOpen] = useState(false);
   const [editDistrictPickerOpen, setEditDistrictPickerOpen] = useState(false);
-  // Served districts editor (multi-select)
+  // Served districts editor (multi-select with "all districts" override)
   const [servedModalOpen, setServedModalOpen] = useState(false);
   const [servedSelection, setServedSelection] = useState<Set<string>>(new Set());
+  const [servedAllDraft, setServedAllDraft] = useState(true);
   const [servedDistrictList, setServedDistrictList] = useState<
     { id: string; name: string; nameAr: string; city: string }[]
   >([]);
@@ -404,6 +405,8 @@ export default function ShopProfileScreen(): React.ReactElement {
       return;
     }
     setServedSelection(new Set(shop.servedDistrictIds));
+    // Empty list on the shop = "serve all" mode is on.
+    setServedAllDraft(shop.servedDistrictIds.length === 0);
     setServedLoading(true);
     setServedModalOpen(true);
     void (async () => {
@@ -429,12 +432,18 @@ export default function ShopProfileScreen(): React.ReactElement {
 
   const saveServedEdit = (): void => {
     if (!shop) return;
+    if (!servedAllDraft && servedSelection.size === 0) {
+      Alert.alert(t("errorTitle"), t("servedDistrictsRequired"));
+      return;
+    }
     setSavingServed(true);
     void (async () => {
       try {
         await apiFetch("/api/v1/shops/me", {
           method: "PUT",
-          body: JSON.stringify({ servedDistrictIds: Array.from(servedSelection) }),
+          body: JSON.stringify({
+            servedDistrictIds: servedAllDraft ? [] : Array.from(servedSelection),
+          }),
         });
         setServedModalOpen(false);
         await load();
@@ -1189,30 +1198,46 @@ export default function ShopProfileScreen(): React.ReactElement {
               </Pressable>
             </View>
             <ScrollView contentContainerStyle={styles.locationModalBody}>
-              <Text style={styles.locationFieldLabel}>{t("servedDistrictsHint")}</Text>
-              {servedLoading ? (
-                <View style={styles.locationLoading}>
-                  <ActivityIndicator size="small" color={theme.primaryMid} />
-                </View>
-              ) : (
-                <View style={styles.modalChips}>
-                  {servedDistrictList.map((d) => {
-                    const on = servedSelection.has(d.id);
-                    const label = locale === "ar-iq" && d.nameAr ? d.nameAr : d.name;
-                    return (
-                      <Pressable
-                        key={d.id}
-                        style={[styles.modalChip, on && styles.modalChipOn]}
-                        onPress={() => toggleServed(d.id)}
-                      >
-                        <Text style={[styles.modalChipText, on && styles.modalChipTextOn]}>
-                          {label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              )}
+              <View style={styles.servedToggleRow}>
+                <Text style={styles.servedToggleLabel}>{t("serveAllDistricts")}</Text>
+                <Switch
+                  value={servedAllDraft}
+                  onValueChange={setServedAllDraft}
+                  trackColor={{ false: theme.border, true: theme.primaryMid }}
+                  thumbColor="#fff"
+                  ios_backgroundColor={theme.border}
+                />
+              </View>
+              {!servedAllDraft ? (
+                <>
+                  <Text style={styles.locationFieldLabel}>
+                    {t("servedDistrictsHint")}
+                  </Text>
+                  {servedLoading ? (
+                    <View style={styles.locationLoading}>
+                      <ActivityIndicator size="small" color={theme.primaryMid} />
+                    </View>
+                  ) : (
+                    <View style={styles.modalChips}>
+                      {servedDistrictList.map((d) => {
+                        const on = servedSelection.has(d.id);
+                        const label = locale === "ar-iq" && d.nameAr ? d.nameAr : d.name;
+                        return (
+                          <Pressable
+                            key={d.id}
+                            style={[styles.modalChip, on && styles.modalChipOn]}
+                            onPress={() => toggleServed(d.id)}
+                          >
+                            <Text style={[styles.modalChipText, on && styles.modalChipTextOn]}>
+                              {label}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  )}
+                </>
+              ) : null}
             </ScrollView>
             <Pressable
               style={[styles.modalSaveBtn, savingServed && styles.modalSaveBtnDisabled]}
@@ -1785,6 +1810,14 @@ const styles = StyleSheet.create({
   },
   modalMakeRowTextOn: { color: theme.primaryMid },
   modalMakeCheck: { fontSize: 16, fontWeight: "700", color: theme.primaryMid },
+  servedToggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  servedToggleLabel: { fontSize: 15, color: theme.text, flexShrink: 1, paddingRight: 12 },
   modalChip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
