@@ -166,6 +166,7 @@ function computeMismatches(p: Post, shop: ShopMe | null): Mismatches {
     category: false,
   };
   if (!shop) return empty;
+  const isTowing = p.serviceType.toUpperCase() === "TOWING";
   // Shop city — fall back to user.district.city when user.city is empty
   // (mirrors server-side resolveShopCityForFeed in api/services/feed-filter.ts).
   const shopCity = (
@@ -176,6 +177,11 @@ function computeMismatches(p: Post, shop: ShopMe | null): Mismatches {
   const postCity = (p.district?.city.trim() ?? "").toLowerCase();
   const cityMismatch =
     shopCity.length > 0 && postCity.length > 0 && shopCity !== postCity;
+  // For towing posts, only city matters — towing trucks drive citywide
+  // regardless of make/year/sub-district. Mirrors the server-side filter.
+  if (isTowing) {
+    return { city: cityMismatch, district: false, carMake: false, carYear: false, category: false };
+  }
   // District mismatch: when shop has a non-empty servedDistrictIds list
   // and the post's district isn't in it (only meaningful when cities match).
   const districtMismatch =
