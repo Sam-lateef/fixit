@@ -1,7 +1,8 @@
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { router, type Href } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
+  Modal,
   Pressable,
   RefreshControl,
   SectionList,
@@ -95,6 +96,29 @@ type FeedSection = {
 };
 
 type FilterTab = "ALL" | "REPAIR" | "PARTS" | "TOWING";
+type SortOption = "newest" | "oldest" | "distance";
+
+function applySort(list: Post[], sortBy: SortOption): Post[] {
+  const out = [...list];
+  if (sortBy === "newest") {
+    out.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } else if (sortBy === "oldest") {
+    out.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  } else {
+    // distance: posts with known distance first (ascending), then unknowns by recency
+    out.sort((a, b) => {
+      const da = a.distanceKm;
+      const db = b.distanceKm;
+      if (da == null && db == null) {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      if (da == null) return 1;
+      if (db == null) return -1;
+      return da - db;
+    });
+  }
+  return out;
+}
 
 function serviceTagStyle(type: string): { bg: string; fg: string } {
   const upper = type.toUpperCase();
@@ -191,6 +215,9 @@ function computeMismatches(p: Post, shop: ShopMe | null): Mismatches {
 
 export default function ShopFeedScreen(): React.ReactElement {
   const { t, locale } = useI18n();
+  const navigation = useNavigation();
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [shopId, setShopId] = useState<string | null>(null);
   const [shop, setShop] = useState<ShopMe | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -303,31 +330,35 @@ export default function ShopFeedScreen(): React.ReactElement {
     [shopId],
   );
 
-  /** Sort: posts where this shop already placed an offer come first (so the
-   *  shop sees their active conversations at the top). Stable for the rest. */
-  const sortMyBidsFirst = useCallback(
-    (list: Post[]): Post[] => {
-      const mine = list.filter(hasMyBid);
-      const rest = list.filter((p) => !hasMyBid(p));
-      return [...mine, ...rest];
-    },
-    [hasMyBid],
-  );
-
   const sections: FeedSection[] = useMemo(() => {
     const out: FeedSection[] = [
-      { key: "matched", title: t("feedForYou"), data: sortMyBidsFirst(posts) },
+      { key: "matched", title: t("feedForYou"), data: applySort(posts, sortBy) },
     ];
     if (morePosts.length > 0) {
       out.push({
         key: "more",
         title: t("feedMoreSectionTitle"),
         hint: t("feedMoreSectionHint"),
-        data: sortMyBidsFirst(morePosts),
+        data: applySort(morePosts, sortBy),
       });
     }
     return out;
-  }, [posts, morePosts, t, sortMyBidsFirst]);
+  }, [posts, morePosts, t, sortBy]);
+
+  // Header-right sort button. Tapping opens the sort sheet.
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable
+          onPress={() => setSortMenuOpen(true)}
+          hitSlop={8}
+          style={styles.headerSortBtn}
+        >
+          <Text style={styles.headerSortText}>{`⇅  ${t("sortLabel")}`}</Text>
+        </Pressable>
+      ),
+    });
+  }, [navigation, t]);
 
   return (
     <ShopPremiumGate>
@@ -565,6 +596,46 @@ export default function ShopFeedScreen(): React.ReactElement {
         }}
       />
       </View>
+
+      {/* Sort menu */}
+      <Modal
+        visible={sortMenuOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSortMenuOpen(false)}
+      >
+        <Pressable
+          style={styles.sortBackdrop}
+          onPress={() => setSortMenuOpen(false)}
+        >
+          <Pressable style={styles.sortSheet} onPress={(e) => e.stopPropagation()}>
+            {(["newest", "oldest", "distance"] as const).map((opt) => {
+              const active = sortBy === opt;
+              const label =
+                opt === "newest"
+                  ? t("sortNewest")
+                  : opt === "oldest"
+                    ? t("sortOldest")
+                    : t("sortDistance");
+              return (
+                <Pressable
+                  key={opt}
+                  style={[styles.sortOption, active && styles.sortOptionActive]}
+                  onPress={() => {
+                    setSortBy(opt);
+                    setSortMenuOpen(false);
+                  }}
+                >
+                  <Text style={[styles.sortOptionText, active && styles.sortOptionTextActive]}>
+                    {active ? "✓ " : "  "}
+                    {label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ShopPremiumGate>
   );
 }
@@ -597,6 +668,45 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     textAlign: "left",
   },
+  // Header sort button (placed in headerRight)
+  headerSortBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  headerSortText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  // Sort menu (modal)
+  sortBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
+  },
+  sortSheet: {
+    backgroundColor: theme.surface,
+    borderTopLeftRadius: theme.radiusLg,
+    borderTopRightRadius: theme.radiusLg,
+    paddingVertical: 8,
+  },
+  sortOption: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+  },
+  sortOptionActive: {
+    backgroundColor: theme.primaryLight,
+  },
+  sortOptionText: {
+    fontSize: 15,
+    color: theme.text,
+    textAlign: "left",
+  },
+  sortOptionTextActive: {
+    color: theme.primary,
+    fontWeight: "700",
+  },
+
   // Applied to the post card field that fails to match the shop profile
   // in the More section. Two flavors: chip-wrapper (already padded) and
   // text-only (needs alignSelf + small padding to shrink to content width

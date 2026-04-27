@@ -49,6 +49,15 @@ export async function registerFeedRoutes(
           expiresAt: { gt: new Date() },
           category: shop.category,
           ...(q.data.serviceType ? { serviceType: q.data.serviceType } : {}),
+          // Hide posts the shop has already bid on (PENDING or ACCEPTED).
+          // Once they bid, the post lives in the "My Bids" tab — no point
+          // showing it in the feed too. WITHDRAWN bids don't exclude so
+          // a shop that withdrew can re-bid from the feed.
+          NOT: {
+            bids: {
+              some: { shopId: shop.id, status: { not: "WITHDRAWN" } },
+            },
+          },
         },
         include: { district: true, user: true, bids: true },
       });
