@@ -12,6 +12,7 @@ import {
 
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { fetchDistrictsForCity, type DistrictRow } from "@/lib/districts-fetch";
 import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
@@ -127,7 +128,7 @@ export default function ShopAreaStep(): React.ReactElement {
         });
         router.replace("/shop");
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "Failed");
+        setErr(friendlyApiError(e, t));
       } finally {
         setBusy(false);
       }

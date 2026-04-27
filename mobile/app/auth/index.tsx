@@ -11,6 +11,7 @@ import {
 
 import { GoogleNativeSignInButton } from "@/components/auth/GoogleNativeSignInButton";
 import { GoogleOAuthButton } from "@/components/auth/GoogleOAuthButton";
+import { friendlyApiError } from "@/lib/api-error";
 import { navigateAfterLogin } from "@/lib/auth-routing";
 import { setToken } from "@/lib/auth-storage";
 import { isFirebaseClientConfigured } from "@/lib/firebase";
@@ -82,7 +83,7 @@ export default function AuthWelcomeScreen(): React.ReactElement {
       void registerPushToken(); // fire-and-forget — don't block login
       navigateAfterLogin(res);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : t("authSignInFailed"));
+      setErr(friendlyApiError(e, t, "authSignInFailed"));
     } finally {
       setBusy(false);
     }

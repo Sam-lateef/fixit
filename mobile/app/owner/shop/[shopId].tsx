@@ -13,6 +13,7 @@ import { ShopProfileHero } from "@/components/shop/ShopProfileHero";
 import type { ShopProfilePayload } from "@/components/shop/shop-profile-model";
 import { ShopServiceOverview } from "@/components/shop/ShopServiceOverview";
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
 import {
   ownerCityLabel,
@@ -46,7 +47,7 @@ export default function OwnerViewShopScreen(): ReactElement {
       setShop(normalizeShopPayload(s));
     } catch (e) {
       setShop(null);
-      setErr(e instanceof Error ? e.message : t("updateFailed"));
+      setErr(friendlyApiError(e, t, "updateFailed"));
     }
   }, [shopId, t]);
 

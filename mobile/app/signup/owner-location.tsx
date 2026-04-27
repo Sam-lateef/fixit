@@ -12,6 +12,7 @@ import {
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { fetchDistrictsForCity, routeCityParam } from "@/lib/districts-fetch";
 import { useI18n } from "@/lib/i18n";
 import { ownerCityLabel } from "@/lib/taxonomy-labels";
@@ -85,7 +86,7 @@ export default function OwnerLocationScreen(): React.ReactElement {
         }
         setDistricts(list);
       } catch (e) {
-        setLoadErr(e instanceof Error ? e.message : "Failed to load districts");
+        setLoadErr(friendlyApiError(e, t));
       }
     })();
   }, [city, fromProfile]);
@@ -200,7 +201,7 @@ export default function OwnerLocationScreen(): React.ReactElement {
                 router.replace("/owner");
               }
             } catch (e) {
-              setErr(e instanceof Error ? e.message : "Failed");
+              setErr(friendlyApiError(e, t));
             } finally {
               setBusy(false);
             }

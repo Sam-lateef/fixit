@@ -29,6 +29,7 @@ import type { ShopProfilePayload } from "@/components/shop/shop-profile-model";
 import { ShopServiceOverview } from "@/components/shop/ShopServiceOverview";
 import { useSubscription } from "@/hooks/useSubscription";
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { openAppNotificationSettings } from "@/lib/push-notifications";
 import { promptDeleteAccount } from "@/lib/delete-account";
@@ -389,7 +390,7 @@ export default function ShopProfileScreen(): React.ReactElement {
       } catch (e) {
         Alert.alert(
           t("errorTitle"),
-          e instanceof Error ? e.message : t("updateFailed"),
+          friendlyApiError(e, t, "updateFailed"),
         );
       } finally {
         setSaving(false);
@@ -450,7 +451,7 @@ export default function ShopProfileScreen(): React.ReactElement {
       } catch (e) {
         Alert.alert(
           t("errorTitle"),
-          e instanceof Error ? e.message : t("updateFailed"),
+          friendlyApiError(e, t, "updateFailed"),
         );
       } finally {
         setSavingServed(false);
@@ -560,7 +561,7 @@ export default function ShopProfileScreen(): React.ReactElement {
         });
         await load();
       } catch (e) {
-        Alert.alert(t("errorTitle"), e instanceof Error ? e.message : t("updateFailed"));
+        Alert.alert(t("errorTitle"), friendlyApiError(e, t, "updateFailed"));
         setEditUserName(shop.user.name ?? "");
       } finally {
         setSaving(false);
@@ -597,7 +598,7 @@ export default function ShopProfileScreen(): React.ReactElement {
       shopDevLog("commitCover: PUT fail", {
         message: e instanceof Error ? e.message : String(e),
       });
-      Alert.alert(t("errorTitle"), e instanceof Error ? e.message : t("updateFailed"));
+      Alert.alert(t("errorTitle"), friendlyApiError(e, t, "updateFailed"));
     } finally {
       setSaving(false);
     }
@@ -645,7 +646,7 @@ export default function ShopProfileScreen(): React.ReactElement {
         shopDevLog("commitName: PUT fail", {
           message: e instanceof Error ? e.message : String(e),
         });
-        Alert.alert(t("errorTitle"), e instanceof Error ? e.message : t("updateFailed"));
+        Alert.alert(t("errorTitle"), friendlyApiError(e, t, "updateFailed"));
         setShopNameDraft(shop.name);
       } finally {
         setSaving(false);
@@ -669,7 +670,7 @@ export default function ShopProfileScreen(): React.ReactElement {
         });
         await load();
       } catch (e) {
-        Alert.alert(t("errorTitle"), e instanceof Error ? e.message : t("updateFailed"));
+        Alert.alert(t("errorTitle"), friendlyApiError(e, t, "updateFailed"));
       }
     })();
   };

@@ -9,6 +9,7 @@ import {
 } from "react-native";
 
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { hrefAuthWelcome } from "@/lib/routes-href";
 import { navigateAfterLogin } from "@/lib/auth-routing";
 import { setToken } from "@/lib/auth-storage";
@@ -62,7 +63,7 @@ export default function AuthOtpScreen(): React.ReactElement {
         user: { userType: res.user.userType },
       });
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Failed");
+      setErr(friendlyApiError(e, t));
     } finally {
       setBusy(false);
     }

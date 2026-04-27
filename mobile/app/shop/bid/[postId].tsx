@@ -14,6 +14,7 @@ import {
 import { PostImageLightbox } from "@/components/PostImageLightbox";
 import { ShopPremiumGate } from "@/components/ShopPremiumGate";
 import { apiFetch, formatIqd } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
 import { normalizeDigits } from "@/lib/numerals";
 import {
@@ -159,15 +160,7 @@ export default function ShopBidScreen(): React.ReactElement {
         });
         router.back();
       } catch (e) {
-        // Friendly fallback when the API returns its raw zod "Invalid body"
-        // (we no longer expect to hit it after the local validation above,
-        // but better safe than the user seeing "Invalid body").
-        const raw = e instanceof Error ? e.message : "";
-        const friendly =
-          raw && raw.toLowerCase() !== "invalid body"
-            ? raw
-            : t("genericSaveFailed");
-        setErr(friendly);
+        setErr(friendlyApiError(e, t));
       } finally {
         setBusy(false);
       }

@@ -20,6 +20,7 @@ import { PostRemoteImage } from "@/components/PostRemoteImage";
 import { MultiSelectPickerModal } from "@/components/MultiSelectPickerModal";
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { useI18n } from "@/lib/i18n";
 import type { StringKey } from "@/lib/strings";
@@ -410,11 +411,9 @@ export function OwnerPostEditor({
         }
       }
     } catch (e) {
-      Alert.alert(
-        t("errorTitle"),
-        e instanceof Error ? e.message : t("cannotEditPost"),
-        [{ text: "OK", onPress: () => router.back() }],
-      );
+      Alert.alert(t("errorTitle"), friendlyApiError(e, t, "cannotEditPost"), [
+        { text: "OK", onPress: () => router.back() },
+      ]);
     } finally {
       setLoadEditBusy(false);
     }
@@ -472,7 +471,7 @@ export function OwnerPostEditor({
     if (pickedPhotos.length >= 3) return;
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert("Photos", "Permission needed to pick images.");
+      Alert.alert(t("permissionPhotosTitle"), t("permissionPhotosBody"));
       return;
     }
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -497,7 +496,7 @@ export function OwnerPostEditor({
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Location", "Location permission is needed to auto-detect your position.");
+        Alert.alert(t("permissionLocationTitle"), t("permissionLocationBody"));
         return;
       }
       const pos = await Location.getCurrentPositionAsync({
@@ -515,7 +514,7 @@ export function OwnerPostEditor({
         setTowingFrom(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
       }
     } catch {
-      Alert.alert("Location", "Could not detect your location. Please enter it manually.");
+      Alert.alert(t("permissionLocationTitle"), t("locationDetectFailed"));
     } finally {
       setLocating(false);
     }
@@ -542,11 +541,11 @@ export function OwnerPostEditor({
       return;
     }
     if (serviceType === "TOWING" && !towingFrom.trim() && !towingDesc) {
-      Alert.alert(t("createPost"), t("towingLocation"));
+      Alert.alert(t("errorTitle"), t("towingLocationRequired"));
       return;
     }
     if (!districtId) {
-      Alert.alert(t("createPost"), t("pickDistrict"));
+      Alert.alert(t("errorTitle"), t("districtRequired"));
       return;
     }
     setBusy(true);
@@ -668,10 +667,7 @@ export function OwnerPostEditor({
           ]);
         }
       } catch (e) {
-        Alert.alert(
-          t("errorTitle"),
-          e instanceof Error ? e.message : t("updateFailed"),
-        );
+        Alert.alert(t("errorTitle"), friendlyApiError(e, t, "updateFailed"));
       } finally {
         setBusy(false);
       }
@@ -920,11 +916,11 @@ export function OwnerPostEditor({
             </Pressable>
             <Pressable style={styles.selectInput} onPress={() => {
               if (!carMakeId && !carMake.trim()) {
-                Alert.alert(t("createPost"), t("carMake"));
+                Alert.alert(t("errorTitle"), t("carMakeRequired"));
                 return;
               }
               if (!carMakeId) {
-                Alert.alert(t("createPost"), t("carMake"));
+                Alert.alert(t("errorTitle"), t("carMakeRequired"));
                 return;
               }
               setPickerMode("model");
@@ -943,7 +939,7 @@ export function OwnerPostEditor({
             </Pressable>
             <Pressable style={styles.selectInput} onPress={() => {
               if (!carModelId) {
-                Alert.alert(t("createPost"), t("carModel"));
+                Alert.alert(t("errorTitle"), t("carModelRequired"));
                 return;
               }
               setPickerMode("year");

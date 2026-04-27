@@ -20,6 +20,7 @@ import {
 
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { openAppNotificationSettings } from "@/lib/push-notifications";
 import { isValidWhatsappE164 } from "@/lib/whatsapp-e164";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
@@ -118,7 +119,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
         });
         await load();
       } catch (e) {
-        Alert.alert(t("errorTitle"), e instanceof Error ? e.message : t("updateFailed"));
+        Alert.alert(t("errorTitle"), friendlyApiError(e, t, "updateFailed"));
         setEditName(prev);
       } finally {
         setBusy(false);
@@ -174,7 +175,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
       } catch (e) {
         Alert.alert(
           t("errorTitle"),
-          e instanceof Error ? e.message : t("updateFailed"),
+          friendlyApiError(e, t, "updateFailed"),
         );
       } finally {
         setSavingCity(false);
@@ -201,7 +202,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
       } catch (e) {
         Alert.alert(
           t("errorTitle"),
-          e instanceof Error ? e.message : t("updateFailed"),
+          friendlyApiError(e, t, "updateFailed"),
         );
       } finally {
         setSavingAddress(false);
@@ -226,7 +227,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
       } catch (e) {
         Alert.alert(
           t("errorTitle"),
-          e instanceof Error ? e.message : t("updateFailed"),
+          friendlyApiError(e, t, "updateFailed"),
         );
       } finally {
         setSavingDistrictId(null);
@@ -264,7 +265,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
       } catch (e) {
         Alert.alert(
           t("errorTitle"),
-          e instanceof Error ? e.message : t("updateFailed"),
+          friendlyApiError(e, t, "updateFailed"),
         );
       } finally {
         setDistrictPreparing(false);

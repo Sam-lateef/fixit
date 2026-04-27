@@ -14,6 +14,7 @@ import {
 
 import { PostImageLightbox } from "@/components/PostImageLightbox";
 import { apiFetch, formatIqd } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
 import { ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
@@ -104,7 +105,7 @@ export default function OwnerHomeScreen(): React.ReactElement {
       setPosts(list.filter((p) => p.status !== "DELETED"));
     } catch (e) {
       setPosts([]);
-      setLoadError(e instanceof Error ? e.message : "Failed to load");
+      setLoadError(friendlyApiError(e, t));
     }
   }, []);
 
@@ -146,10 +147,7 @@ export default function OwnerHomeScreen(): React.ReactElement {
               await apiFetch(`/api/v1/posts/${id}`, { method: "DELETE" });
               await load();
             } catch (e) {
-              Alert.alert(
-                "Error",
-                e instanceof Error ? e.message : "Failed",
-              );
+              Alert.alert(t("errorTitle"), friendlyApiError(e, t));
             }
           })();
         },
@@ -167,7 +165,7 @@ export default function OwnerHomeScreen(): React.ReactElement {
         await load();
         router.push(`/chat/${res.chatThread.id}` as Href);
       } catch (e) {
-        Alert.alert("Error", e instanceof Error ? e.message : "Failed");
+        Alert.alert(t("errorTitle"), friendlyApiError(e, t));
       }
     })();
   };

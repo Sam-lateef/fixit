@@ -9,6 +9,7 @@ import {
 } from "react-native";
 
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { devMockPhoneE164, isDevMockAuthUiEnabled } from "@/lib/dev-auth";
 import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
@@ -31,7 +32,7 @@ export default function AuthNumberScreen(): React.ReactElement {
       });
       router.push({ pathname: "/auth/otp", params: { phone: full } });
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Failed");
+      setErr(friendlyApiError(e, t));
     } finally {
       setBusy(false);
     }

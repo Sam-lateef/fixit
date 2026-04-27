@@ -15,6 +15,7 @@ import {
 import { PostRemoteImage } from "@/components/PostRemoteImage";
 import { ShopPremiumGate } from "@/components/ShopPremiumGate";
 import { apiFetch, formatIqd } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
 
@@ -127,7 +128,7 @@ export default function ShopBidsScreen(): React.ReactElement {
               await apiFetch(`/api/v1/bids/${bidId}`, { method: "DELETE" });
               await load();
             } catch (e) {
-              Alert.alert("Error", e instanceof Error ? e.message : "Failed");
+              Alert.alert(t("errorTitle"), friendlyApiError(e, t));
             }
           })();
         },

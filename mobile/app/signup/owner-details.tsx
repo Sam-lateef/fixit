@@ -12,6 +12,7 @@ import {
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
 import { IRAQ_OWNER_CITIES, ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
@@ -95,7 +96,7 @@ export default function OwnerDetailsScreen(): React.ReactElement {
                   : { city },
               });
             } catch (e) {
-              setErr(e instanceof Error ? e.message : "Failed");
+              setErr(friendlyApiError(e, t));
             } finally {
               setBusy(false);
             }

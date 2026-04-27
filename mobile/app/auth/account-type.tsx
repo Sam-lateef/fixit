@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { setToken } from "@/lib/auth-storage";
 import { syncRevenueCatUser } from "@/lib/revenuecat";
 import { useI18n } from "@/lib/i18n";
@@ -94,7 +95,7 @@ export default function AccountTypeScreen(): React.ReactElement {
                 } as never);
               }
             } catch (e) {
-              setErr(e instanceof Error ? e.message : "Failed");
+              setErr(friendlyApiError(e, t));
             } finally {
               setBusy(false);
             }
