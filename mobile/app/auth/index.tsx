@@ -2,6 +2,7 @@ import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -91,58 +92,54 @@ export default function AuthWelcomeScreen(): React.ReactElement {
 
   return (
     <View style={styles.screen}>
-      {/* Three vertical zones: icon top, brand middle, buttons bottom.
-          Brand block is the flex:1 spacer with center justification, so
-          صلّحها/FIX IT and the taglines float in the middle of the screen
-          regardless of device height. */}
-      <View style={styles.iconWrap}>
-        <Text style={styles.logoIcon}>🔧</Text>
-      </View>
-
+      {/* Brand — bilingual stack so identity reads regardless of locale. */}
       <View style={styles.brandWrap}>
+        <Image
+          source={require("../../assets/images/fixit-adaptive-fg-1024.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <Text style={styles.brandName}>صلّحها</Text>
         <Text style={styles.brandNameEn}>FIX IT</Text>
         <Text style={styles.brandTag}>سوق إصلاح السيارات وقطع الغيار</Text>
         <Text style={styles.brandTagEn}>Car repair and parts marketplace</Text>
       </View>
 
-      <View style={styles.actions}>
-        {busy ? (
-          <ActivityIndicator color={theme.primaryMid} style={styles.spin} size="large" />
-        ) : null}
+      {busy ? (
+        <ActivityIndicator color={theme.primaryMid} style={styles.spin} size="large" />
+      ) : null}
 
-        {needsPlayServicesCheck && !androidPlayServicesChecked ? null : useNativeGoogle ? (
-          <GoogleNativeSignInButton
-            webClientId={webClientId}
-            onSignedIn={handleGoogleSignedIn}
-            onError={setErr}
-            busy={busy}
-            setBusy={setBusy}
-          />
-        ) : (
-          <GoogleOAuthButton
-            webClientId={webClientId}
-            iosClientId={iosClientId}
-            androidClientId={androidClientId}
-            onSignedIn={handleGoogleSignedIn}
-            onError={setErr}
-            busy={busy}
-            setBusy={setBusy}
-          />
-        )}
+      {needsPlayServicesCheck && !androidPlayServicesChecked ? null : useNativeGoogle ? (
+        <GoogleNativeSignInButton
+          webClientId={webClientId}
+          onSignedIn={handleGoogleSignedIn}
+          onError={setErr}
+          busy={busy}
+          setBusy={setBusy}
+        />
+      ) : (
+        <GoogleOAuthButton
+          webClientId={webClientId}
+          iosClientId={iosClientId}
+          androidClientId={androidClientId}
+          onSignedIn={handleGoogleSignedIn}
+          onError={setErr}
+          busy={busy}
+          setBusy={setBusy}
+        />
+      )}
 
-        {Platform.OS === "ios" ? (
-          <Pressable
-            style={[styles.btn, styles.btnPrimary, busy && styles.btnDisabled]}
-            disabled={busy || !isFirebaseClientConfigured()}
-            onPress={() => void onApple()}
-          >
-            <Text style={styles.btnPrimaryText}>{t("continueWithApple")}</Text>
-          </Pressable>
-        ) : null}
+      {Platform.OS === "ios" ? (
+        <Pressable
+          style={[styles.btn, styles.btnPrimary, busy && styles.btnDisabled]}
+          disabled={busy || !isFirebaseClientConfigured()}
+          onPress={() => void onApple()}
+        >
+          <Text style={styles.btnPrimaryText}>{t("continueWithApple")}</Text>
+        </Pressable>
+      ) : null}
 
-        {err ? <Text style={styles.err}>{err}</Text> : null}
-      </View>
+      {err ? <Text style={styles.err}>{err}</Text> : null}
     </View>
   );
 }
@@ -154,21 +151,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: theme.surface,
   },
-  // Icon, brand and buttons are one centered column with breathing-room
-  // gaps between zones — feels grouped, not spread to the corners.
-  iconWrap: { alignItems: "center", marginBottom: 28 },
-  brandWrap: { alignItems: "center", marginBottom: 40 },
-  actions: {},
-  logoIcon: { fontSize: 72 },
+  brandWrap: { alignItems: "center", marginBottom: 28 },
+  // Solid green brand wrench, no circle behind it.
+  logo: { width: 120, height: 120, marginBottom: 12 },
   brandName: {
-    fontSize: 30,
+    // Arabic glyphs render narrower than Latin at the same point size, so
+    // bump صلّحها up to roughly match the visual width of "FIX IT" below.
+    fontSize: 36,
     fontWeight: "800",
     color: theme.primary,
     letterSpacing: 0.5,
     textAlign: "center",
   },
   brandNameEn: {
-    fontSize: 30,
+    fontSize: 31,
     fontWeight: "800",
     color: theme.primary,
     letterSpacing: 0.5,

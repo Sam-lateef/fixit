@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { setLocaleGateCompleted } from "@/lib/locale-gate";
@@ -20,39 +20,34 @@ export default function LanguageGateScreen(): React.ReactElement {
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <View style={styles.wrap}>
-        {/* Three vertical zones: icon top, brand middle, buttons bottom. */}
-        <View style={styles.iconWrap}>
-          <Text style={styles.logoIcon}>🔧</Text>
-        </View>
-
         <View style={styles.brandWrap}>
-          {/* Show both names on the very first screen — the user hasn't
-              picked a language yet, so don't gate the brand on locale. */}
+          <Image
+            source={require("../assets/images/fixit-adaptive-fg-1024.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.brandName}>صلّحها</Text>
           <Text style={styles.brandNameEn}>FIX IT</Text>
           <Text style={styles.brandTag}>سوق إصلاح السيارات وقطع الغيار</Text>
           <Text style={styles.brandTagEn}>Car repair and parts marketplace</Text>
         </View>
-
-        <View style={styles.actions}>
-          <Text style={styles.title}>{t("chooseLanguageTitle")}</Text>
-          <Pressable
-            accessibilityRole="button"
-            style={styles.btn}
-            onPress={() => choose("ar-iq")}
-          >
-            <Text style={styles.btnText}>{t("arabic")}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.btn, styles.btnSecondary]}
-            onPress={() => choose("en")}
-          >
-            <Text style={[styles.btnText, styles.btnTextSecondary]}>
-              {t("english")}
-            </Text>
-          </Pressable>
-        </View>
+        <Text style={styles.title}>{t("chooseLanguageTitle")}</Text>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.btn}
+          onPress={() => choose("ar-iq")}
+        >
+          <Text style={styles.btnText}>{t("arabic")}</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          style={[styles.btn, styles.btnSecondary]}
+          onPress={() => choose("en")}
+        >
+          <Text style={[styles.btnText, styles.btnTextSecondary]}>
+            {t("english")}
+          </Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -62,24 +57,24 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: theme.surface },
   wrap: {
     flex: 1,
-    padding: 24,
     justifyContent: "center",
+    paddingHorizontal: 28,
+    paddingBottom: 48,
   },
-  // Match auth/login screen: icon, brand and buttons grouped as one
-  // centered column with breathing-room gaps between zones.
-  iconWrap: { alignItems: "center", marginBottom: 28 },
-  brandWrap: { alignItems: "center", marginBottom: 40 },
-  actions: {},
-  logoIcon: { fontSize: 72 },
+  brandWrap: { alignItems: "center", marginBottom: 28 },
+  // Solid green brand wrench, no circle behind it.
+  logo: { width: 120, height: 120, marginBottom: 12 },
   brandName: {
-    fontSize: 30,
+    // Arabic glyphs render narrower than Latin at the same point size, so
+    // bump صلّحها up to roughly match the visual width of "FIX IT" below.
+    fontSize: 36,
     fontWeight: "800",
     color: theme.primary,
     letterSpacing: 0.5,
     textAlign: "center",
   },
   brandNameEn: {
-    fontSize: 30,
+    fontSize: 31,
     fontWeight: "800",
     color: theme.primary,
     letterSpacing: 0.5,
@@ -99,25 +94,24 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "700",
     color: theme.text,
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  // Button geometry matched to auth/login screen for visual parity.
   btn: {
     backgroundColor: theme.primaryMid,
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderRadius: theme.radiusMd,
     alignItems: "center",
-    marginBottom: 12,
+    marginTop: 12,
   },
   btnSecondary: {
     backgroundColor: theme.chip,
     borderWidth: 1,
     borderColor: theme.border,
   },
-  btnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  btnText: { color: "#fff", fontWeight: "700", fontSize: 17 },
   btnTextSecondary: { color: theme.text },
 });
