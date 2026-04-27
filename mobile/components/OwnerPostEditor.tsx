@@ -187,6 +187,7 @@ export function OwnerPostEditor({
 
   const [pickedPhotos, setPickedPhotos] = useState<PickedPhoto[]>([]);
   const [busy, setBusy] = useState(false);
+  const [descError, setDescError] = useState("");
   const [loadEditBusy, setLoadEditBusy] = useState(() => Boolean(editPostId));
 
   const loadDistricts = useCallback(async () => {
@@ -533,10 +534,11 @@ export function OwnerPostEditor({
   const submit = (): void => {
     const desc = description.trim();
     const towingDesc = towingNotes.trim();
+    setDescError("");
 
     // Validation
     if (serviceType !== "TOWING" && desc.length < 1) {
-      Alert.alert(t("createPost"), t("description"));
+      setDescError(t("descriptionRequired"));
       return;
     }
     if (serviceType === "TOWING" && !towingFrom.trim() && !towingDesc) {
@@ -1019,16 +1021,23 @@ export function OwnerPostEditor({
               style={[
                 styles.input,
                 styles.area,
+                descError ? styles.inputError : null,
                 locale === "ar-iq"
                   ? { textAlign: "right", writingDirection: "rtl" }
                   : { textAlign: "left", writingDirection: "ltr" },
               ]}
               value={description}
-              onChangeText={(v) => setDescription(v.slice(0, DESC_LIMIT))}
+              onChangeText={(v) => {
+                setDescription(v.slice(0, DESC_LIMIT));
+                if (descError) setDescError("");
+              }}
               multiline
               placeholderTextColor={theme.mutedLight}
               maxLength={DESC_LIMIT}
             />
+            {descError ? (
+              <Text style={styles.inlineError}>{descError}</Text>
+            ) : null}
             <Text style={styles.charCount}>{description.length}/{DESC_LIMIT}</Text>
           </>
         ) : null}
@@ -1225,6 +1234,14 @@ const styles = StyleSheet.create({
   },
   area: { minHeight: 90, textAlignVertical: "top" },
   charCount: { fontSize: 12, color: theme.mutedLight, textAlign: "right", marginBottom: 4 },
+  inputError: { borderColor: theme.danger },
+  inlineError: {
+    color: theme.danger,
+    fontSize: 13,
+    marginTop: 4,
+    marginBottom: 4,
+    textAlign: "left",
+  },
   photoRow: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
   thumbWrap: { position: "relative" },
   thumb: { width: 72, height: 72, borderRadius: 8 },

@@ -41,6 +41,7 @@ type Post = {
   carMake: string | null;
   carModel: string | null;
   carYear: number | null;
+  deliveryNeeded: boolean;
   towingToAddress: string | null;
   description: string;
   distanceKm: number | null;
@@ -425,6 +426,11 @@ export default function ShopFeedScreen(): React.ReactElement {
                       <Text style={styles.urgencyText}>⚡</Text>
                     </View>
                   ) : null}
+                  {p.serviceType.toUpperCase() === "PARTS" && p.deliveryNeeded ? (
+                    <View style={styles.deliveryBadge}>
+                      <Text style={styles.deliveryBadgeText}>{t("deliveryRequested")}</Text>
+                    </View>
+                  ) : null}
                   {postIsNew && !hasBid ? (
                     <View style={styles.newBadge}>
                       <Text style={styles.newBadgeText}>{t("new_")}</Text>
@@ -732,6 +738,13 @@ const styles = StyleSheet.create({
 
   cardDimmed: { opacity: 0.65 },
 
+  deliveryBadge: {
+    backgroundColor: "#E0F2FE",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  deliveryBadgeText: { fontSize: 11, fontWeight: "700", color: "#075985" },
   newBadge: {
     backgroundColor: "#D8F3DC",
     paddingHorizontal: 8,
