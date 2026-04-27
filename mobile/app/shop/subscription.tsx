@@ -1,48 +1,20 @@
 import { Stack } from "expo-router";
-import { useCallback } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ShopPaywall } from "@/components/ShopPaywall";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useI18n } from "@/lib/i18n";
-import { isRevenueCatConfigured } from "@/lib/revenuecat";
-import { presentRevenueCatDashboardPaywall } from "@/lib/revenuecat-paywall";
 import { theme } from "@/lib/theme";
 
 export default function ShopSubscriptionScreen(): React.ReactElement {
   const { t } = useI18n();
-  const { isSubscribed, isLoading, refresh } = useSubscription();
+  const { isSubscribed, isLoading } = useSubscription();
+  const [plansComingSoon, setPlansComingSoon] = useState(false);
 
   const openPlans = useCallback((): void => {
-    if (Platform.OS === "web") {
-      return;
-    }
-    if (!isRevenueCatConfigured()) {
-      Alert.alert(t("errorTitle"), t("revenueCatKeysMissing"));
-      return;
-    }
-    void (async () => {
-      try {
-        const ok = await presentRevenueCatDashboardPaywall();
-        if (ok) {
-          await refresh();
-        }
-      } catch (e) {
-        Alert.alert(
-          t("errorTitle"),
-          e instanceof Error ? e.message : t("updateFailed"),
-        );
-      }
-    })();
-  }, [refresh, t]);
+    setPlansComingSoon(true);
+  }, []);
 
   return (
     <>
@@ -63,6 +35,9 @@ export default function ShopSubscriptionScreen(): React.ReactElement {
           <Pressable style={styles.primaryBtn} onPress={openPlans}>
             <Text style={styles.primaryBtnText}>{t("openSubscriptionPlans")}</Text>
           </Pressable>
+          {plansComingSoon ? (
+            <Text style={styles.comingSoon}>{t("subscriptionComingSoon")}</Text>
+          ) : null}
         </View>
       ) : (
         <ShopPaywall />
@@ -106,4 +81,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   primaryBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  comingSoon: {
+    marginTop: 14,
+    fontSize: 15,
+    fontWeight: "600",
+    color: theme.muted,
+    textAlign: "center",
+  },
 });

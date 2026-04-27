@@ -11,13 +11,12 @@ import {
 
 import { useSubscription } from "@/hooks/useSubscription";
 import { useI18n } from "@/lib/i18n";
-import { presentRevenueCatDashboardPaywall } from "@/lib/revenuecat-paywall";
 import { SHOP_ENTITLEMENT_ID } from "@/lib/revenuecat";
 import { theme } from "@/lib/theme";
 
 /**
- * Full-screen gate: opens RevenueCat dashboard paywall (react-native-purchases-ui).
- * Active entitlement in code: {@link SHOP_ENTITLEMENT_ID} (e.g. "FixIT Pro").
+ * Full-screen subscription gate. Subscribe CTA shows "coming soon" until IAP is live.
+ * Entitlement id (dev label): {@link SHOP_ENTITLEMENT_ID}.
  */
 export function ShopPaywall(): React.ReactElement {
   const { t } = useI18n();
@@ -25,24 +24,11 @@ export function ShopPaywall(): React.ReactElement {
     useSubscription();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [subscribeComingSoon, setSubscribeComingSoon] = useState(false);
 
-  async function openNativePaywall(): Promise<void> {
+  function onSubscribePress(): void {
+    setSubscribeComingSoon(true);
     setErr("");
-    setBusy(true);
-    try {
-      const unlocked = await presentRevenueCatDashboardPaywall();
-      if (unlocked) {
-        await refresh();
-      }
-    } catch (e) {
-      const msg =
-        e instanceof Error
-          ? e.message
-          : "Paywall unavailable. Use a dev/production build (not Expo Go).";
-      setErr(msg);
-    } finally {
-      setBusy(false);
-    }
   }
 
   if (subLoading) {
@@ -72,10 +58,13 @@ export function ShopPaywall(): React.ReactElement {
       <Pressable
         style={[styles.primaryBtn, busy && styles.btnDisabled]}
         disabled={busy}
-        onPress={() => void openNativePaywall()}
+        onPress={onSubscribePress}
       >
         <Text style={styles.primaryBtnText}>{t("subscribeNow")}</Text>
       </Pressable>
+      {subscribeComingSoon ? (
+        <Text style={styles.comingSoon}>{t("subscriptionComingSoon")}</Text>
+      ) : null}
       <Pressable
         style={styles.restore}
         disabled={busy}
@@ -148,4 +137,11 @@ const styles = StyleSheet.create({
   restore: { marginTop: 16, padding: 12, alignItems: "center" },
   restoreText: { color: theme.muted, fontWeight: "600", fontSize: 14 },
   err: { marginTop: 12, color: theme.danger, fontSize: 13, textAlign: "center" },
+  comingSoon: {
+    marginTop: 14,
+    fontSize: 15,
+    fontWeight: "600",
+    color: theme.muted,
+    textAlign: "center",
+  },
 });

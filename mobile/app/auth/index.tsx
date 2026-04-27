@@ -1,5 +1,4 @@
 import * as WebBrowser from "expo-web-browser";
-import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -134,14 +133,6 @@ export default function AuthWelcomeScreen(): React.ReactElement {
         </Pressable>
       ) : null}
 
-      <Pressable
-        style={[styles.btn, styles.btnSecondary, busy && styles.btnDisabled]}
-        disabled={busy}
-        onPress={() => router.push("/auth/number")}
-      >
-        <Text style={styles.btnSecondaryText}>{t("usePhoneInstead")}</Text>
-      </Pressable>
-
       {err ? <Text style={styles.err}>{err}</Text> : null}
     </View>
   );
@@ -176,12 +167,6 @@ const styles = StyleSheet.create({
   },
   btnPrimary: { backgroundColor: theme.primaryMid },
   btnPrimaryText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-  btnSecondary: {
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  btnSecondaryText: { color: theme.text, fontWeight: "600", fontSize: 15 },
   btnDisabled: { opacity: 0.5 },
   err: { marginTop: 16, color: theme.danger, fontSize: 14 },
 });

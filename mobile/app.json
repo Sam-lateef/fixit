@@ -4,7 +4,7 @@
     "slug": "fixit",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/Fix.png",
+    "icon": "./assets/images/car repair.png",
     "scheme": "fixit",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -25,7 +25,7 @@
       "package": "com.fixit.app",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/Fix.png",
+        "foregroundImage": "./assets/images/car repair.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,

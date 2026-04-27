@@ -20,6 +20,7 @@ export default function OwnerTabsLayout(): React.ReactElement {
           headerStyle: { backgroundColor: theme.primary },
           headerTintColor: "#fff",
           headerTitleStyle: { color: "#fff", fontWeight: "700" },
+          headerTitleAlign: "center",
           headerShadowVisible: false,
         tabBarStyle: {
           backgroundColor: theme.surface,

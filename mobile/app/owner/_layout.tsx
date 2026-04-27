@@ -10,6 +10,7 @@ export default function OwnerStackLayout(): React.ReactElement {
     headerStyle: { backgroundColor: theme.primary },
     headerTintColor: "#fff",
     headerTitleStyle: { color: "#fff", fontWeight: "700" as const },
+    headerTitleAlign: "center" as const,
     headerShadowVisible: false,
     // Hide native back so iOS doesn't mirror under RTL (renders `Back ›`).
     // Custom button below always renders `‹ Back` in LTR order.
