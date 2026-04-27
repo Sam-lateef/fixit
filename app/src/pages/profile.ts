@@ -48,7 +48,7 @@ export async function renderProfile(
   });
   root.querySelector("#out")?.addEventListener("click", async () => {
     await clearToken();
-    navigate("#/auth/number");
+    navigate("#/auth/welcome");
   });
   root.querySelectorAll("[data-h]").forEach((el) => {
     el.addEventListener("click", () => {

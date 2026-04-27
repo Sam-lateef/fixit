@@ -15,6 +15,7 @@ import {
   GestureHandlerRootView,
   Pressable as GHPressable,
 } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { theme } from "@/lib/theme";
 
@@ -64,6 +65,8 @@ export function MultiSelectPickerModal({
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set(initialSelected));
   const isSingle = mode === "single";
+  // Pad the footer so Save/Cancel clear the iPhone home indicator.
+  const insets = useSafeAreaInsets();
 
   // When the modal opens, reseed the local selection from props and clear the
   // search field. When it closes, leave state alone — useEffect on `visible`
@@ -166,7 +169,7 @@ export function MultiSelectPickerModal({
               </View>
             ) : null}
 
-            <View style={styles.footer}>
+            <View style={[styles.footer, { paddingBottom: 12 + insets.bottom }]}>
               <Text style={styles.count}>
                 {!isSingle && selected.size > 0
                   ? `${selected.size} selected`

@@ -8,6 +8,7 @@
     "android": "expo run:android",
     "android:build": "expo run:android",
     "prebuild:android": "expo prebuild --platform android --no-install",
+    "prebuild:android:clean": "expo prebuild --platform android --clean",
     "android:sha1": "powershell -ExecutionPolicy Bypass -File ./scripts/print-android-debug-sha1.ps1",
     "ios": "expo run:ios",
     "web": "expo start --web"

@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { theme } from "@/lib/theme";
 
@@ -45,6 +46,8 @@ export function SearchablePickerModal({
 }: Props): React.ReactElement {
   const [query, setQuery] = useState("");
   const searchOn = showSearch !== false;
+  // Pad the card so the cancel button clears the iPhone home indicator.
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (!visible) {
@@ -75,7 +78,7 @@ export function SearchablePickerModal({
       >
         {/* Tap-outside-to-dismiss area */}
         <Pressable style={styles.dismissArea} onPress={onRequestClose} />
-        <View style={styles.card}>
+        <View style={[styles.card, { paddingBottom: 16 + insets.bottom }]}>
           <Text style={styles.title}>{title}</Text>
           {searchOn ? (
             <TextInput

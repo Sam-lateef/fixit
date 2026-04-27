@@ -12,9 +12,15 @@ export default function SignupLayout(): React.ReactElement {
         headerStyle: { backgroundColor: theme.primary },
         headerTintColor: "#fff",
         headerTitleStyle: { color: "#fff", fontWeight: "700" as const },
+        headerTitleAlign: "center",
         headerShadowVisible: false,
         contentStyle: { backgroundColor: theme.surface },
         headerTitle: "",
+        // Suppress the native iOS back button entirely; `HeaderBackButton`
+        // is our only back affordance and always reads `‹ Back`.
+        headerBackVisible: false,
+        headerBackTitle: "",
+        headerBackButtonDisplayMode: "minimal",
         headerLeft: () => <HeaderBackButton />,
         headerRight: () => <HeaderLogoutButton />,
       }}

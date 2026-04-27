@@ -91,50 +91,58 @@ export default function AuthWelcomeScreen(): React.ReactElement {
 
   return (
     <View style={styles.screen}>
-      {/* Brand */}
-      <View style={styles.brandWrap}>
-        <View style={styles.logoCircle}>
-          <Text style={styles.logoIcon}>🔧</Text>
-        </View>
-        <Text style={styles.brandName}>{t("appName")}</Text>
-        <Text style={styles.brandTag}>{t("tagline")}</Text>
+      {/* Three vertical zones: icon top, brand middle, buttons bottom.
+          Brand block is the flex:1 spacer with center justification, so
+          صلّحها/FIX IT and the taglines float in the middle of the screen
+          regardless of device height. */}
+      <View style={styles.iconWrap}>
+        <Text style={styles.logoIcon}>🔧</Text>
       </View>
 
-      {busy ? (
-        <ActivityIndicator color={theme.primaryMid} style={styles.spin} size="large" />
-      ) : null}
+      <View style={styles.brandWrap}>
+        <Text style={styles.brandName}>صلّحها</Text>
+        <Text style={styles.brandNameEn}>FIX IT</Text>
+        <Text style={styles.brandTag}>سوق إصلاح السيارات وقطع الغيار</Text>
+        <Text style={styles.brandTagEn}>Car repair and parts marketplace</Text>
+      </View>
 
-      {needsPlayServicesCheck && !androidPlayServicesChecked ? null : useNativeGoogle ? (
-        <GoogleNativeSignInButton
-          webClientId={webClientId}
-          onSignedIn={handleGoogleSignedIn}
-          onError={setErr}
-          busy={busy}
-          setBusy={setBusy}
-        />
-      ) : (
-        <GoogleOAuthButton
-          webClientId={webClientId}
-          iosClientId={iosClientId}
-          androidClientId={androidClientId}
-          onSignedIn={handleGoogleSignedIn}
-          onError={setErr}
-          busy={busy}
-          setBusy={setBusy}
-        />
-      )}
+      <View style={styles.actions}>
+        {busy ? (
+          <ActivityIndicator color={theme.primaryMid} style={styles.spin} size="large" />
+        ) : null}
 
-      {Platform.OS === "ios" ? (
-        <Pressable
-          style={[styles.btn, styles.btnPrimary, busy && styles.btnDisabled]}
-          disabled={busy || !isFirebaseClientConfigured()}
-          onPress={() => void onApple()}
-        >
-          <Text style={styles.btnPrimaryText}>{t("continueWithApple")}</Text>
-        </Pressable>
-      ) : null}
+        {needsPlayServicesCheck && !androidPlayServicesChecked ? null : useNativeGoogle ? (
+          <GoogleNativeSignInButton
+            webClientId={webClientId}
+            onSignedIn={handleGoogleSignedIn}
+            onError={setErr}
+            busy={busy}
+            setBusy={setBusy}
+          />
+        ) : (
+          <GoogleOAuthButton
+            webClientId={webClientId}
+            iosClientId={iosClientId}
+            androidClientId={androidClientId}
+            onSignedIn={handleGoogleSignedIn}
+            onError={setErr}
+            busy={busy}
+            setBusy={setBusy}
+          />
+        )}
 
-      {err ? <Text style={styles.err}>{err}</Text> : null}
+        {Platform.OS === "ios" ? (
+          <Pressable
+            style={[styles.btn, styles.btnPrimary, busy && styles.btnDisabled]}
+            disabled={busy || !isFirebaseClientConfigured()}
+            onPress={() => void onApple()}
+          >
+            <Text style={styles.btnPrimaryText}>{t("continueWithApple")}</Text>
+          </Pressable>
+        ) : null}
+
+        {err ? <Text style={styles.err}>{err}</Text> : null}
+      </View>
     </View>
   );
 }
@@ -146,19 +154,29 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: theme.surface,
   },
-  brandWrap: { alignItems: "center", marginBottom: 28 },
-  logoCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: theme.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
+  // Icon, brand and buttons are one centered column with breathing-room
+  // gaps between zones — feels grouped, not spread to the corners.
+  iconWrap: { alignItems: "center", marginBottom: 28 },
+  brandWrap: { alignItems: "center", marginBottom: 40 },
+  actions: {},
+  logoIcon: { fontSize: 72 },
+  brandName: {
+    fontSize: 30,
+    fontWeight: "800",
+    color: theme.primary,
+    letterSpacing: 0.5,
+    textAlign: "center",
   },
-  logoIcon: { fontSize: 32 },
-  brandName: { fontSize: 26, fontWeight: "800", color: theme.primary, letterSpacing: 0.5 },
-  brandTag: { fontSize: 13, color: theme.muted, marginTop: 4, textAlign: "center" },
+  brandNameEn: {
+    fontSize: 30,
+    fontWeight: "800",
+    color: theme.primary,
+    letterSpacing: 0.5,
+    textAlign: "center",
+    marginTop: 14,
+  },
+  brandTag: { fontSize: 13, color: theme.muted, marginTop: 10, textAlign: "center" },
+  brandTagEn: { fontSize: 13, color: theme.muted, marginTop: 2, textAlign: "center" },
   spin: { marginBottom: 16 },
   btn: {
     paddingVertical: 14,

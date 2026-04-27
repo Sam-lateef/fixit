@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PostImageLightbox } from "@/components/PostImageLightbox";
 import { ShopPremiumGate } from "@/components/ShopPremiumGate";
@@ -216,6 +217,8 @@ function computeMismatches(p: Post, shop: ShopMe | null): Mismatches {
 export default function ShopFeedScreen(): React.ReactElement {
   const { t, locale } = useI18n();
   const navigation = useNavigation();
+  // Safe-area inset so the sort sheet clears the iPhone home indicator.
+  const insets = useSafeAreaInsets();
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [shopId, setShopId] = useState<string | null>(null);
@@ -608,7 +611,10 @@ export default function ShopFeedScreen(): React.ReactElement {
           style={styles.sortBackdrop}
           onPress={() => setSortMenuOpen(false)}
         >
-          <Pressable style={styles.sortSheet} onPress={(e) => e.stopPropagation()}>
+          <Pressable
+            style={[styles.sortSheet, { paddingBottom: 16 + insets.bottom }]}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.sortGrabber} />
             <View style={styles.sortHeader}>
               <Text style={styles.sortHeaderTitle}>{t("sortLabel")}</Text>

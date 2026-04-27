@@ -11,6 +11,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PostRemoteImage } from "@/components/PostRemoteImage";
 import { ShopPremiumGate } from "@/components/ShopPremiumGate";
@@ -74,6 +75,8 @@ function statusTag(
 export default function ShopBidsScreen(): React.ReactElement {
   const { t, isRtl, locale } = useI18n();
   const navigation = useNavigation();
+  // Safe-area inset so the sort sheet clears the iPhone home indicator.
+  const insets = useSafeAreaInsets();
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [bids, setBids] = useState<BidRow[]>([]);
@@ -334,7 +337,10 @@ export default function ShopBidsScreen(): React.ReactElement {
           style={styles.sortBackdrop}
           onPress={() => setSortMenuOpen(false)}
         >
-          <Pressable style={styles.sortSheet} onPress={(e) => e.stopPropagation()}>
+          <Pressable
+            style={[styles.sortSheet, { paddingBottom: 16 + insets.bottom }]}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.sortGrabber} />
             <View style={styles.sortHeader}>
               <Text style={styles.sortHeaderTitle}>{t("sortLabel")}</Text>

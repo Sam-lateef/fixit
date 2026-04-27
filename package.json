@@ -16,6 +16,7 @@
     "db:seed": "npm run db:seed -w api",
     "test": "npm run test -w api",
     "deploy:fly": "fly deploy",
+    "deploy:fly:admin": "fly deploy web/admin",
     "android": "npm run android -w mobile",
     "ios": "npm run ios -w mobile"
   },

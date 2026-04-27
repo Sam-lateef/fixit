@@ -4,7 +4,7 @@
     "slug": "fixit",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/car repair.png",
+    "icon": "./assets/images/fixit-icon-1024.png",
     "scheme": "fixit",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -16,6 +16,7 @@
     "ios": {
       "bundleIdentifier": "com.fixitiq.app",
       "supportsTablet": true,
+      "icon": "./assets/images/fixit-icon-1024.png",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -25,7 +26,7 @@
       "package": "com.fixit.app",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/car repair.png",
+        "foregroundImage": "./assets/images/fixit-adaptive-fg-1024.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -35,11 +36,16 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/launcher-wrench-green.png"
     },
     "plugins": [
       "expo-router",
-      "@react-native-google-signin/google-signin",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.925833254957-i4hat6onrq66lnbtbifma5ikte92mv9r"
+        }
+      ],
       "expo-apple-authentication",
       "expo-secure-store",
       [
@@ -57,7 +63,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/icon.png",
+          "icon": "./assets/images/fixit-notification-96.png",
           "color": "#2D6A4F",
           "sounds": []
         }

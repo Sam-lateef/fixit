@@ -12,8 +12,8 @@ export function renderSplash(root: HTMLElement): void {
     t("tagline") +
     "</div>" +
     "</div>";
-  setTimeout(() => navigate("#/auth/number"), 1800);
+  setTimeout(() => navigate("#/auth/welcome"), 1800);
   root.querySelector(".splash")?.addEventListener("click", () => {
-    navigate("#/auth/number");
+    navigate("#/auth/welcome");
   });
 }

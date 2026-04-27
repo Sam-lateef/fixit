@@ -19,12 +19,14 @@ import { registerUploadRoutes } from "./routes/uploads.js";
 import { registerCatalogRoutes } from "./routes/catalog.js";
 import { registerDistrictRoutes } from "./routes/districts.js";
 import { registerGeocodeRoutes } from "./routes/geocode.js";
+import { registerPublicConfigRoutes } from "./routes/public-config.js";
 import { registerDevSessionRoutes } from "./routes/dev-session.js";
 import { registerAdminAuthRoutes } from "./routes/admin/auth.js";
 import { registerAdminUserRoutes } from "./routes/admin/users.js";
 import { registerAdminPostRoutes } from "./routes/admin/posts.js";
 import { initSocket } from "./socket/chat.js";
 import { startPostExpiryJob } from "./cron/expiry.js";
+import { registerWebDist } from "./register-web-dist.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -48,6 +50,8 @@ export async function buildApp(): Promise<AppWithIo> {
   await fastify.register(cors, { origin: true, credentials: true });
 
   fastify.get("/health", async () => ({ ok: true }));
+
+  await registerPublicConfigRoutes(fastify);
 
   await fastify.register(jwt, {
     secret,
@@ -95,6 +99,8 @@ export async function buildApp(): Promise<AppWithIo> {
   registerChatRoutes(fastify, () => bridge);
 
   startPostExpiryJob();
+
+  await registerWebDist(fastify);
 
   return { fastify, io };
 }

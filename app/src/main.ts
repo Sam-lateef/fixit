@@ -6,6 +6,6 @@ const el = document.getElementById("app");
 if (el) {
   startRouter(el);
   if (!window.location.hash || window.location.hash === "#") {
-    navigate("#/splash");
+    navigate("#/coming-soon");
   }
 }

@@ -15,6 +15,11 @@ export default function OwnerStackLayout(): React.ReactElement {
     // Hide native back so iOS doesn't mirror under RTL (renders `Back ›`).
     // Custom button below always renders `‹ Back` in LTR order.
     headerBackVisible: false,
+    // Defensive: empty the native back title + minimal display mode so even
+    // if headerBackVisible doesn't fully suppress on some iOS version, no
+    // `‹ <prev-screen-title>` text can render next to our custom `‹ Back`.
+    headerBackTitle: "",
+    headerBackButtonDisplayMode: "minimal" as const,
     headerLeft: () => <StackBackButton />,
   } as const;
   return (

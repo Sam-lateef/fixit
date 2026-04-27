@@ -10,7 +10,6 @@ import {
   Platform,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Switch,
@@ -22,6 +21,7 @@ import {
   GestureHandlerRootView,
   Pressable as GHPressable,
 } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { ShopProfileHero } from "@/components/shop/ShopProfileHero";
@@ -145,6 +145,8 @@ function parseShopYearDraft(minStr: string, maxStr: string): YearDraftParse {
 
 export default function ShopProfileScreen(): React.ReactElement {
   const { t, locale, setLocale } = useI18n();
+  // Safe-area inset so bottom-anchored sheets clear the iPhone home indicator.
+  const insets = useSafeAreaInsets();
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
   const [servicePicker, setServicePicker] = useState<
@@ -1029,7 +1031,7 @@ export default function ShopProfileScreen(): React.ReactElement {
               setLocationModalOpen(false);
             }}
           />
-          <SafeAreaView style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { paddingBottom: insets.bottom }]}>
             <View style={styles.modalHeader}>
               {editCityPickerOpen || editDistrictPickerOpen ? (
                 <Pressable
@@ -1196,7 +1198,7 @@ export default function ShopProfileScreen(): React.ReactElement {
                 <Text style={styles.modalSaveBtnText}>{t("save")}</Text>
               </Pressable>
             ) : null}
-          </SafeAreaView>
+          </View>
         </KeyboardAvoidingView>
       </Modal>
 
@@ -1212,7 +1214,7 @@ export default function ShopProfileScreen(): React.ReactElement {
             style={styles.dismissArea}
             onPress={() => setServedModalOpen(false)}
           />
-          <SafeAreaView style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { paddingBottom: insets.bottom }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t("servedDistricts")}</Text>
               <Pressable onPress={() => setServedModalOpen(false)} hitSlop={8}>
@@ -1268,7 +1270,7 @@ export default function ShopProfileScreen(): React.ReactElement {
             >
               <Text style={styles.modalSaveBtnText}>{t("save")}</Text>
             </Pressable>
-          </SafeAreaView>
+          </View>
         </View>
       </Modal>
 
@@ -1312,7 +1314,7 @@ export default function ShopProfileScreen(): React.ReactElement {
               setEditSection(null);
             }}
           />
-          <SafeAreaView style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { paddingBottom: insets.bottom }]}>
             <View style={styles.modalHeader}>
               {makesAllOpen || yearFromOpen || yearToOpen ? (
                 <Pressable
@@ -1576,7 +1578,7 @@ export default function ShopProfileScreen(): React.ReactElement {
                 <Text style={styles.modalSaveBtnText}>{t("save")}</Text>
               </Pressable>
             ) : null}
-          </SafeAreaView>
+          </View>
         </KeyboardAvoidingView>
         </GestureHandlerRootView>
       </Modal>

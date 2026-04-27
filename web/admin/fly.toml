@@ -1,0 +1,28 @@
+# Deploy from this directory:
+#   cd web/admin && fly apps create fixit-admin   # once
+#   fly deploy
+#
+# Set API if not using the default Fly URL:
+#   fly secrets set API_BASE=https://fixit-api.fly.dev
+app = "fixit-admin"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  API_BASE = "https://fixit-api.fly.dev"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "10s"
+    grace_period = "45s"
+    method = "GET"
+    path = "/health"

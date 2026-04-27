@@ -10,6 +10,7 @@ import {
 } from "react-native";
 
 import { useSubscription } from "@/hooks/useSubscription";
+import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
 import { SHOP_ENTITLEMENT_ID } from "@/lib/revenuecat";
 import { theme } from "@/lib/theme";
@@ -20,10 +21,15 @@ import { theme } from "@/lib/theme";
  */
 export function ShopPaywall(): React.ReactElement {
   const { t } = useI18n();
-  const { restorePurchases, isLoading: subLoading, refresh } =
-    useSubscription();
+  const {
+    restorePurchases,
+    isLoading: subLoading,
+    isSubscribed,
+    refresh,
+  } = useSubscription();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [info, setInfo] = useState("");
   const [subscribeComingSoon, setSubscribeComingSoon] = useState(false);
 
   function onSubscribePress(): void {
@@ -70,13 +76,18 @@ export function ShopPaywall(): React.ReactElement {
         disabled={busy}
         onPress={() => {
           setErr("");
+          setInfo("");
           setBusy(true);
           void (async () => {
             try {
               await restorePurchases();
               await refresh();
+              // After restore + refresh, the subscription state is up to date.
+              // Tell the user the outcome — silent success is confusing on a
+              // button that read "Restore purchases" a second ago.
+              setInfo(isSubscribed ? t("restoreSuccess") : t("restoreNoneFound"));
             } catch (e) {
-              setErr(e instanceof Error ? e.message : "Restore failed");
+              setErr(friendlyApiError(e, t, "restoreFailed"));
             } finally {
               setBusy(false);
             }
@@ -86,6 +97,7 @@ export function ShopPaywall(): React.ReactElement {
         <Text style={styles.restoreText}>{t("restorePurchases")}</Text>
       </Pressable>
       {err ? <Text style={styles.err}>{err}</Text> : null}
+      {info ? <Text style={styles.info}>{info}</Text> : null}
     </ScrollView>
   );
 }
@@ -137,6 +149,7 @@ const styles = StyleSheet.create({
   restore: { marginTop: 16, padding: 12, alignItems: "center" },
   restoreText: { color: theme.muted, fontWeight: "600", fontSize: 14 },
   err: { marginTop: 12, color: theme.danger, fontSize: 13, textAlign: "center" },
+  info: { marginTop: 12, color: theme.muted, fontSize: 13, textAlign: "center" },
   comingSoon: {
     marginTop: 14,
     fontSize: 15,

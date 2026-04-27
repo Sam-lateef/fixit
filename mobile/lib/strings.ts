@@ -134,6 +134,11 @@ export const en = {
   paywallSubtitle:
     "Subscribe to bid on requests, access the feed, and grow your workshop.",
   restorePurchases: "Restore purchases",
+  restoreSuccess: "Subscription restored.",
+  restoreNoneFound:
+    "No previous subscription found on this Apple ID. If you subscribed on another account, sign in to that one and try again.",
+  restoreFailed:
+    "Couldn’t restore right now. Check your connection and try again.",
   paywallNoPackages:
     "No subscription packages loaded. Check RevenueCat & App Store Connect.",
   paywallWebHint:
@@ -411,6 +416,11 @@ export const arIq: Record<keyof typeof en, string> = {
   paywallSubtitle:
     "اشترك لإرسال العروض على الطلبات والوصول للطلبات وتنمية الورشة.",
   restorePurchases: "استعادة المشتريات",
+  restoreSuccess: "تم استرجاع الاشتراك.",
+  restoreNoneFound:
+    "ما كو اشتراك سابق على حساب Apple هذا. إذا اشتركت بحساب ثاني، سجّل دخول بنفس الحساب وحاول مرة ثانية.",
+  restoreFailed:
+    "ما گدرنا نسترجع هسّه. تحقق من الإنترنت وحاول مرة ثانية.",
   paywallNoPackages:
     "لم تُحمَّل باقات الاشتراك. تحقق من RevenueCat ومتجر التطبيقات.",
   paywallWebHint:

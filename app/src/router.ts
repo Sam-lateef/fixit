@@ -1,7 +1,10 @@
 import { t } from "./i18n/index.js";
 import { getToken } from "./services/auth-storage.js";
+import { renderComingSoon } from "./pages/coming-soon.js";
+import { renderPrivacy, renderTerms } from "./pages/legal-info.js";
 import { renderSplash } from "./pages/splash.js";
-import { renderEnterNumber } from "./pages/enter-number.js";
+import { renderAuthWelcome } from "./pages/auth-welcome.js";
+import { renderShopAuthComingSoon } from "./pages/auth-shop-welcome.js";
 import { renderOtp } from "./pages/otp.js";
 import { renderAccountType } from "./pages/account-type.js";
 import { renderOwnerDetails } from "./pages/owner-details.js";
@@ -27,6 +30,11 @@ export function navigate(hash: string): void {
   window.location.hash = hash;
 }
 
+/** Re-run the current hash route (e.g. after changing locale on the landing page). */
+export function refreshRoute(): void {
+  void route();
+}
+
 export function startRouter(root: HTMLElement): void {
   ctx.root = root;
   window.addEventListener("hashchange", () => {
@@ -36,22 +44,42 @@ export function startRouter(root: HTMLElement): void {
 }
 
 async function route(): Promise<void> {
-  const hash = window.location.hash.slice(1) || "/splash";
+  const hash = window.location.hash.slice(1) || "/coming-soon";
   const root = ctx.root;
   root.innerHTML = "";
 
+  if (hash === "/coming-soon" || hash === "/" || hash === "") {
+    await renderComingSoon(root);
+    return;
+  }
+  if (hash.startsWith("/privacy")) {
+    renderPrivacy(root);
+    return;
+  }
+  if (hash.startsWith("/terms")) {
+    renderTerms(root);
+    return;
+  }
   if (hash.startsWith("/splash")) {
     renderSplash(root);
     return;
   }
+  if (hash.startsWith("/auth/welcome")) {
+    renderAuthWelcome(root);
+    return;
+  }
   if (hash.startsWith("/auth/number")) {
-    renderEnterNumber(root);
+    navigate("#/auth/shop");
+    return;
+  }
+  if (hash.startsWith("/auth/shop")) {
+    renderShopAuthComingSoon(root);
     return;
   }
   if (hash.startsWith("/auth/otp")) {
     const phone = sessionStorage.getItem("fixit_phone") ?? "";
     if (!phone) {
-      navigate("#/auth/number");
+      navigate("#/auth/shop");
       return;
     }
     renderOtp(root, phone);
@@ -76,7 +104,7 @@ async function route(): Promise<void> {
   if (hash.startsWith("/owner/create")) {
     const authed = await getToken();
     if (!authed) {
-      navigate("#/auth/number");
+      navigate("#/auth/welcome");
       return;
     }
     renderCreatePost(root);
@@ -85,7 +113,7 @@ async function route(): Promise<void> {
   if (hash.startsWith("/owner")) {
     const authed = await getToken();
     if (!authed) {
-      navigate("#/auth/number");
+      navigate("#/auth/welcome");
       return;
     }
     if (hash.startsWith("/owner/chat/")) {
@@ -108,7 +136,7 @@ async function route(): Promise<void> {
     const postId = hash.replace("/shop/bid/", "");
     const authed = await getToken();
     if (!authed) {
-      navigate("#/auth/number");
+      navigate("#/auth/shop");
       return;
     }
     renderPlaceBid(root, postId);
@@ -117,7 +145,7 @@ async function route(): Promise<void> {
   if (hash.startsWith("/shop")) {
     const authed = await getToken();
     if (!authed) {
-      navigate("#/auth/number");
+      navigate("#/auth/shop");
       return;
     }
     if (hash.startsWith("/shop/chat/")) {

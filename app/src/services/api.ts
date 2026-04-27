@@ -28,7 +28,7 @@ export async function apiFetch<T>(
   const res = await fetch(url, { ...init, headers });
   if (res.status === 401) {
     await clearToken();
-    window.location.hash = "#/auth/number";
+    window.location.hash = "#/auth/welcome";
   }
   const text = await res.text();
   const data = text ? (JSON.parse(text) as unknown) : null;
@@ -52,7 +52,7 @@ export async function uploadPhoto(file: Blob): Promise<{ url: string }> {
   });
   if (res.status === 401) {
     await clearToken();
-    window.location.hash = "#/auth/number";
+    window.location.hash = "#/auth/welcome";
   }
   const data = (await res.json()) as { url?: string; error?: string };
   if (!res.ok) throw new Error(data.error ?? "Upload failed");

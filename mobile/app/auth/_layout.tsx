@@ -18,8 +18,14 @@ export default function AuthLayout(): React.ReactElement {
         headerStyle: { backgroundColor: theme.primary },
         headerTintColor: "#fff",
         headerTitleStyle: { color: "#fff", fontWeight: "700" as const },
+        headerTitleAlign: "center",
         headerShadowVisible: false,
         contentStyle: { backgroundColor: theme.surface },
+        // Suppress native iOS back button + any auto back-title so only the
+        // custom `‹ Back` from HeaderBackButton ever renders.
+        headerBackVisible: false,
+        headerBackTitle: "",
+        headerBackButtonDisplayMode: "minimal",
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />

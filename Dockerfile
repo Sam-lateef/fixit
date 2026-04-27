@@ -31,6 +31,10 @@ RUN npx prisma generate
 RUN npm run build
 
 WORKDIR /repo/app
+# Optional bake-time admin link override (see app/.env.example). Prefer runtime
+# `ADMIN_LOGIN_URL` on the API container (GET /api/v1/public/config).
+ARG VITE_ADMIN_LOGIN_URL=
+ENV VITE_ADMIN_LOGIN_URL=$VITE_ADMIN_LOGIN_URL
 RUN npm run build
 
 WORKDIR /repo

@@ -2,12 +2,18 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router, Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { type GestureResponderEvent, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
 
 export default function OwnerTabsLayout(): React.ReactElement {
   const { t } = useI18n();
+  // Add the bottom safe-area inset so icons don't hug the iPhone home
+  // indicator. React Navigation auto-handles this only if `height` and
+  // `paddingBottom` aren't overridden — we keep our 60pt baseline and
+  // grow it by the inset.
+  const insets = useSafeAreaInsets();
 
   return (
     <>
@@ -25,8 +31,8 @@ export default function OwnerTabsLayout(): React.ReactElement {
         tabBarStyle: {
           backgroundColor: theme.surface,
           borderTopColor: theme.border,
-          height: 60,
-          paddingBottom: 8,
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
         },
       }}
     >

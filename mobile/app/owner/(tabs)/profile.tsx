@@ -10,13 +10,13 @@ import {
   Platform,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { apiFetch } from "@/lib/api";
@@ -25,6 +25,7 @@ import { openAppNotificationSettings } from "@/lib/push-notifications";
 import { isValidWhatsappE164 } from "@/lib/whatsapp-e164";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { promptDeleteAccount } from "@/lib/delete-account";
+import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "@/lib/legal-public-urls";
 import { hrefAuthWelcome } from "@/lib/routes-href";
 import { signOutFromApp } from "@/lib/sign-out";
 import { useI18n } from "@/lib/i18n";
@@ -46,6 +47,8 @@ type UserMe = {
 
 export default function OwnerProfileScreen(): React.ReactElement {
   const { t, locale, setLocale } = useI18n();
+  // Safe-area inset so bottom-anchored sheets clear the iPhone home indicator.
+  const insets = useSafeAreaInsets();
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [user, setUser] = useState<UserMe | null>(null);
   const [editName, setEditName] = useState("");
@@ -395,7 +398,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
         <View style={styles.sectionCard}>
           <Pressable
             style={styles.settingRow}
-            onPress={() => void Linking.openURL("https://fixitiq.com/privacy")}
+            onPress={() => void Linking.openURL(LEGAL_PRIVACY_URL)}
           >
             <Text style={styles.settingLabel}>{t("privacyPolicy")}</Text>
             <Text style={styles.settingChevron}>›</Text>
@@ -403,7 +406,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
           <View style={styles.settingDivider} />
           <Pressable
             style={styles.settingRow}
-            onPress={() => void Linking.openURL("https://fixitiq.com/terms")}
+            onPress={() => void Linking.openURL(LEGAL_TERMS_URL)}
           >
             <Text style={styles.settingLabel}>{t("termsOfService")}</Text>
             <Text style={styles.settingChevron}>›</Text>
@@ -502,7 +505,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
             style={styles.addressDismissArea}
             onPress={() => setAddressEditorOpen(false)}
           />
-          <SafeAreaView style={styles.addressSheet}>
+          <View style={[styles.addressSheet, { paddingBottom: insets.bottom }]}>
             <View style={styles.addressHeader}>
               <View style={{ width: 24 }} />
               <Text style={styles.addressTitle}>{t("address")}</Text>
@@ -538,7 +541,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
             >
               <Text style={styles.addressSaveBtnText}>{t("save")}</Text>
             </Pressable>
-          </SafeAreaView>
+          </View>
         </KeyboardAvoidingView>
       </Modal>
     </>
