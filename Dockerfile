@@ -11,14 +11,26 @@ COPY api/package.json ./api/
 COPY app/package.json ./app/
 COPY mobile/package.json ./mobile/
 
-# DevDependencies needed for `tsc`; pruned after build. Cache speeds repeat Fly deploys.
+# Install workspaces needed to build API + Vite web app; pruned after build.
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci -w api
+    npm ci -w api -w app
+
+# Workaround for npm/cli#4828 — when the host that wrote package-lock.json
+# was Windows or macOS, the Linux-x64 platform-specific Rollup native
+# binary may be missing from the lockfile, breaking `vite build` here.
+# This is a no-op when the binary is already installed.
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --no-save --no-fund --no-audit \
+      @rollup/rollup-linux-x64-gnu
 
 COPY api ./api
+COPY app ./app
 
 WORKDIR /repo/api
 RUN npx prisma generate
+RUN npm run build
+
+WORKDIR /repo/app
 RUN npm run build
 
 WORKDIR /repo
@@ -26,5 +38,6 @@ RUN npm prune --omit=dev
 
 WORKDIR /repo/api
 ENV NODE_ENV=production
+ENV WEB_DIST_DIR=/repo/app/dist
 EXPOSE 3000
 CMD ["node", "dist/index.js"]
