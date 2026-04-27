@@ -160,18 +160,89 @@ const districts: Array<{
       lng: centroids[d.name]?.lng ?? BAGHDAD_CENTER.lng,
     }));
   })(),
+  // Basra
   { name: "Ashar", nameAr: "العشار", city: "Basra", cityAr: "البصرة", lat: 30.5089, lng: 47.7858 },
   { name: "Zubayr", nameAr: "الزبير", city: "Basra", cityAr: "البصرة", lat: 30.3822, lng: 47.7069 },
   { name: "Hayyaniya", nameAr: "الحيانية", city: "Basra", cityAr: "البصرة", lat: 30.53, lng: 47.82 },
+  { name: "Jubaila", nameAr: "الجبيلة", city: "Basra", cityAr: "البصرة", lat: 30.55, lng: 47.81 },
+  { name: "Tannuma", nameAr: "التنومة", city: "Basra", cityAr: "البصرة", lat: 30.52, lng: 47.83 },
+  { name: "Maaqal", nameAr: "المعقل", city: "Basra", cityAr: "البصرة", lat: 30.54, lng: 47.81 },
+  // Mosul
   { name: "Nabi Younis", nameAr: "نبي يونس", city: "Mosul", cityAr: "الموصل", lat: 36.3292, lng: 43.1372 },
   { name: "Hadbaa", nameAr: "الحدباء", city: "Mosul", cityAr: "الموصل", lat: 36.37, lng: 43.15 },
+  { name: "Old City", nameAr: "المدينة القديمة", city: "Mosul", cityAr: "الموصل", lat: 36.34, lng: 43.13 },
+  { name: "Zuhour", nameAr: "الزهور", city: "Mosul", cityAr: "الموصل", lat: 36.36, lng: 43.16 },
+  // Erbil
   { name: "Ankawa", nameAr: "عينكاوا", city: "Erbil", cityAr: "أربيل", lat: 36.22, lng: 44.0 },
   { name: "Iskan", nameAr: "الإسكان", city: "Erbil", cityAr: "أربيل", lat: 36.19, lng: 44.01 },
-  { name: "Najaf Center", nameAr: "مركز النجف", city: "Najaf", cityAr: "النجف", lat: 32.029, lng: 44.3396 },
-  { name: "Karbala Center", nameAr: "مركز كربلاء", city: "Karbala", cityAr: "كربلاء", lat: 32.616, lng: 44.0248 },
-  { name: "Kirkuk Center", nameAr: "مركز كركوك", city: "Kirkuk", cityAr: "كركوك", lat: 35.4681, lng: 44.3922 },
+  { name: "Citadel", nameAr: "القلعة", city: "Erbil", cityAr: "أربيل", lat: 36.191, lng: 44.009 },
+  { name: "Bakhtiari", nameAr: "البختياري", city: "Erbil", cityAr: "أربيل", lat: 36.20, lng: 44.02 },
+  // Sulaymaniyah
   { name: "Sulaymaniyah Center", nameAr: "السليمانية", city: "Sulaymaniyah", cityAr: "السليمانية", lat: 35.5568, lng: 45.4361 },
+  { name: "Salem Street", nameAr: "شارع سالم", city: "Sulaymaniyah", cityAr: "السليمانية", lat: 35.561, lng: 45.43 },
+  { name: "Bakhtiyari", nameAr: "البختياري", city: "Sulaymaniyah", cityAr: "السليمانية", lat: 35.55, lng: 45.44 },
+  // Duhok
   { name: "Duhok Center", nameAr: "دهوك", city: "Duhok", cityAr: "دهوك", lat: 36.8671, lng: 42.9881 },
+  { name: "Masike", nameAr: "ماسيكي", city: "Duhok", cityAr: "دهوك", lat: 36.86, lng: 42.99 },
+  // Kirkuk
+  { name: "Kirkuk Center", nameAr: "مركز كركوك", city: "Kirkuk", cityAr: "كركوك", lat: 35.4681, lng: 44.3922 },
+  { name: "Shorja", nameAr: "الشورجة", city: "Kirkuk", cityAr: "كركوك", lat: 35.47, lng: 44.39 },
+  { name: "Rahimawa", nameAr: "رحيماوة", city: "Kirkuk", cityAr: "كركوك", lat: 35.48, lng: 44.40 },
+  // Najaf
+  { name: "Najaf Center", nameAr: "مركز النجف", city: "Najaf", cityAr: "النجف", lat: 32.029, lng: 44.3396 },
+  { name: "Kufa", nameAr: "الكوفة", city: "Najaf", cityAr: "النجف", lat: 32.033, lng: 44.40 },
+  { name: "Manathira", nameAr: "المناذرة", city: "Najaf", cityAr: "النجف", lat: 32.05, lng: 44.42 },
+  // Karbala
+  { name: "Karbala Center", nameAr: "مركز كربلاء", city: "Karbala", cityAr: "كربلاء", lat: 32.616, lng: 44.0248 },
+  { name: "Hindiya", nameAr: "الهندية", city: "Karbala", cityAr: "كربلاء", lat: 32.55, lng: 44.21 },
+  { name: "Ain al-Tamr", nameAr: "عين التمر", city: "Karbala", cityAr: "كربلاء", lat: 32.58, lng: 43.48 },
+  // Babylon (Babil)
+  { name: "Hillah", nameAr: "الحلة", city: "Babylon", cityAr: "بابل", lat: 32.4836, lng: 44.4308 },
+  { name: "Mahawil", nameAr: "المحاويل", city: "Babylon", cityAr: "بابل", lat: 32.71, lng: 44.46 },
+  { name: "Musayyib", nameAr: "المسيب", city: "Babylon", cityAr: "بابل", lat: 32.78, lng: 44.29 },
+  { name: "Hashimiyah", nameAr: "الهاشمية", city: "Babylon", cityAr: "بابل", lat: 32.18, lng: 44.65 },
+  // Anbar
+  { name: "Ramadi", nameAr: "الرمادي", city: "Anbar", cityAr: "الأنبار", lat: 33.4258, lng: 43.3081 },
+  { name: "Fallujah", nameAr: "الفلوجة", city: "Anbar", cityAr: "الأنبار", lat: 33.3556, lng: 43.7868 },
+  { name: "Heet", nameAr: "هيت", city: "Anbar", cityAr: "الأنبار", lat: 33.6383, lng: 42.8267 },
+  { name: "Haditha", nameAr: "حديثة", city: "Anbar", cityAr: "الأنبار", lat: 34.1394, lng: 42.3811 },
+  // Diyala
+  { name: "Baquba", nameAr: "بعقوبة", city: "Diyala", cityAr: "ديالى", lat: 33.7472, lng: 44.6439 },
+  { name: "Khalis", nameAr: "الخالص", city: "Diyala", cityAr: "ديالى", lat: 33.81, lng: 44.53 },
+  { name: "Muqdadiyah", nameAr: "المقدادية", city: "Diyala", cityAr: "ديالى", lat: 33.97, lng: 44.93 },
+  { name: "Khanaqin", nameAr: "خانقين", city: "Diyala", cityAr: "ديالى", lat: 34.34, lng: 45.39 },
+  // Wasit
+  { name: "Kut", nameAr: "الكوت", city: "Wasit", cityAr: "واسط", lat: 32.5132, lng: 45.8189 },
+  { name: "Numaniyah", nameAr: "النعمانية", city: "Wasit", cityAr: "واسط", lat: 32.535, lng: 45.376 },
+  { name: "Hai", nameAr: "الحي", city: "Wasit", cityAr: "واسط", lat: 32.171, lng: 46.045 },
+  { name: "Suwaira", nameAr: "الصويرة", city: "Wasit", cityAr: "واسط", lat: 32.92, lng: 44.78 },
+  // Maysan
+  { name: "Amarah", nameAr: "العمارة", city: "Maysan", cityAr: "ميسان", lat: 31.8333, lng: 47.1444 },
+  { name: "Majar al-Kabir", nameAr: "المجر الكبير", city: "Maysan", cityAr: "ميسان", lat: 31.564, lng: 47.156 },
+  { name: "Qalat Salih", nameAr: "قلعة صالح", city: "Maysan", cityAr: "ميسان", lat: 31.51, lng: 47.27 },
+  { name: "Ali al-Gharbi", nameAr: "علي الغربي", city: "Maysan", cityAr: "ميسان", lat: 32.45, lng: 46.69 },
+  // Dhi Qar
+  { name: "Nasiriyah", nameAr: "الناصرية", city: "Dhi Qar", cityAr: "ذي قار", lat: 31.0428, lng: 46.2575 },
+  { name: "Suq al-Shuyukh", nameAr: "سوق الشيوخ", city: "Dhi Qar", cityAr: "ذي قار", lat: 30.886, lng: 46.466 },
+  { name: "Shatra", nameAr: "الشطرة", city: "Dhi Qar", cityAr: "ذي قار", lat: 31.412, lng: 46.176 },
+  { name: "Rifai", nameAr: "الرفاعي", city: "Dhi Qar", cityAr: "ذي قار", lat: 31.71, lng: 46.10 },
+  // Muthanna
+  { name: "Samawah", nameAr: "السماوة", city: "Muthanna", cityAr: "المثنى", lat: 31.3091, lng: 45.2811 },
+  { name: "Rumaytha", nameAr: "الرميثة", city: "Muthanna", cityAr: "المثنى", lat: 31.526, lng: 45.207 },
+  { name: "Khidhir", nameAr: "الخضر", city: "Muthanna", cityAr: "المثنى", lat: 31.116, lng: 45.842 },
+  // Qadisiyyah
+  { name: "Diwaniyah", nameAr: "الديوانية", city: "Qadisiyyah", cityAr: "القادسية", lat: 31.9892, lng: 44.9244 },
+  { name: "Afak", nameAr: "عفك", city: "Qadisiyyah", cityAr: "القادسية", lat: 32.07, lng: 45.26 },
+  { name: "Hamza", nameAr: "الحمزة", city: "Qadisiyyah", cityAr: "القادسية", lat: 31.71, lng: 44.97 },
+  { name: "Shamiya", nameAr: "الشامية", city: "Qadisiyyah", cityAr: "القادسية", lat: 31.96, lng: 44.59 },
+  // Saladin
+  { name: "Tikrit", nameAr: "تكريت", city: "Saladin", cityAr: "صلاح الدين", lat: 34.5969, lng: 43.6764 },
+  { name: "Samarra", nameAr: "سامراء", city: "Saladin", cityAr: "صلاح الدين", lat: 34.198, lng: 43.874 },
+  { name: "Bayji", nameAr: "بيجي", city: "Saladin", cityAr: "صلاح الدين", lat: 34.929, lng: 43.491 },
+  { name: "Balad", nameAr: "بلد", city: "Saladin", cityAr: "صلاح الدين", lat: 34.018, lng: 44.142 },
+  // Halabja
+  { name: "Halabja Center", nameAr: "مركز حلبجة", city: "Halabja", cityAr: "حلبجة", lat: 35.1833, lng: 45.9892 },
+  { name: "Said Sadiq", nameAr: "سيد صادق", city: "Halabja", cityAr: "حلبجة", lat: 35.36, lng: 45.86 },
   /** Lets owner-details "Other" city load at least one district without client-side fallback only. */
   {
     name: "Not listed",
