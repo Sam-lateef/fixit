@@ -357,7 +357,9 @@ export default function ShopFeedScreen(): React.ReactElement {
           </View>
         }
         renderSectionHeader={({ section: sec }) => {
-          if (sec.key === "matched" && morePosts.length === 0) {
+          // Matched section: the screen header already says "Requests".
+          // Only render a header for the "More" section.
+          if (sec.key === "matched") {
             return null;
           }
           return (
