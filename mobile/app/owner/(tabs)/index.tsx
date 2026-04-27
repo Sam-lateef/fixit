@@ -1,7 +1,7 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFocusEffect } from "@react-navigation/native";
 import { router, type Href } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -109,6 +109,15 @@ export default function OwnerHomeScreen(): React.ReactElement {
     })();
   }, [load]);
 
+  // Memoize the RefreshControl element — known iOS Fabric (newArch) bug:
+  // recreating <RefreshControl> on every render (e.g. during focus events)
+  // can leave it with a stale native handler and freeze pull-to-refresh.
+  // facebook/react-native#37308, #53263.
+  const refreshControl = useMemo(
+    () => <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />,
+    [refreshing, onRefresh],
+  );
+
   useFocusEffect(
     useCallback(() => {
       void load();
@@ -160,9 +169,7 @@ export default function OwnerHomeScreen(): React.ReactElement {
       contentContainerStyle={styles.list}
       // Allow pull-to-refresh even when the list is short / empty (iOS).
       alwaysBounceVertical
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
+      refreshControl={refreshControl}
       ListHeaderComponent={null}
       ListEmptyComponent={
         loadError ? (
@@ -340,6 +347,10 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 32,
     backgroundColor: theme.bg,
+    // flexGrow: 1 makes pull-to-refresh work when the list is empty / short.
+    // Without it, FlatList's content has no scrollable surface to activate
+    // RefreshControl on iOS. This is the same fix as InboxThreadList.
+    flexGrow: 1,
   },
   empty: {
     color: theme.muted,

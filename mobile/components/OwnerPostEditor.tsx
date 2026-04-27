@@ -17,6 +17,7 @@ import {
 } from "react-native";
 
 import { PostRemoteImage } from "@/components/PostRemoteImage";
+import { MultiSelectPickerModal } from "@/components/MultiSelectPickerModal";
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { apiFetch } from "@/lib/api";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
@@ -1089,16 +1090,22 @@ export function OwnerPostEditor({
         </>
         </View>
       </ScrollView>
-      <SearchablePickerModal
+      <MultiSelectPickerModal
         visible={pickerMode === "make"}
-        title=""
+        mode="single"
+        title={t("carMake")}
         items={vehicleMakes.map((m) => ({
           id: m.id,
           label: catalogLabel(m.name, m.nameAr, locale),
         }))}
-        onSelect={(id) => {
+        initialSelected={carMakeId ? [carMakeId] : []}
+        onSave={(ids) => {
+          const id = ids[0];
           const m = vehicleMakes.find((x) => x.id === id);
-          if (!m) return;
+          if (!m) {
+            setPickerMode(null);
+            return;
+          }
           setCarMakeId(m.id);
           setCarMake(m.name);
           setCarModelId("");
@@ -1107,49 +1114,55 @@ export function OwnerPostEditor({
           setPickerMode(null);
         }}
         onRequestClose={() => setPickerMode(null)}
+        saveLabel={t("save")}
         cancelLabel={t("cancel")}
         searchPlaceholder={t("search")}
         busy={makesBusy}
-        selectedId={carMakeId || undefined}
       />
-      <SearchablePickerModal
+      <MultiSelectPickerModal
         visible={pickerMode === "model"}
-        title=""
+        mode="single"
+        title={t("carModel")}
         items={vehicleModels.map((m) => ({
           id: m.id,
           label: catalogLabel(m.name, m.nameAr, locale),
         }))}
-        onSelect={(id) => {
+        initialSelected={carModelId ? [carModelId] : []}
+        onSave={(ids) => {
+          const id = ids[0];
           const m = vehicleModels.find((x) => x.id === id);
-          if (!m) return;
+          if (!m) {
+            setPickerMode(null);
+            return;
+          }
           setCarModelId(m.id);
           setCarModel(m.name);
           setCarYear("");
           setPickerMode(null);
         }}
         onRequestClose={() => setPickerMode(null)}
+        saveLabel={t("save")}
         cancelLabel={t("cancel")}
         searchPlaceholder={t("search")}
         busy={modelsBusy}
-        selectedId={carModelId || undefined}
       />
-      <SearchablePickerModal
+      <MultiSelectPickerModal
         visible={pickerMode === "year"}
-        title=""
-        items={vehicleYears.map((y) => ({
-          id: String(y),
-          label: String(y),
-        }))}
-        onSelect={(id) => {
-          setCarYear(id);
+        mode="single"
+        showSearch={false}
+        title={t("yearOptional")}
+        items={vehicleYears.map((y) => ({ id: String(y), label: String(y) }))}
+        initialSelected={carYear ? [carYear] : []}
+        onSave={(ids) => {
+          const id = ids[0];
+          if (id) setCarYear(id);
           setPickerMode(null);
         }}
         onRequestClose={() => setPickerMode(null)}
+        saveLabel={t("save")}
         cancelLabel={t("cancel")}
         searchPlaceholder={t("search")}
         busy={yearsBusy}
-        showSearch={false}
-        selectedId={carYear || undefined}
       />
     </KeyboardAvoidingView>
   );

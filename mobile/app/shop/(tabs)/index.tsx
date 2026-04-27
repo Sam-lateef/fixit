@@ -193,6 +193,14 @@ export default function ShopFeedScreen(): React.ReactElement {
     })();
   }, [load, filter]);
 
+  // Memoize the RefreshControl element — known iOS Fabric bug where
+  // recreating it on every render (during focus events) leaves it with a
+  // stale native handler. facebook/react-native#37308.
+  const refreshControl = useMemo(
+    () => <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />,
+    [refreshing, onRefresh],
+  );
+
   const tabs: Array<{ key: FilterTab; label: string }> = [{ key: "ALL", label: t("all") }];
   if (shop?.offersRepair) tabs.push({ key: "REPAIR", label: t("repair") });
   if (shop?.offersParts) tabs.push({ key: "PARTS", label: t("parts") });
@@ -256,9 +264,7 @@ export default function ShopFeedScreen(): React.ReactElement {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         stickySectionHeadersEnabled={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={refreshControl}
         ListHeaderComponent={
           <View>
             <View style={styles.tabRow}>
@@ -442,7 +448,9 @@ const styles = StyleSheet.create({
   screenRoot: { flex: 1, backgroundColor: theme.bg },
   /** SectionList must fill the tab or rows never get a scroll viewport (Android). */
   listFlex: { flex: 1 },
-  list: { padding: 16, paddingTop: 24, paddingBottom: 32, backgroundColor: theme.bg },
+  // flexGrow: 1 makes pull-to-refresh work when the list is short / empty
+  // (same fix as InboxThreadList).
+  list: { padding: 16, paddingTop: 24, paddingBottom: 32, backgroundColor: theme.bg, flexGrow: 1 },
 
   sectionHeaderWrap: {
     marginTop: 8,

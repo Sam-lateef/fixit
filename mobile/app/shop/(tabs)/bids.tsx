@@ -1,5 +1,5 @@
 import { router, type Href } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -77,6 +77,13 @@ export default function ShopBidsScreen(): React.ReactElement {
     })();
   }, [load]);
 
+  // Memoized RefreshControl (defensive — known iOS Fabric issue with
+  // recreating it on every render). facebook/react-native#37308.
+  const refreshControl = useMemo(
+    () => <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />,
+    [refreshing, onRefresh],
+  );
+
   const withdraw = (bidId: string): void => {
     Alert.alert(t("withdrawBid"), "", [
       { text: t("back"), style: "cancel" },
@@ -103,9 +110,7 @@ export default function ShopBidsScreen(): React.ReactElement {
         data={bids}
         keyExtractor={(b) => b.id}
         contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={refreshControl}
         ListEmptyComponent={
           <Text style={styles.empty}>{t("noBidsYet")}</Text>
         }
@@ -234,7 +239,9 @@ export default function ShopBidsScreen(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: 16, paddingTop: 24, paddingBottom: 32, backgroundColor: theme.bg },
+  // flexGrow: 1 makes pull-to-refresh work when the list is short / empty
+  // (same fix as InboxThreadList / shop Requests).
+  list: { padding: 16, paddingTop: 24, paddingBottom: 32, backgroundColor: theme.bg, flexGrow: 1 },
   empty: { color: theme.muted, marginTop: 24, textAlign: "center" },
   card: {
     backgroundColor: theme.surface,

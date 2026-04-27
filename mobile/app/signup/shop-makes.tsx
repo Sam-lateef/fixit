@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 
+import { MultiSelectPickerModal } from "@/components/MultiSelectPickerModal";
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { apiFetch } from "@/lib/api";
@@ -150,18 +151,17 @@ export default function ShopMakesStep(): React.ReactElement {
         </Pressable>
       </View>
 
-      <SearchablePickerModal
+      <MultiSelectPickerModal
         visible={makesPickerOpen}
-        title=""
-        items={allMakes.map((m) => ({
-          id: m.name,
-          label: m.name,
-        }))}
-        onSelect={(id) => {
-          toggle(id);
+        title={t("carMakes")}
+        items={allMakes.map((m) => ({ id: m.name, label: m.name }))}
+        initialSelected={Array.from(selected)}
+        onSave={(ids) => {
+          setSelected(new Set(ids));
           setMakesPickerOpen(false);
         }}
         onRequestClose={() => setMakesPickerOpen(false)}
+        saveLabel={t("save")}
         cancelLabel={t("cancel")}
         searchPlaceholder={t("search")}
       />

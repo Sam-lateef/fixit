@@ -18,7 +18,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Pressable as GHPressable } from "react-native-gesture-handler";
+import {
+  GestureHandlerRootView,
+  Pressable as GHPressable,
+} from "react-native-gesture-handler";
 
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { ShopProfileHero } from "@/components/shop/ShopProfileHero";
@@ -1119,6 +1122,11 @@ export default function ShopProfileScreen(): React.ReactElement {
           setEditSection(null);
         }}
       >
+        {/* GestureHandlerRootView is required here so GHPressable rows below
+         *  receive taps inside the Modal on Android. The app-level
+         *  GestureHandlerRootView in app/_layout.tsx doesn't reach into the
+         *  Modal's separate native window. */}
+        <GestureHandlerRootView style={styles.modalRoot}>
         <KeyboardAvoidingView
           style={styles.modalOverlay}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -1399,6 +1407,7 @@ export default function ShopProfileScreen(): React.ReactElement {
             ) : null}
           </SafeAreaView>
         </KeyboardAvoidingView>
+        </GestureHandlerRootView>
       </Modal>
     </>
   );
@@ -1507,6 +1516,7 @@ const styles = StyleSheet.create({
   logoutText: { color: theme.danger, fontWeight: "700", fontSize: 16 },
 
   /* Modal */
+  modalRoot: { flex: 1 },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.45)",
