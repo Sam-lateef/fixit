@@ -178,6 +178,14 @@ export default function ShopProfileScreen(): React.ReactElement {
   const [editDistrictsLoading, setEditDistrictsLoading] = useState(false);
   const [editCityPickerOpen, setEditCityPickerOpen] = useState(false);
   const [editDistrictPickerOpen, setEditDistrictPickerOpen] = useState(false);
+  // Served districts editor (multi-select)
+  const [servedModalOpen, setServedModalOpen] = useState(false);
+  const [servedSelection, setServedSelection] = useState<Set<string>>(new Set());
+  const [servedDistrictList, setServedDistrictList] = useState<
+    { id: string; name: string; nameAr: string; city: string }[]
+  >([]);
+  const [servedLoading, setServedLoading] = useState(false);
+  const [savingServed, setSavingServed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
@@ -384,6 +392,59 @@ export default function ShopProfileScreen(): React.ReactElement {
         );
       } finally {
         setSaving(false);
+      }
+    })();
+  };
+
+  const openServedEdit = (): void => {
+    if (!shop) return;
+    const city = shop.user.city?.trim() ?? "";
+    if (city.length === 0) {
+      Alert.alert(t("errorTitle"), t("pickCityFirst"));
+      return;
+    }
+    setServedSelection(new Set(shop.servedDistrictIds));
+    setServedLoading(true);
+    setServedModalOpen(true);
+    void (async () => {
+      try {
+        const list = await fetchDistrictsForCity(city);
+        setServedDistrictList(list);
+      } catch {
+        setServedDistrictList([]);
+      } finally {
+        setServedLoading(false);
+      }
+    })();
+  };
+
+  const toggleServed = (id: string): void => {
+    setServedSelection((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const saveServedEdit = (): void => {
+    if (!shop) return;
+    setSavingServed(true);
+    void (async () => {
+      try {
+        await apiFetch("/api/v1/shops/me", {
+          method: "PUT",
+          body: JSON.stringify({ servedDistrictIds: Array.from(servedSelection) }),
+        });
+        setServedModalOpen(false);
+        await load();
+      } catch (e) {
+        Alert.alert(
+          t("errorTitle"),
+          e instanceof Error ? e.message : t("updateFailed"),
+        );
+      } finally {
+        setSavingServed(false);
       }
     })();
   };
@@ -705,6 +766,17 @@ export default function ShopProfileScreen(): React.ReactElement {
                 {shop.user.address?.trim()
                   ? `${shop.user.address.trim()}  ›`
                   : `${t("address")}  ›`}
+              </Text>
+            </Pressable>
+
+            <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
+              {t("servedDistricts")}
+            </Text>
+            <Pressable onPress={openServedEdit} hitSlop={8}>
+              <Text style={styles.fieldStatic} numberOfLines={2}>
+                {shop.servedDistrictIds.length > 0
+                  ? `${shop.servedDistrictIds.length}  ›`
+                  : `${t("servedDistrictsAny")}  ›`}
               </Text>
             </Pressable>
           </View>
@@ -1099,6 +1171,58 @@ export default function ShopProfileScreen(): React.ReactElement {
             ) : null}
           </SafeAreaView>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Served districts edit modal */}
+      <Modal
+        visible={servedModalOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setServedModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <SafeAreaView style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t("servedDistricts")}</Text>
+              <Pressable onPress={() => setServedModalOpen(false)} hitSlop={8}>
+                <Text style={styles.modalClose}>✕</Text>
+              </Pressable>
+            </View>
+            <ScrollView contentContainerStyle={styles.locationModalBody}>
+              <Text style={styles.locationFieldLabel}>{t("servedDistrictsHint")}</Text>
+              {servedLoading ? (
+                <View style={styles.locationLoading}>
+                  <ActivityIndicator size="small" color={theme.primaryMid} />
+                </View>
+              ) : (
+                <View style={styles.modalChips}>
+                  {servedDistrictList.map((d) => {
+                    const on = servedSelection.has(d.id);
+                    const label = locale === "ar-iq" && d.nameAr ? d.nameAr : d.name;
+                    return (
+                      <Pressable
+                        key={d.id}
+                        style={[styles.modalChip, on && styles.modalChipOn]}
+                        onPress={() => toggleServed(d.id)}
+                      >
+                        <Text style={[styles.modalChipText, on && styles.modalChipTextOn]}>
+                          {label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+            </ScrollView>
+            <Pressable
+              style={[styles.modalSaveBtn, savingServed && styles.modalSaveBtnDisabled]}
+              onPress={saveServedEdit}
+              disabled={savingServed}
+            >
+              <Text style={styles.modalSaveBtnText}>{t("save")}</Text>
+            </Pressable>
+          </SafeAreaView>
+        </View>
       </Modal>
 
       {/* Edit chip picker modal */}

@@ -1,22 +1,23 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { apiFetch } from "@/lib/api";
+import { fetchDistrictsForCity, type DistrictRow } from "@/lib/districts-fetch";
 import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
 
 export default function ShopAreaStep(): React.ReactElement {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const raw = useLocalSearchParams<{ data?: string }>();
   const prev: Record<string, unknown> = raw.data
     ? (JSON.parse(raw.data as string) as Record<string, unknown>)
@@ -25,32 +26,68 @@ export default function ShopAreaStep(): React.ReactElement {
   const offersRepair = Boolean(prev.offersRepair);
   const offersParts = Boolean(prev.offersParts);
   const offersTowing = Boolean(prev.offersTowing);
+  const cityFromPrev = (prev.city as string | undefined) ?? "";
+  const homeDistrictId = (prev.districtId as string | undefined) ?? "";
 
-  const [repairRadius, setRepairRadius] = useState("15");
-  const [partsRadius, setPartsRadius] = useState("20");
-  const [towingRadius, setTowingRadius] = useState("8");
+  const [districts, setDistricts] = useState<DistrictRow[]>([]);
+  const [districtsLoading, setDistrictsLoading] = useState(true);
+  const [districtsError, setDistrictsError] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [partsNationwide, setPartsNationwide] = useState(false);
 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
+  useEffect(() => {
+    if (!cityFromPrev) {
+      setDistricts([]);
+      setDistrictsLoading(false);
+      setDistrictsError(t("pickCityFirst"));
+      return;
+    }
+    setDistrictsLoading(true);
+    setDistrictsError("");
+    void (async () => {
+      try {
+        const list = await fetchDistrictsForCity(cityFromPrev);
+        setDistricts(list);
+        // Default-select the shop's own district (from previous step) so the
+        // user starts with a sane scope and can extend.
+        if (homeDistrictId && list.some((d) => d.id === homeDistrictId)) {
+          setSelected(new Set([homeDistrictId]));
+        }
+      } catch (e) {
+        setDistricts([]);
+        setDistrictsError(e instanceof Error ? e.message : "Failed to load districts");
+      } finally {
+        setDistrictsLoading(false);
+      }
+    })();
+  }, [cityFromPrev, homeDistrictId, t]);
+
+  const toggle = (id: string): void => {
+    setSelected((prev2) => {
+      const next = new Set(prev2);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   function parseSignupYear(value: unknown): number | undefined {
-    if (typeof value !== "string") {
-      return undefined;
-    }
-    const t = value.trim();
-    if (t.length === 0) {
-      return undefined;
-    }
-    const n = parseInt(t, 10);
-    if (Number.isNaN(n)) {
-      return undefined;
-    }
-    return n;
+    if (typeof value !== "string") return undefined;
+    const v = value.trim();
+    if (v.length === 0) return undefined;
+    const n = parseInt(v, 10);
+    return Number.isNaN(n) ? undefined : n;
   }
 
   function handleCreate(): void {
     setErr("");
+    if (selected.size === 0 && !(offersParts && partsNationwide)) {
+      setErr(t("servedDistrictsRequired"));
+      return;
+    }
     setBusy(true);
 
     const carYearMin = parseSignupYear(prev.yearFrom);
@@ -75,14 +112,7 @@ export default function ShopAreaStep(): React.ReactElement {
       city: prev.city,
       districtId: prev.districtId,
       address: (prev.address as string) || undefined,
-      repairRadiusKm: offersRepair ? clampInt(repairRadius, 1, 50) : undefined,
-      partsRadiusKm:
-        offersParts && !partsNationwide
-          ? clampInt(partsRadius, 1, 50)
-          : undefined,
-      towingRadiusKm: offersTowing
-        ? clampInt(towingRadius, 1, 30)
-        : undefined,
+      servedDistrictIds: Array.from(selected),
       partsNationwide: offersParts ? partsNationwide : false,
     };
 
@@ -101,6 +131,10 @@ export default function ShopAreaStep(): React.ReactElement {
     })();
   }
 
+  function districtLabel(d: DistrictRow): string {
+    return locale === "ar-iq" && d.nameAr ? d.nameAr : d.name;
+  }
+
   return (
     <ScrollView contentContainerStyle={s.container}>
       <WizardProgressBar step={6} />
@@ -111,24 +145,7 @@ export default function ShopAreaStep(): React.ReactElement {
         <Text style={s.infoText}>{t("serviceAreaHint")}</Text>
       </View>
 
-      {offersRepair && (
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>{t("repair")}</Text>
-          <View style={s.radiusRow}>
-            <TextInput
-              style={s.radiusInput}
-              value={repairRadius}
-              onChangeText={setRepairRadius}
-              keyboardType="number-pad"
-              maxLength={2}
-            />
-            <Text style={s.km}>km</Text>
-            <Text style={s.range}>(1–50)</Text>
-          </View>
-        </View>
-      )}
-
-      {offersParts && (
+      {offersParts ? (
         <View style={s.section}>
           <Text style={s.sectionTitle}>{t("parts")}</Text>
           <View style={s.toggleRow}>
@@ -141,38 +158,38 @@ export default function ShopAreaStep(): React.ReactElement {
               ios_backgroundColor={theme.border}
             />
           </View>
-          {!partsNationwide && (
-            <View style={s.radiusRow}>
-              <TextInput
-                style={s.radiusInput}
-                value={partsRadius}
-                onChangeText={setPartsRadius}
-                keyboardType="number-pad"
-                maxLength={2}
-              />
-              <Text style={s.km}>km</Text>
-              <Text style={s.range}>(1–50)</Text>
-            </View>
-          )}
         </View>
-      )}
+      ) : null}
 
-      {offersTowing && (
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>{t("towing")}</Text>
-          <View style={s.radiusRow}>
-            <TextInput
-              style={s.radiusInput}
-              value={towingRadius}
-              onChangeText={setTowingRadius}
-              keyboardType="number-pad"
-              maxLength={2}
-            />
-            <Text style={s.km}>km</Text>
-            <Text style={s.range}>(1–30)</Text>
+      <View style={s.section}>
+        <Text style={s.sectionTitle}>{t("servedDistricts")}</Text>
+        <Text style={s.sectionHint}>{t("servedDistrictsHint")}</Text>
+
+        {districtsLoading ? (
+          <ActivityIndicator color={theme.primaryMid} style={{ marginTop: 16 }} />
+        ) : districtsError ? (
+          <Text style={s.err}>{districtsError}</Text>
+        ) : districts.length === 0 ? (
+          <Text style={s.err}>{t("districtEmptyHelp")}</Text>
+        ) : (
+          <View style={s.chips}>
+            {districts.map((d) => {
+              const on = selected.has(d.id);
+              return (
+                <Pressable
+                  key={d.id}
+                  style={[s.chip, on && s.chipOn]}
+                  onPress={() => toggle(d.id)}
+                >
+                  <Text style={[s.chipText, on && s.chipTextOn]}>
+                    {districtLabel(d)}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
-        </View>
-      )}
+        )}
+      </View>
 
       {err !== "" && <Text style={s.err}>{err}</Text>}
 
@@ -185,13 +202,6 @@ export default function ShopAreaStep(): React.ReactElement {
       </Pressable>
     </ScrollView>
   );
-}
-
-/** Parse text to int and clamp between min/max. */
-function clampInt(text: string, min: number, max: number): number {
-  const n = parseInt(text, 10);
-  if (Number.isNaN(n)) return min;
-  return Math.max(min, Math.min(max, n));
 }
 
 const s = StyleSheet.create({
@@ -214,29 +224,15 @@ const s = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: theme.text,
-    marginBottom: 10,
+    marginBottom: 6,
     textAlign: "left",
   },
-  radiusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 8,
+  sectionHint: {
+    fontSize: 13,
+    color: theme.muted,
+    marginBottom: 12,
+    textAlign: "left",
   },
-  radiusInput: {
-    width: 64,
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: theme.radiusMd,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: theme.text,
-    textAlign: "center",
-    fontWeight: "700",
-  },
-  km: { fontSize: 15, color: theme.muted, fontWeight: "600" },
-  range: { fontSize: 13, color: theme.mutedLight },
   toggleRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -244,7 +240,19 @@ const s = StyleSheet.create({
     marginBottom: 8,
   },
   toggleLabel: { fontSize: 15, color: theme.text },
-  err: { marginTop: 12, color: theme.danger, fontSize: 13 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: theme.chip,
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  chipOn: { backgroundColor: theme.primaryMid, borderColor: theme.primaryMid },
+  chipText: { fontSize: 14, color: theme.text, fontWeight: "600" },
+  chipTextOn: { color: "#fff" },
+  err: { marginTop: 12, color: theme.danger, fontSize: 13, textAlign: "left" },
   btn: {
     marginTop: 28,
     backgroundColor: theme.primaryMid,

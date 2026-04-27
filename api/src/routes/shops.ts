@@ -43,6 +43,7 @@ const createShopSchema = z.object({
   repairRadiusKm: z.number().int().min(1).max(50).optional(),
   partsRadiusKm: z.number().int().min(1).max(50).optional(),
   towingRadiusKm: z.number().int().min(1).max(30).optional(),
+  servedDistrictIds: z.array(z.string().min(1)).optional(),
   partsNationwide: z.boolean(),
   city: z.string().min(1),
   districtId: z.string().min(1),
@@ -114,6 +115,7 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
           repairRadiusKm: body.repairRadiusKm,
           partsRadiusKm: body.partsRadiusKm,
           towingRadiusKm: body.towingRadiusKm,
+          servedDistrictIds: body.servedDistrictIds ?? [],
           partsNationwide: body.partsNationwide,
         },
       });
@@ -246,6 +248,7 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
         repairRadiusKm: body.repairRadiusKm,
         partsRadiusKm: body.partsRadiusKm,
         towingRadiusKm: body.towingRadiusKm,
+        servedDistrictIds: body.servedDistrictIds,
         partsNationwide: body.partsNationwide,
       });
 

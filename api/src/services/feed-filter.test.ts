@@ -20,6 +20,7 @@ function shop(over: Partial<ShopForFeed> = {}): ShopForFeed {
     repairRadiusKm: 10,
     partsRadiusKm: 20,
     towingRadiusKm: 8,
+    servedDistrictIds: [],
     partsNationwide: false,
     deliveryAvailable: false,
     carMakes: ["Toyota"],
@@ -305,4 +306,27 @@ test("buildMoreFeedEntries fills with national posts after same-city rows", () =
   assert.equal(cityMatchedCount, 1);
   assert.equal(entries.length, 2);
   assert.ok(entries.some((e) => e.id === "b1"));
+});
+
+
+test("filterPostsForShop excludes post outside shop servedDistrictIds (same city)", () => {
+  const s = shop({ servedDistrictIds: ["d1"] });
+  // post in same city (Baghdad) but a different district -> excluded
+  const otherDistrictPost = post({ districtId: "d2" });
+  const matched = filterPostsForShop(s, [otherDistrictPost]);
+  assert.equal(matched.length, 0);
+});
+
+test("filterPostsForShop includes post in shop servedDistrictIds (same city)", () => {
+  const s = shop({ servedDistrictIds: ["d1", "d2"] });
+  const allowed = post({ districtId: "d2" });
+  const matched = filterPostsForShop(s, [allowed]);
+  assert.equal(matched.length, 1);
+});
+
+test("filterPostsForShop with empty servedDistrictIds serves whole city (back-compat)", () => {
+  const s = shop({ servedDistrictIds: [] });
+  const samCityOtherDistrict = post({ districtId: "dX" });
+  const matched = filterPostsForShop(s, [samCityOtherDistrict]);
+  assert.equal(matched.length, 1);
 });

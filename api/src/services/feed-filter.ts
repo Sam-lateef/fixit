@@ -218,22 +218,26 @@ export function filterPostsForShop(
       if (!matched) continue;
     }
 
-    // Parts shops with nationwide delivery bypass the city check.
+    // Parts shops with nationwide delivery bypass the city/district check.
     if (post.serviceType === "PARTS" && shop.partsNationwide) {
       results.push({ ...post, distanceKm: null });
       continue;
     }
 
-    // City-based filter (district is informational only).
-    // Reasoning: a Baghdad shop should not see Erbil requests, but within
-    // the same city, district shouldn't matter. The previous radius check
-    // could exclude same-city posts (when districts were geographically
-    // far apart) and could let through cross-city posts (when border
-    // districts of two cities happened to be close).
+    // City-based filter (post must be in the same city as the shop).
     const shopCity = resolveShopCityForFeed(shop);
     const postCity = post.district?.city?.trim() ?? "";
     if (shopCity.length === 0 || postCity.length === 0) continue;
     if (normalizeCityKey(shopCity) !== normalizeCityKey(postCity)) continue;
+
+    // District-based filter: when shop has chosen specific districts,
+    // post.districtId must be in that list. Empty list = serve whole
+    // city (backwards compat with shops that signed up before this
+    // field existed and never set it).
+    if (shop.servedDistrictIds.length > 0) {
+      if (!post.districtId) continue;
+      if (!shop.servedDistrictIds.includes(post.districtId)) continue;
+    }
 
     // Distance is still computed for display on the card (informational).
     results.push({

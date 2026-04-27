@@ -22,6 +22,8 @@ export type ShopProfilePayload = {
   carYearMax?: number | null;
   repairCategories: string[];
   partsCategories: string[];
+  /** Districts the shop covers. Empty = whole city. */
+  servedDistrictIds: string[];
   user: {
     name: string | null;
     phone: string | null;

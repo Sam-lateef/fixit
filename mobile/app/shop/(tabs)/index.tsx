@@ -49,6 +49,7 @@ type Post = {
   photoUrls: string[];
   bids: Array<{ shopId: string }>;
   user: { name: string | null };
+  districtId: string | null;
   district: {
     name: string;
     nameAr: string | null;
@@ -75,6 +76,8 @@ type ShopMe = {
   yearTo: number | null;
   repairCategories: string[];
   partsCategories: string[];
+  /** Districts the shop covers. Empty = whole city. */
+  servedDistrictIds: string[];
   user: {
     city: string | null;
     // Server feed filter falls back to user.district.city when user.city is
@@ -122,13 +125,20 @@ function serviceTypeLabel(
 
 type Mismatches = {
   city: boolean;
+  district: boolean;
   carMake: boolean;
   carYear: boolean;
   category: boolean;
 };
 
 function computeMismatches(p: Post, shop: ShopMe | null): Mismatches {
-  const empty = { city: false, carMake: false, carYear: false, category: false };
+  const empty = {
+    city: false,
+    district: false,
+    carMake: false,
+    carYear: false,
+    category: false,
+  };
   if (!shop) return empty;
   // Shop city — fall back to user.district.city when user.city is empty
   // (mirrors server-side resolveShopCityForFeed in api/services/feed-filter.ts).
@@ -140,6 +150,13 @@ function computeMismatches(p: Post, shop: ShopMe | null): Mismatches {
   const postCity = (p.district?.city.trim() ?? "").toLowerCase();
   const cityMismatch =
     shopCity.length > 0 && postCity.length > 0 && shopCity !== postCity;
+  // District mismatch: when shop has a non-empty servedDistrictIds list
+  // and the post's district isn't in it (only meaningful when cities match).
+  const districtMismatch =
+    !cityMismatch &&
+    shop.servedDistrictIds.length > 0 &&
+    p.districtId !== null &&
+    !shop.servedDistrictIds.includes(p.districtId);
   // Car make: shop has restricted list AND post specifies a make not in it.
   const carMake = p.carMake?.trim().toLowerCase() ?? "";
   const shopMakes = shop.carMakes.map((m) => m.toLowerCase());
@@ -164,6 +181,7 @@ function computeMismatches(p: Post, shop: ShopMe | null): Mismatches {
   }
   return {
     city: cityMismatch,
+    district: districtMismatch,
     carMake: carMakeMismatch,
     carYear: carYearMismatch,
     category: categoryMismatch,
@@ -478,7 +496,7 @@ export default function ShopFeedScreen(): React.ReactElement {
                       <Text
                         style={[
                           styles.locationInfo,
-                          mm?.city && styles.mismatchOutlineText,
+                          (mm?.city || mm?.district) && styles.mismatchOutlineText,
                         ]}
                         numberOfLines={1}
                       >
