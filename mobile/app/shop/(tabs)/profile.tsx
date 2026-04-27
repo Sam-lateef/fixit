@@ -1620,7 +1620,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     textAlign: "left",
   },
-  fieldLabelSpaced: { marginTop: 14 },
+  fieldLabelSpaced: { marginTop: 24 },
   fieldInput: {
     marginTop: 6,
     borderWidth: 1,
