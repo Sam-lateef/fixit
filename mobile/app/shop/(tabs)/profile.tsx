@@ -1208,6 +1208,10 @@ export default function ShopProfileScreen(): React.ReactElement {
         onRequestClose={() => setServedModalOpen(false)}
       >
         <View style={styles.modalOverlay}>
+          <Pressable
+            style={styles.dismissArea}
+            onPress={() => setServedModalOpen(false)}
+          />
           <SafeAreaView style={styles.modalSheet}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t("servedDistricts")}</Text>
