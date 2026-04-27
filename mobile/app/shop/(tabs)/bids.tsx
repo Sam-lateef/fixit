@@ -1,8 +1,10 @@
+import { useNavigation } from "@react-navigation/native";
 import { router, type Href } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
+  Modal,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -15,6 +17,8 @@ import { ShopPremiumGate } from "@/components/ShopPremiumGate";
 import { apiFetch, formatIqd } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
+
+type SortOption = "newest" | "oldest";
 
 type BidRow = {
   id: string;
@@ -48,8 +52,35 @@ function statusTag(
 
 export default function ShopBidsScreen(): React.ReactElement {
   const { t, isRtl } = useI18n();
+  const navigation = useNavigation();
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [bids, setBids] = useState<BidRow[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+
+  const sortedBids = useMemo(() => {
+    const out = [...bids];
+    out.sort((a, b) => {
+      const aT = new Date(a.createdAt).getTime();
+      const bT = new Date(b.createdAt).getTime();
+      return sortBy === "newest" ? bT - aT : aT - bT;
+    });
+    return out;
+  }, [bids, sortBy]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable
+          onPress={() => setSortMenuOpen(true)}
+          hitSlop={8}
+          style={styles.headerSortBtn}
+        >
+          <Text style={styles.headerSortText}>{`⇅  ${t("sortLabel")}`}</Text>
+        </Pressable>
+      ),
+    });
+  }, [navigation, t]);
 
   const load = useCallback(async () => {
     try {
@@ -107,7 +138,7 @@ export default function ShopBidsScreen(): React.ReactElement {
   return (
     <ShopPremiumGate>
       <FlatList
-        data={bids}
+        data={sortedBids}
         keyExtractor={(b) => b.id}
         contentContainerStyle={styles.list}
         refreshControl={refreshControl}
@@ -234,6 +265,52 @@ export default function ShopBidsScreen(): React.ReactElement {
           );
         }}
       />
+
+      <Modal
+        visible={sortMenuOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSortMenuOpen(false)}
+      >
+        <Pressable
+          style={styles.sortBackdrop}
+          onPress={() => setSortMenuOpen(false)}
+        >
+          <Pressable style={styles.sortSheet} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.sortGrabber} />
+            <View style={styles.sortHeader}>
+              <Text style={styles.sortHeaderTitle}>{t("sortLabel")}</Text>
+              <Pressable onPress={() => setSortMenuOpen(false)} hitSlop={8}>
+                <Text style={styles.sortHeaderClose}>✕</Text>
+              </Pressable>
+            </View>
+            {(["newest", "oldest"] as const).map((opt, i) => {
+              const active = sortBy === opt;
+              const label = opt === "newest" ? t("sortNewest") : t("sortOldest");
+              return (
+                <Pressable
+                  key={opt}
+                  style={[
+                    styles.sortOption,
+                    i > 0 && styles.sortOptionDivider,
+                    active && styles.sortOptionActive,
+                  ]}
+                  onPress={() => {
+                    setSortBy(opt);
+                    setSortMenuOpen(false);
+                  }}
+                >
+                  <Text style={[styles.sortOptionText, active && styles.sortOptionTextActive]}>
+                    {active ? "✓ " : "  "}
+                    {label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+            <View style={styles.sortBottomSafe} />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ShopPremiumGate>
   );
 }
@@ -292,4 +369,57 @@ const styles = StyleSheet.create({
   actionText: { color: "#fff", fontWeight: "600", fontSize: 13 },
   withdrawBtn: { backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.danger },
   withdrawText: { color: theme.danger },
+
+  // Header-right sort button + bottom-sheet menu (matches the feed tab UX).
+  headerSortBtn: { paddingHorizontal: 12, paddingVertical: 6 },
+  headerSortText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  sortBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
+  },
+  sortSheet: {
+    backgroundColor: theme.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 8,
+    paddingHorizontal: 20,
+    minHeight: 240,
+  },
+  sortGrabber: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: theme.border,
+    alignSelf: "center",
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  sortHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    marginBottom: 4,
+  },
+  sortHeaderTitle: { fontSize: 17, fontWeight: "700", color: theme.text },
+  sortHeaderClose: { fontSize: 20, color: theme.muted, paddingHorizontal: 4 },
+  sortOption: {
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+    borderRadius: theme.radiusMd,
+  },
+  sortOptionDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.border,
+    borderRadius: 0,
+  },
+  sortOptionActive: {
+    backgroundColor: theme.primaryLight,
+    borderRadius: theme.radiusMd,
+    borderTopWidth: 0,
+  },
+  sortOptionText: { fontSize: 16, color: theme.text, textAlign: "left" },
+  sortOptionTextActive: { color: theme.primary, fontWeight: "700" },
+  sortBottomSafe: { height: 36 },
 });

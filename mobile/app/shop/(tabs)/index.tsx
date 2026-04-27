@@ -601,7 +601,7 @@ export default function ShopFeedScreen(): React.ReactElement {
       <Modal
         visible={sortMenuOpen}
         transparent
-        animationType="fade"
+        animationType="slide"
         onRequestClose={() => setSortMenuOpen(false)}
       >
         <Pressable
@@ -609,7 +609,14 @@ export default function ShopFeedScreen(): React.ReactElement {
           onPress={() => setSortMenuOpen(false)}
         >
           <Pressable style={styles.sortSheet} onPress={(e) => e.stopPropagation()}>
-            {(["newest", "oldest", "distance"] as const).map((opt) => {
+            <View style={styles.sortGrabber} />
+            <View style={styles.sortHeader}>
+              <Text style={styles.sortHeaderTitle}>{t("sortLabel")}</Text>
+              <Pressable onPress={() => setSortMenuOpen(false)} hitSlop={8}>
+                <Text style={styles.sortHeaderClose}>✕</Text>
+              </Pressable>
+            </View>
+            {(["newest", "oldest", "distance"] as const).map((opt, i) => {
               const active = sortBy === opt;
               const label =
                 opt === "newest"
@@ -620,7 +627,11 @@ export default function ShopFeedScreen(): React.ReactElement {
               return (
                 <Pressable
                   key={opt}
-                  style={[styles.sortOption, active && styles.sortOptionActive]}
+                  style={[
+                    styles.sortOption,
+                    i > 0 && styles.sortOptionDivider,
+                    active && styles.sortOptionActive,
+                  ]}
                   onPress={() => {
                     setSortBy(opt);
                     setSortMenuOpen(false);
@@ -633,6 +644,7 @@ export default function ShopFeedScreen(): React.ReactElement {
                 </Pressable>
               );
             })}
+            <View style={styles.sortBottomSafe} />
           </Pressable>
         </Pressable>
       </Modal>
@@ -678,27 +690,63 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 14,
   },
-  // Sort menu (modal)
+  // Sort menu (bottom-sheet modal)
   sortBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "flex-end",
   },
   sortSheet: {
     backgroundColor: theme.surface,
-    borderTopLeftRadius: theme.radiusLg,
-    borderTopRightRadius: theme.radiusLg,
-    paddingVertical: 8,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 8,
+    paddingHorizontal: 20,
+    minHeight: 280,
+  },
+  sortGrabber: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: theme.border,
+    alignSelf: "center",
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  sortHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    marginBottom: 4,
+  },
+  sortHeaderTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: theme.text,
+  },
+  sortHeaderClose: {
+    fontSize: 20,
+    color: theme.muted,
+    paddingHorizontal: 4,
   },
   sortOption: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+    borderRadius: theme.radiusMd,
+  },
+  sortOptionDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.border,
+    borderRadius: 0,
   },
   sortOptionActive: {
     backgroundColor: theme.primaryLight,
+    borderRadius: theme.radiusMd,
+    borderTopWidth: 0,
   },
   sortOptionText: {
-    fontSize: 15,
+    fontSize: 16,
     color: theme.text,
     textAlign: "left",
   },
@@ -706,6 +754,8 @@ const styles = StyleSheet.create({
     color: theme.primary,
     fontWeight: "700",
   },
+  // Pads beyond home indicator on iOS / nav bar on Android.
+  sortBottomSafe: { height: 36 },
 
   // Applied to the post card field that fails to match the shop profile
   // in the More section. Two flavors: chip-wrapper (already padded) and

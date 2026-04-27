@@ -26,14 +26,18 @@ docs
 
 
 
-# API Dockerfile only needs workspace package.json stubs under app/ and mobile/.
-
-app/*
-
-!app/package.json
+# API Dockerfile builds the api workspace AND the app workspace
+# (the admin web is bundled by Vite and served by the API at WEB_DIST_DIR).
+# Mobile is not needed in the docker image — keep only its package.json
+# so the workspace install can resolve.
 
 mobile/*
 
 !mobile/package.json
+
+# Don't ship the built admin assets from a developer's machine —
+# the Dockerfile builds them fresh inside the image.
+app/dist
+app/node_modules
 
 
