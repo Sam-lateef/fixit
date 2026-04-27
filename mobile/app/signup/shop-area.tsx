@@ -203,7 +203,7 @@ const s = StyleSheet.create({
     borderRadius: theme.radiusMd,
     backgroundColor: theme.primaryLight,
   },
-  infoText: { color: theme.primary, fontSize: 14, lineHeight: 20 },
+  infoText: { color: theme.primary, fontSize: 14, lineHeight: 20, textAlign: "left" },
   section: {
     marginTop: 24,
     paddingBottom: 16,

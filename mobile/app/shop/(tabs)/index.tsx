@@ -467,7 +467,7 @@ export default function ShopFeedScreen(): React.ReactElement {
                       <Text
                         style={[
                           styles.carInfo,
-                          (mm?.carMake || mm?.carYear) && styles.mismatchOutline,
+                          (mm?.carMake || mm?.carYear) && styles.mismatchOutlineText,
                         ]}
                         numberOfLines={1}
                       >
@@ -478,7 +478,7 @@ export default function ShopFeedScreen(): React.ReactElement {
                       <Text
                         style={[
                           styles.locationInfo,
-                          mm?.city && styles.mismatchOutline,
+                          mm?.city && styles.mismatchOutlineText,
                         ]}
                         numberOfLines={1}
                       >
@@ -572,11 +572,21 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   // Applied to the post card field that fails to match the shop profile
-  // (city, car make, year, or repair/parts category) in the More section.
+  // in the More section. Two flavors: chip-wrapper (already padded) and
+  // text-only (needs alignSelf + small padding to shrink to content width
+  // instead of stretching the whole row).
   mismatchOutline: {
     borderWidth: 1,
     borderColor: theme.danger,
     borderRadius: theme.radiusMd,
+  },
+  mismatchOutlineText: {
+    borderWidth: 1,
+    borderColor: theme.danger,
+    borderRadius: theme.radiusMd,
+    alignSelf: "flex-start",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
   sectionFooterEmpty: {
     fontSize: 13,
