@@ -15,6 +15,7 @@ import { PostImageLightbox } from "@/components/PostImageLightbox";
 import { ShopPremiumGate } from "@/components/ShopPremiumGate";
 import { apiFetch, formatIqd } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import { normalizeDigits } from "@/lib/numerals";
 import {
   ownerCityLabel,
   partsCategoryLabel,
@@ -75,6 +76,8 @@ export default function ShopBidScreen(): React.ReactElement {
   const [deliveryDate, setDeliveryDate] = useState("");
   const [deliveryWindow, setDeliveryWindow] = useState("");
   const [message, setMessage] = useState(initialMessage ?? "");
+  const [priceError, setPriceError] = useState("");
+  const [messageError, setMessageError] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -120,18 +123,28 @@ export default function ShopBidScreen(): React.ReactElement {
 
   const submit = (): void => {
     setErr("");
-    const n = Number(price);
+    setPriceError("");
+    setMessageError("");
+    // Accept Arabic-Indic / Persian numerals for price too — Iraqi keyboards
+    // commonly produce those, and Number() can't parse them natively.
+    const n = parseInt(normalizeDigits(price).trim(), 10);
     const msg = message.trim();
-    if (!n) {
-      setErr(t("priceRequired"));
-      return;
+    let invalid = false;
+    if (!Number.isFinite(n) || n <= 0) {
+      setPriceError(t("priceRequired"));
+      invalid = true;
     }
+    if (msg.length === 0) {
+      setMessageError(t("messageRequired"));
+      invalid = true;
+    }
+    if (invalid) return;
     setBusy(true);
     void (async () => {
       try {
         const body: Record<string, unknown> = {
           priceEstimate: Math.round(n),
-          message: msg || undefined,
+          message: msg,
         };
         if (isParts) {
           if (deliveryDate) body.deliveryDate = deliveryDate;
@@ -146,7 +159,15 @@ export default function ShopBidScreen(): React.ReactElement {
         });
         router.back();
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "Failed");
+        // Friendly fallback when the API returns its raw zod "Invalid body"
+        // (we no longer expect to hit it after the local validation above,
+        // but better safe than the user seeing "Invalid body").
+        const raw = e instanceof Error ? e.message : "";
+        const friendly =
+          raw && raw.toLowerCase() !== "invalid body"
+            ? raw
+            : t("genericSaveFailed");
+        setErr(friendly);
       } finally {
         setBusy(false);
       }
@@ -281,14 +302,25 @@ export default function ShopBidScreen(): React.ReactElement {
           {/* Price */}
           <Text style={styles.label}>{t("priceIqd")}</Text>
           <TextInput
-            style={[styles.input, styles.priceInput]}
+            style={[
+              styles.input,
+              styles.priceInput,
+              priceError ? styles.inputError : null,
+            ]}
             keyboardType="number-pad"
             placeholder="250,000"
             placeholderTextColor={theme.mutedLight}
             value={price}
-            onChangeText={setPrice}
+            onChangeText={(v) => {
+              setPrice(v);
+              if (priceError) setPriceError("");
+            }}
           />
-          <Text style={styles.hint}>{t("canAdjust")}</Text>
+          {priceError ? (
+            <Text style={styles.inlineError}>{priceError}</Text>
+          ) : (
+            <Text style={styles.hint}>{t("canAdjust")}</Text>
+          )}
 
           {/* Date/time fields — different labels for parts vs repair/towing */}
           {isParts ? (
@@ -318,6 +350,7 @@ export default function ShopBidScreen(): React.ReactElement {
             style={[
               styles.input,
               styles.area,
+              messageError ? styles.inputError : null,
               locale === "ar-iq"
                 ? { textAlign: "right", writingDirection: "rtl" }
                 : { textAlign: "left", writingDirection: "ltr" },
@@ -325,10 +358,16 @@ export default function ShopBidScreen(): React.ReactElement {
             placeholder={t("message")}
             placeholderTextColor={theme.mutedLight}
             value={message}
-            onChangeText={(v) => setMessage(v.slice(0, 500))}
+            onChangeText={(v) => {
+              setMessage(v.slice(0, 500));
+              if (messageError) setMessageError("");
+            }}
             multiline
             maxLength={500}
           />
+          {messageError ? (
+            <Text style={styles.inlineError}>{messageError}</Text>
+          ) : null}
           <Text style={styles.charCount}>{message.length}/500</Text>
 
           {/* Submit */}
@@ -469,6 +508,14 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   priceInput: { fontSize: 22, fontWeight: "700", writingDirection: "ltr" },
+  inputError: { borderColor: theme.danger },
+  inlineError: {
+    color: theme.danger,
+    fontSize: 13,
+    marginTop: 4,
+    marginBottom: 4,
+    textAlign: "left",
+  },
 
   area: { minHeight: 100, textAlignVertical: "top" },
   charCount: { fontSize: 12, color: theme.mutedLight, textAlign: "right", marginTop: 4 },
