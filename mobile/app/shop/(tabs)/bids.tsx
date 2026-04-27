@@ -17,6 +17,11 @@ import { ShopPremiumGate } from "@/components/ShopPremiumGate";
 import { apiFetch, formatIqd } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
+import {
+  ownerCityLabel,
+  partsCategoryLabel,
+  repairCategoryLabel,
+} from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
 
 type SortOption = "newest" | "oldest";
@@ -32,11 +37,26 @@ type BidRow = {
     serviceType: string;
     description: string;
     status: string;
+    repairCategory: string | null;
+    partsCategory: string | null;
     carMake: string | null;
+    carModel: string | null;
     carYear: number | null;
     photoUrls: string[];
+    district: { name: string; nameAr: string | null; city: string } | null;
+    user: { name: string | null };
   };
 };
+
+function relativeTime(iso: string, t: (k: "minAgo" | "hAgo" | "dAgo") => string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const m = Math.max(1, Math.round(ms / 60_000));
+  if (m < 60) return `${m}${t("minAgo")}`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}${t("hAgo")}`;
+  const d = Math.round(h / 24);
+  return `${d}${t("dAgo")}`;
+}
 
 function statusTag(
   status: string,
@@ -52,7 +72,7 @@ function statusTag(
 }
 
 export default function ShopBidsScreen(): React.ReactElement {
-  const { t, isRtl } = useI18n();
+  const { t, isRtl, locale } = useI18n();
   const navigation = useNavigation();
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
@@ -149,6 +169,29 @@ export default function ShopBidsScreen(): React.ReactElement {
         renderItem={({ item: b }) => {
           const tag = statusTag(b.status, t);
           const photo = b.post.photoUrls?.[0];
+          const svc = b.post.serviceType.toUpperCase();
+          const catLabel =
+            svc === "REPAIR" && b.post.repairCategory
+              ? repairCategoryLabel(b.post.repairCategory, locale)
+              : svc === "PARTS" && b.post.partsCategory
+                ? partsCategoryLabel(b.post.partsCategory, locale)
+                : null;
+          const carLine = [b.post.carMake, b.post.carModel, b.post.carYear]
+            .filter(Boolean)
+            .join(" · ");
+          const cityLabel = b.post.district
+            ? ownerCityLabel(b.post.district.city, locale)
+            : "";
+          const districtLabel = b.post.district
+            ? locale === "ar-iq" && b.post.district.nameAr
+              ? b.post.district.nameAr
+              : b.post.district.name
+            : "";
+          const locationLine = [cityLabel, districtLabel]
+            .filter((s) => s.length > 0)
+            .join(" · ");
+          const customerName = b.post.user?.name ?? "";
+          const placedAgo = relativeTime(b.createdAt, t);
           return (
             <View style={styles.card}>
               <Pressable
@@ -180,11 +223,12 @@ export default function ShopBidsScreen(): React.ReactElement {
                   <View style={styles.headerText}>
                     <View style={styles.row}>
                       <Text style={styles.type}>
-                        {b.post.serviceType === "REPAIR"
+                        {svc === "REPAIR"
                           ? t("repair")
-                          : b.post.serviceType === "PARTS"
+                          : svc === "PARTS"
                             ? t("parts")
                             : t("towing")}
+                        {catLabel ? ` · ${catLabel}` : ""}
                       </Text>
                       <View style={[styles.badge, { backgroundColor: tag.bg }]}>
                         <Text style={[styles.badgeText, { color: tag.fg }]}>
@@ -192,9 +236,12 @@ export default function ShopBidsScreen(): React.ReactElement {
                         </Text>
                       </View>
                     </View>
-                    {(b.post.carMake || b.post.carYear) ? (
-                      <Text style={styles.carInfo}>
-                        {[b.post.carMake, b.post.carYear].filter(Boolean).join(" · ")}
+                    {carLine.length > 0 ? (
+                      <Text style={styles.carInfo}>{carLine}</Text>
+                    ) : null}
+                    {locationLine.length > 0 ? (
+                      <Text style={styles.locationInfo} numberOfLines={1}>
+                        {locationLine}
                       </Text>
                     ) : null}
                   </View>
@@ -202,6 +249,16 @@ export default function ShopBidsScreen(): React.ReactElement {
                 <Text style={styles.desc} numberOfLines={2}>
                   {b.post.description}
                 </Text>
+                <View style={styles.metaRow}>
+                  {customerName.length > 0 ? (
+                    <Text style={styles.metaText} numberOfLines={1}>
+                      {customerName}
+                    </Text>
+                  ) : null}
+                  <Text style={styles.metaText}>
+                    {t("placedAgo")} {placedAgo}
+                  </Text>
+                </View>
                 <Text style={styles.price}>{formatIqd(b.priceEstimate)}</Text>
                 {b.message ? (
                   <Text style={styles.msg} numberOfLines={2}>
@@ -350,8 +407,17 @@ const styles = StyleSheet.create({
   type: { fontWeight: "700", color: theme.text },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   badgeText: { fontSize: 12, fontWeight: "700" },
-  carInfo: { marginTop: 4, fontSize: 13, color: theme.mutedLight, fontWeight: "600" },
+  carInfo: { marginTop: 4, fontSize: 13, color: theme.mutedLight, fontWeight: "600", textAlign: "left" },
+  locationInfo: { marginTop: 2, fontSize: 12, color: theme.muted, textAlign: "left" },
   desc: { marginTop: 8, color: theme.muted, fontSize: 14, textAlign: "left" },
+  metaRow: {
+    marginTop: 6,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    columnGap: 12,
+    rowGap: 4,
+  },
+  metaText: { fontSize: 12, color: theme.mutedLight, textAlign: "left" },
   price: { marginTop: 8, fontWeight: "700", color: theme.text, fontSize: 16, textAlign: "left" },
   msg: { marginTop: 4, color: theme.muted, fontSize: 13, textAlign: "left" },
   actions: {

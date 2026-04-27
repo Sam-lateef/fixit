@@ -107,6 +107,10 @@ export const en = {
   feedMoreEmpty: "No other requests right now.",
   feedNoMatchingPosts: "Nothing currently",
   carYearsInvalid: "Use years 1950–2035, “from” ≤ “to”, or leave fields blank.",
+  placedAgo: "Placed",
+  minAgo: "m ago",
+  hAgo: "h ago",
+  dAgo: "d ago",
   pickDistrict: "Pick a district",
   pickCityFirst: "Choose your city above, then tap your district.",
   districtOtherHint:
@@ -380,6 +384,10 @@ export const arIq: Record<keyof typeof en, string> = {
   feedMoreEmpty: "لا توجد طلبات أخرى حالياً.",
   feedNoMatchingPosts: "لا شيء حالياً",
   carYearsInvalid: "أدخل سنوات بين 1950 و2035، «من» أصغر أو يساوي «إلى»، أو اترك الحقلين فارغين.",
+  placedAgo: "أُرسل",
+  minAgo: "د",
+  hAgo: "س",
+  dAgo: "ي",
   pickDistrict: "اختر المنطقة",
   pickCityFirst: "اختر المحافظة أعلاه، ثم اضغط منطقتك.",
   districtOtherHint:

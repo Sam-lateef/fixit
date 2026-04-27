@@ -237,7 +237,14 @@ export async function registerBidRoutes(fastify: FastifyInstance): Promise<void>
       }
       const bids = await prisma.bid.findMany({
         where: { shopId: shop.id },
-        include: { post: true },
+        include: {
+          post: {
+            include: {
+              district: { select: { name: true, nameAr: true, city: true } },
+              user: { select: { name: true } },
+            },
+          },
+        },
         orderBy: { createdAt: "desc" },
       });
       return { bids };
