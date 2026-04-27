@@ -108,8 +108,8 @@ const s = StyleSheet.create({
     backgroundColor: theme.surface,
   },
   container: { padding: 20, paddingBottom: 40, backgroundColor: theme.surface },
-  heading: { fontSize: 22, fontWeight: "700", color: theme.text },
-  sub: { fontSize: 14, color: theme.muted, marginTop: 4, marginBottom: 4 },
+  heading: { fontSize: 22, fontWeight: "700", color: theme.text, textAlign: "left" },
+  sub: { fontSize: 14, color: theme.muted, marginTop: 4, marginBottom: 4, textAlign: "left" },
   cards: { marginTop: 20, gap: 12 },
   card: {
     flexDirection: "row",

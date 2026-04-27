@@ -234,7 +234,7 @@ export default function ShopBidsScreen(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: 16, paddingBottom: 32, backgroundColor: theme.bg },
+  list: { padding: 16, paddingTop: 24, paddingBottom: 32, backgroundColor: theme.bg },
   empty: { color: theme.muted, marginTop: 24, textAlign: "center" },
   card: {
     backgroundColor: theme.surface,
@@ -266,9 +266,9 @@ const styles = StyleSheet.create({
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   badgeText: { fontSize: 12, fontWeight: "700" },
   carInfo: { marginTop: 4, fontSize: 13, color: theme.mutedLight, fontWeight: "600" },
-  desc: { marginTop: 8, color: theme.muted, fontSize: 14 },
-  price: { marginTop: 8, fontWeight: "700", color: theme.text, fontSize: 16 },
-  msg: { marginTop: 4, color: theme.muted, fontSize: 13 },
+  desc: { marginTop: 8, color: theme.muted, fontSize: 14, textAlign: "left" },
+  price: { marginTop: 8, fontWeight: "700", color: theme.text, fontSize: 16, textAlign: "left" },
+  msg: { marginTop: 4, color: theme.muted, fontSize: 13, textAlign: "left" },
   actions: {
     flexDirection: "row",
     gap: 8,

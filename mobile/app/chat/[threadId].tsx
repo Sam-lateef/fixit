@@ -73,7 +73,7 @@ function formatTime(iso: string): string {
 }
 
 export default function ChatThreadScreen(): React.ReactElement {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const insets = useSafeAreaInsets();
   const { threadId } = useLocalSearchParams<{ threadId: string }>();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -276,7 +276,12 @@ export default function ChatThreadScreen(): React.ReactElement {
 
       <View style={[styles.composer, { paddingBottom: 10 + insets.bottom }]}>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            locale === "ar-iq"
+              ? { textAlign: "right", writingDirection: "rtl" }
+              : { textAlign: "left", writingDirection: "ltr" },
+          ]}
           value={draft}
           onChangeText={setDraft}
           placeholder={t("typeMessage")}

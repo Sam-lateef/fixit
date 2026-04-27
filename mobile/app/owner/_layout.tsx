@@ -1,10 +1,9 @@
 import { Stack } from "expo-router";
 
-import { useI18n } from "@/lib/i18n";
+import { StackBackButton } from "@/components/StackBackButton";
 import { theme } from "@/lib/theme";
 
 export default function OwnerStackLayout(): React.ReactElement {
-  const { t } = useI18n();
   const stackedScreenOptions = {
     headerShown: true,
     headerTransparent: false,
@@ -12,7 +11,10 @@ export default function OwnerStackLayout(): React.ReactElement {
     headerTintColor: "#fff",
     headerTitleStyle: { color: "#fff", fontWeight: "700" as const },
     headerShadowVisible: false,
-    headerBackTitle: t("back"),
+    // Hide native back so iOS doesn't mirror under RTL (renders `Back ›`).
+    // Custom button below always renders `‹ Back` in LTR order.
+    headerBackVisible: false,
+    headerLeft: () => <StackBackButton />,
   } as const;
   return (
     <Stack screenOptions={{ headerShown: false }}>

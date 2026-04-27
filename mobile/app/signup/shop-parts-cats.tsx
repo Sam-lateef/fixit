@@ -89,8 +89,9 @@ export default function ShopPartsCatsStep(): React.ReactElement {
         <Switch
           value={delivery}
           onValueChange={setDelivery}
-          trackColor={{ false: theme.border, true: theme.primaryLight }}
-          thumbColor={delivery ? theme.primaryMid : "#f4f4f5"}
+          trackColor={{ false: theme.border, true: theme.primaryMid }}
+          thumbColor="#fff"
+          ios_backgroundColor={theme.border}
         />
       </View>
 
@@ -103,7 +104,7 @@ export default function ShopPartsCatsStep(): React.ReactElement {
 
 const s = StyleSheet.create({
   container: { padding: 20, paddingBottom: 40, backgroundColor: theme.surface },
-  heading: { fontSize: 22, fontWeight: "700", color: theme.text },
+  heading: { fontSize: 22, fontWeight: "700", color: theme.text, textAlign: "left" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
   chip: {
     paddingVertical: 10,

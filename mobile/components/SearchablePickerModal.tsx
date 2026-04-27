@@ -63,12 +63,18 @@ export function SearchablePickerModal({
       visible={visible}
       animationType="slide"
       transparent
+      // Required for iOS so this can present on top of another Modal (e.g.
+      // when used inside the shop-profile location editor). Without this iOS
+      // freezes when a child Modal overlays a parent Modal.
+      presentationStyle="overFullScreen"
       onRequestClose={onRequestClose}
     >
       <KeyboardAvoidingView
         style={styles.backdrop}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
+        {/* Tap-outside-to-dismiss area */}
+        <Pressable style={styles.dismissArea} onPress={onRequestClose} />
         <View style={styles.card}>
           <Text style={styles.title}>{title}</Text>
           {searchOn ? (
@@ -120,6 +126,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "flex-end",
   },
+  dismissArea: { flex: 1 },
   card: {
     maxHeight: "85%",
     backgroundColor: theme.surface,
@@ -132,7 +139,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: theme.text,
     marginBottom: 10,
-    textAlign: "left",
+    textAlign: "center",
   },
   search: {
     borderWidth: 1,
@@ -158,7 +165,13 @@ const styles = StyleSheet.create({
   rowSelected: {
     backgroundColor: theme.primaryLight,
   },
-  rowText: { fontSize: 16, color: theme.text, flex: 1, textAlign: "left" },
+  rowText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: theme.text,
+    flex: 1,
+    textAlign: "center",
+  },
   rowCheck: {
     fontSize: 16,
     fontWeight: "700",

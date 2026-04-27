@@ -4,8 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Linking,
+  Modal,
+  Platform,
   Pressable,
+  RefreshControl,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -52,6 +57,11 @@ export default function OwnerProfileScreen(): React.ReactElement {
   const [districtPickerOpen, setDistrictPickerOpen] = useState(false);
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
   const [savingCity, setSavingCity] = useState(false);
+  // Inline address editor (matches shop profile pattern — no nav)
+  const [addressEditorOpen, setAddressEditorOpen] = useState(false);
+  const [editAddress, setEditAddress] = useState("");
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -63,6 +73,17 @@ export default function OwnerProfileScreen(): React.ReactElement {
       /* stay empty */
     }
   }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    void (async () => {
+      try {
+        await load();
+      } finally {
+        setRefreshing(false);
+      }
+    })();
+  }, [load]);
 
   useFocusEffect(
     useCallback(() => {
@@ -162,13 +183,30 @@ export default function OwnerProfileScreen(): React.ReactElement {
   }
 
   function openAddressEditor(): void {
-    router.push({
-      pathname: "/signup/owner-location",
-      params: {
-        from: "profile",
-        city: user?.city?.trim() || "Baghdad",
-      },
-    });
+    setEditAddress(user?.address ?? "");
+    setAddressEditorOpen(true);
+  }
+
+  function saveAddressEdit(): void {
+    if (!user || savingAddress) return;
+    setSavingAddress(true);
+    void (async () => {
+      try {
+        await apiFetch("/api/v1/users/me", {
+          method: "PUT",
+          body: JSON.stringify({ address: editAddress.trim() }),
+        });
+        await load();
+        setAddressEditorOpen(false);
+      } catch (e) {
+        Alert.alert(
+          t("errorTitle"),
+          e instanceof Error ? e.message : t("updateFailed"),
+        );
+      } finally {
+        setSavingAddress(false);
+      }
+    })();
   }
 
   function districtChipLabel(d: DistrictRow): string {
@@ -259,12 +297,21 @@ export default function OwnerProfileScreen(): React.ReactElement {
       <ScrollView
         style={styles.scrollRoot}
         contentContainerStyle={styles.scroll}
+        alwaysBounceVertical
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         <View style={[styles.sectionCard, styles.sectionCardFirst]}>
           <View style={styles.fieldBlock}>
             <Text style={styles.fieldLabel}>{t("name")}</Text>
             <TextInput
-              style={styles.fieldInput}
+              style={[
+                styles.fieldInput,
+                locale === "ar-iq"
+                  ? { textAlign: "right", writingDirection: "rtl" }
+                  : { textAlign: "left", writingDirection: "ltr" },
+              ]}
               value={editName}
               onChangeText={setEditName}
               onEndEditing={commitNameIfChanged}
@@ -438,13 +485,128 @@ export default function OwnerProfileScreen(): React.ReactElement {
         searchPlaceholder={t("search")}
         busy={Boolean(savingDistrictId)}
       />
+
+      {/* Inline address editor (matches shop profile pattern) */}
+      <Modal
+        visible={addressEditorOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setAddressEditorOpen(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.addressOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <Pressable
+            style={styles.addressDismissArea}
+            onPress={() => setAddressEditorOpen(false)}
+          />
+          <SafeAreaView style={styles.addressSheet}>
+            <View style={styles.addressHeader}>
+              <View style={{ width: 24 }} />
+              <Text style={styles.addressTitle}>{t("address")}</Text>
+              <Pressable onPress={() => setAddressEditorOpen(false)} hitSlop={8}>
+                <Text style={styles.addressClose}>✕</Text>
+              </Pressable>
+            </View>
+            <ScrollView
+              contentContainerStyle={styles.addressBody}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text style={styles.addressFieldLabel}>{t("address")}</Text>
+              <TextInput
+                style={[
+                  styles.addressInput,
+                  locale === "ar-iq"
+                    ? { textAlign: "right", writingDirection: "rtl" }
+                    : { textAlign: "left", writingDirection: "ltr" },
+                ]}
+                value={editAddress}
+                onChangeText={setEditAddress}
+                placeholder={t("address")}
+                placeholderTextColor={theme.mutedLight}
+                multiline
+                maxLength={500}
+                autoFocus
+              />
+            </ScrollView>
+            <Pressable
+              style={[styles.addressSaveBtn, savingAddress && { opacity: 0.6 }]}
+              onPress={saveAddressEdit}
+              disabled={savingAddress}
+            >
+              <Text style={styles.addressSaveBtnText}>{t("save")}</Text>
+            </Pressable>
+          </SafeAreaView>
+        </KeyboardAvoidingView>
+      </Modal>
     </>
   );
 }
 
 const styles = StyleSheet.create({
   scrollRoot: { flex: 1, backgroundColor: theme.bg },
-  scroll: { paddingBottom: 40 },
+  scroll: { paddingTop: 20, paddingBottom: 40 },
+
+  // Inline address editor modal (mirrors shop profile location editor)
+  addressOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
+  },
+  addressDismissArea: { flex: 1 },
+  addressSheet: {
+    backgroundColor: theme.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "75%",
+  },
+  addressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: theme.border,
+  },
+  addressTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: theme.text,
+    textAlign: "center",
+  },
+  addressClose: { fontSize: 24, color: theme.muted, fontWeight: "600" },
+  addressBody: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 16 },
+  addressFieldLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: theme.muted,
+    marginBottom: 6,
+    textAlign: "left",
+  },
+  addressInput: {
+    minHeight: 80,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: theme.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: theme.text,
+    textAlignVertical: "top",
+    backgroundColor: theme.surface,
+  },
+  addressSaveBtn: {
+    backgroundColor: theme.primaryMid,
+    paddingVertical: 14,
+    marginHorizontal: 18,
+    marginBottom: 16,
+    borderRadius: theme.radiusMd,
+    alignItems: "center",
+  },
+  addressSaveBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 
   fieldBlock: {
     paddingHorizontal: 16,
@@ -466,7 +628,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.text,
     backgroundColor: theme.surface,
-    textAlign: "right",
+    textAlign: "left",
   },
   sectionCard: {
     backgroundColor: theme.surface,
@@ -488,7 +650,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     minHeight: 48,
   },
-  settingLabel: { fontSize: 15, fontWeight: "600", color: theme.text },
+  settingLabel: { fontSize: 17, fontWeight: "600", color: theme.text },
   settingValue: {
     fontSize: 15,
     color: theme.mutedLight,

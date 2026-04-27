@@ -161,12 +161,13 @@ export default function AuthOtpScreen(): React.ReactElement {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, padding: 20, backgroundColor: theme.surface },
-  h1: { fontSize: 22, fontWeight: "700", color: theme.text },
+  h1: { fontSize: 22, fontWeight: "700", color: theme.text, textAlign: "left" },
   sub: {
     marginTop: 8,
     color: theme.muted,
     fontSize: 14,
     writingDirection: "ltr",
+    textAlign: "left",
   },
   codeRow: {
     flexDirection: "row",

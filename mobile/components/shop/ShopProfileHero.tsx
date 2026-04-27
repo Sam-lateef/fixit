@@ -38,7 +38,10 @@ type ShopProfileHeroProps = {
  * When `editable`, name is editable and a camera control updates the cover via upload.
  */
 export function ShopProfileHero(props: ShopProfileHeroProps): ReactElement {
-  const { t } = useI18n();
+  const { t, isRtl } = useI18n();
+  const inputDirection = isRtl
+    ? ({ textAlign: "right", writingDirection: "rtl" } as const)
+    : ({ textAlign: "left", writingDirection: "ltr" } as const);
   const { width } = useWindowDimensions();
   const height = useMemo(() => Math.min(300, Math.round(width * 0.52)), [width]);
   const [coverBusy, setCoverBusy] = useState(false);
@@ -143,7 +146,7 @@ export function ShopProfileHero(props: ShopProfileHeroProps): ReactElement {
       <View style={styles.bottomBlock}>
         {props.editable ? (
           <TextInput
-            style={styles.heroNameInput}
+            style={[styles.heroNameInput, inputDirection]}
             value={props.shopNameDraft}
             onChangeText={props.onShopNameDraftChange}
             onEndEditing={props.onCommitShopName}
@@ -192,6 +195,7 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0,0,0,0.35)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
+    textAlign: "left",
   },
   heroNameText: {
     fontSize: 26,
@@ -200,6 +204,7 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0,0,0,0.35)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
+    textAlign: "left",
   },
   cameraFab: {
     position: "absolute",

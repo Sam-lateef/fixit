@@ -168,8 +168,6 @@ export default function ShopBidScreen(): React.ReactElement {
             : isEditing
               ? t("editBid")
               : t("placeBid"),
-          headerStyle: { backgroundColor: theme.surface },
-          headerTintColor: theme.text,
         }}
       />
       <KeyboardAvoidingView
@@ -352,7 +350,13 @@ export default function ShopBidScreen(): React.ReactElement {
           {/* Message */}
           <Text style={styles.label}>{t("messageToCustomer")}</Text>
           <TextInput
-            style={[styles.input, styles.area]}
+            style={[
+              styles.input,
+              styles.area,
+              locale === "ar-iq"
+                ? { textAlign: "right", writingDirection: "rtl" }
+                : { textAlign: "left", writingDirection: "ltr" },
+            ]}
             placeholder={t("message")}
             placeholderTextColor={theme.mutedLight}
             value={message}
@@ -424,10 +428,10 @@ const styles = StyleSheet.create({
   summaryTopRow: { flexDirection: "row", marginBottom: 6 },
   serviceTag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
   serviceTagText: { fontSize: 12, fontWeight: "700" },
-  summaryTitle: { fontSize: 17, fontWeight: "700", color: theme.text, marginTop: 4 },
-  summaryCarInfo: { fontSize: 13, color: theme.primary, fontWeight: "600", marginTop: 4 },
-  summaryOwner: { fontSize: 13, color: theme.muted, marginTop: 2 },
-  summaryDesc: { fontSize: 14, color: theme.text, marginTop: 6, lineHeight: 20 },
+  summaryTitle: { fontSize: 17, fontWeight: "700", color: theme.text, marginTop: 4, textAlign: "left" },
+  summaryCarInfo: { fontSize: 13, color: theme.primary, fontWeight: "600", marginTop: 4, textAlign: "left" },
+  summaryOwner: { fontSize: 13, color: theme.muted, marginTop: 2, textAlign: "left" },
+  summaryDesc: { fontSize: 14, color: theme.text, marginTop: 6, lineHeight: 20, textAlign: "left" },
 
   detailsBlock: {
     backgroundColor: theme.surface,

@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -47,10 +46,11 @@ type CatalogModel = { id: string; name: string; nameAr: string | null };
 
 function catalogLabel(
   name: string,
-  nameAr: string | null | undefined,
-  loc: string,
+  _nameAr: string | null | undefined,
+  _loc: string,
 ): string {
-  return loc === "ar-iq" && nameAr ? nameAr : name;
+  // Car makes & models are always shown in English regardless of locale.
+  return name;
 }
 
 const BAGHDAD_FALLBACK = { lat: 33.3152, lng: 44.4219 };
@@ -174,7 +174,6 @@ export function OwnerPostEditor({
   const [modelsBusy, setModelsBusy] = useState(false);
   const [yearsBusy, setYearsBusy] = useState(false);
   const [pickerMode, setPickerMode] = useState<"make" | "model" | "year" | null>(null);
-  const [pickerQuery, setPickerQuery] = useState("");
   const [districtModalOpen, setDistrictModalOpen] = useState(false);
 
   // Towing
@@ -699,7 +698,7 @@ export function OwnerPostEditor({
       <ScrollView
         contentContainerStyle={[
           styles.scroll,
-          transparentHeader ? { paddingTop: 16 + headerHeight } : null,
+          transparentHeader ? { paddingTop: 24 + headerHeight } : null,
         ]}
         keyboardShouldPersistTaps="handled"
       >
@@ -806,7 +805,12 @@ export function OwnerPostEditor({
             </View>
             {repairCat === "other" ? (
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  locale === "ar-iq"
+                    ? { textAlign: "right", writingDirection: "rtl" }
+                    : { textAlign: "left", writingDirection: "ltr" },
+                ]}
                 placeholder={t("other")}
                 placeholderTextColor={theme.mutedLight}
                 value={repairOther}
@@ -843,7 +847,12 @@ export function OwnerPostEditor({
             </View>
             {partsCat === "other" ? (
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  locale === "ar-iq"
+                    ? { textAlign: "right", writingDirection: "rtl" }
+                    : { textAlign: "left", writingDirection: "ltr" },
+                ]}
                 placeholder={t("other")}
                 placeholderTextColor={theme.mutedLight}
                 value={partsOther}
@@ -899,7 +908,6 @@ export function OwnerPostEditor({
         {serviceType !== "TOWING" && category === "CARS" ? (
           <>
             <Pressable style={styles.selectInput} onPress={() => {
-              setPickerQuery("");
               setPickerMode("make");
             }}>
               <Text
@@ -923,7 +931,6 @@ export function OwnerPostEditor({
                 Alert.alert(t("createPost"), t("carMake"));
                 return;
               }
-              setPickerQuery("");
               setPickerMode("model");
             }}>
               <Text
@@ -943,7 +950,6 @@ export function OwnerPostEditor({
                 Alert.alert(t("createPost"), t("carModel"));
                 return;
               }
-              setPickerQuery("");
               setPickerMode("year");
             }}>
               <Text style={carYear ? styles.selectValue : styles.selectPlaceholder}>
@@ -969,7 +975,12 @@ export function OwnerPostEditor({
               )}
             </Pressable>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                locale === "ar-iq"
+                  ? { textAlign: "right", writingDirection: "rtl" }
+                  : { textAlign: "left", writingDirection: "ltr" },
+              ]}
               value={towingFrom}
               onChangeText={setTowingFrom}
               placeholder="Baghdad"
@@ -977,14 +988,25 @@ export function OwnerPostEditor({
             />
             <Text style={styles.label}>{t("towTo")}</Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                locale === "ar-iq"
+                  ? { textAlign: "right", writingDirection: "rtl" }
+                  : { textAlign: "left", writingDirection: "ltr" },
+              ]}
               value={towingTo}
               onChangeText={setTowingTo}
               placeholderTextColor={theme.mutedLight}
             />
             <Text style={styles.label}>{t("towingNotes")}</Text>
             <TextInput
-              style={[styles.input, styles.area]}
+              style={[
+                styles.input,
+                styles.area,
+                locale === "ar-iq"
+                  ? { textAlign: "right", writingDirection: "rtl" }
+                  : { textAlign: "left", writingDirection: "ltr" },
+              ]}
               value={towingNotes}
               onChangeText={setTowingNotes}
               multiline
@@ -1019,7 +1041,13 @@ export function OwnerPostEditor({
           <>
             <Text style={styles.label}>{t("description")}</Text>
             <TextInput
-              style={[styles.input, styles.area]}
+              style={[
+                styles.input,
+                styles.area,
+                locale === "ar-iq"
+                  ? { textAlign: "right", writingDirection: "rtl" }
+                  : { textAlign: "left", writingDirection: "ltr" },
+              ]}
               value={description}
               onChangeText={(v) => setDescription(v.slice(0, DESC_LIMIT))}
               multiline
@@ -1061,101 +1089,68 @@ export function OwnerPostEditor({
         </>
         </View>
       </ScrollView>
-      <Modal visible={pickerMode !== null} animationType="slide" transparent>
-        <KeyboardAvoidingView
-          style={styles.modalBackdrop}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>
-              {pickerMode === "make"
-                ? t("carMake")
-                : pickerMode === "model"
-                  ? t("carModel")
-                  : t("yearOptional")}
-            </Text>
-            <TextInput
-              style={styles.input}
-              placeholder={t("search")}
-              placeholderTextColor={theme.mutedLight}
-              value={pickerQuery}
-              onChangeText={setPickerQuery}
-            />
-            <ScrollView style={styles.modalList}>
-              {pickerMode === "make" ? vehicleMakes
-                .filter((m) =>
-                  catalogLabel(m.name, m.nameAr, locale)
-                    .toLowerCase()
-                    .includes(pickerQuery.trim().toLowerCase()),
-                )
-                .map((m) => (
-                  <Pressable
-                    key={m.id}
-                    style={styles.modalItem}
-                    onPress={() => {
-                      setCarMakeId(m.id);
-                      setCarMake(m.name);
-                      setCarModelId("");
-                      setCarModel("");
-                      setCarYear("");
-                      setPickerMode(null);
-                    }}
-                  >
-                    <Text style={styles.modalItemText}>
-                      {catalogLabel(m.name, m.nameAr, locale)}
-                    </Text>
-                  </Pressable>
-                )) : null}
-              {pickerMode === "model" ? vehicleModels
-                .filter((m) =>
-                  catalogLabel(m.name, m.nameAr, locale)
-                    .toLowerCase()
-                    .includes(pickerQuery.trim().toLowerCase()),
-                )
-                .map((m) => (
-                  <Pressable
-                    key={m.id}
-                    style={styles.modalItem}
-                    onPress={() => {
-                      setCarModelId(m.id);
-                      setCarModel(m.name);
-                      setCarYear("");
-                      setPickerMode(null);
-                    }}
-                  >
-                    <Text style={styles.modalItemText}>
-                      {catalogLabel(m.name, m.nameAr, locale)}
-                    </Text>
-                  </Pressable>
-                )) : null}
-              {pickerMode === "year" ? vehicleYears
-                .filter((y) => String(y).includes(pickerQuery.trim()))
-                .map((y) => (
-                  <Pressable
-                    key={y}
-                    style={styles.modalItem}
-                    onPress={() => {
-                      setCarYear(String(y));
-                      setPickerMode(null);
-                    }}
-                  >
-                    <Text style={styles.modalItemText}>{String(y)}</Text>
-                  </Pressable>
-                )) : null}
-              {(pickerMode === "make" && makesBusy) ||
-              (pickerMode === "model" && modelsBusy) ||
-              (pickerMode === "year" && yearsBusy) ? (
-                <View style={styles.loadingRow}>
-                  <ActivityIndicator size="small" color={theme.primaryMid} />
-                </View>
-              ) : null}
-            </ScrollView>
-            <Pressable style={styles.modalCloseBtn} onPress={() => setPickerMode(null)}>
-              <Text style={styles.modalCloseBtnText}>{t("cancel")}</Text>
-            </Pressable>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+      <SearchablePickerModal
+        visible={pickerMode === "make"}
+        title=""
+        items={vehicleMakes.map((m) => ({
+          id: m.id,
+          label: catalogLabel(m.name, m.nameAr, locale),
+        }))}
+        onSelect={(id) => {
+          const m = vehicleMakes.find((x) => x.id === id);
+          if (!m) return;
+          setCarMakeId(m.id);
+          setCarMake(m.name);
+          setCarModelId("");
+          setCarModel("");
+          setCarYear("");
+          setPickerMode(null);
+        }}
+        onRequestClose={() => setPickerMode(null)}
+        cancelLabel={t("cancel")}
+        searchPlaceholder={t("search")}
+        busy={makesBusy}
+        selectedId={carMakeId || undefined}
+      />
+      <SearchablePickerModal
+        visible={pickerMode === "model"}
+        title=""
+        items={vehicleModels.map((m) => ({
+          id: m.id,
+          label: catalogLabel(m.name, m.nameAr, locale),
+        }))}
+        onSelect={(id) => {
+          const m = vehicleModels.find((x) => x.id === id);
+          if (!m) return;
+          setCarModelId(m.id);
+          setCarModel(m.name);
+          setCarYear("");
+          setPickerMode(null);
+        }}
+        onRequestClose={() => setPickerMode(null)}
+        cancelLabel={t("cancel")}
+        searchPlaceholder={t("search")}
+        busy={modelsBusy}
+        selectedId={carModelId || undefined}
+      />
+      <SearchablePickerModal
+        visible={pickerMode === "year"}
+        title=""
+        items={vehicleYears.map((y) => ({
+          id: String(y),
+          label: String(y),
+        }))}
+        onSelect={(id) => {
+          setCarYear(id);
+          setPickerMode(null);
+        }}
+        onRequestClose={() => setPickerMode(null)}
+        cancelLabel={t("cancel")}
+        searchPlaceholder={t("search")}
+        busy={yearsBusy}
+        showSearch={false}
+        selectedId={carYear || undefined}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -1166,7 +1161,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  scroll: { paddingHorizontal: 16, paddingBottom: 40 },
+  scroll: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 40 },
   readOnlyBanner: {
     backgroundColor: theme.primaryLight,
     borderRadius: theme.radiusMd,
@@ -1289,51 +1284,4 @@ const styles = StyleSheet.create({
   },
   btnDisabled: { opacity: 0.6 },
   btnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "flex-end",
-  },
-  modalCard: {
-    maxHeight: "80%",
-    backgroundColor: theme.surface,
-    borderTopLeftRadius: theme.radiusLg,
-    borderTopRightRadius: theme.radiusLg,
-    padding: 16,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: theme.text,
-    marginBottom: 10,
-    textAlign: "left",
-  },
-  modalList: {
-    maxHeight: 420,
-  },
-  modalItem: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  modalItemText: {
-    fontSize: 15,
-    color: theme.text,
-    textAlign: "left",
-  },
-  loadingRow: {
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  modalCloseBtn: {
-    marginTop: 12,
-    paddingVertical: 12,
-    borderRadius: theme.radiusMd,
-    alignItems: "center",
-    backgroundColor: theme.chip,
-  },
-  modalCloseBtnText: {
-    color: theme.text,
-    fontWeight: "700",
-  },
 });

@@ -91,14 +91,21 @@ export default function ShopLocationStep(): React.ReactElement {
 
   return (
     <>
-      <ScrollView contentContainerStyle={s.container}>
+      <ScrollView
+        contentContainerStyle={s.container}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+      >
         <WizardProgressBar step={5} />
-
-        <Text style={s.heading}>{t("shopLocation")}</Text>
 
         <Text style={s.label}>{t("shopName")}</Text>
         <TextInput
-          style={s.input}
+          style={[
+            s.input,
+            locale === "ar-iq"
+              ? { textAlign: "right", writingDirection: "rtl" }
+              : { textAlign: "left", writingDirection: "ltr" },
+          ]}
           value={shopName}
           onChangeText={setShopName}
           placeholder={t("shopName")}
@@ -143,7 +150,12 @@ export default function ShopLocationStep(): React.ReactElement {
 
         <Text style={s.label}>{t("shopAddress")}</Text>
         <TextInput
-          style={s.input}
+          style={[
+            s.input,
+            locale === "ar-iq"
+              ? { textAlign: "right", writingDirection: "rtl" }
+              : { textAlign: "left", writingDirection: "ltr" },
+          ]}
           value={address}
           onChangeText={setAddress}
           placeholder={t("shopAddress")}
@@ -193,7 +205,7 @@ export default function ShopLocationStep(): React.ReactElement {
 
 const s = StyleSheet.create({
   container: { padding: 20, paddingBottom: 40, backgroundColor: theme.surface },
-  heading: { fontSize: 22, fontWeight: "700", color: theme.text },
+  heading: { fontSize: 22, fontWeight: "700", color: theme.text, textAlign: "left" },
   label: {
     marginTop: 20,
     fontSize: 15,

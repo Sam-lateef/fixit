@@ -110,7 +110,7 @@ export default function AccountTypeScreen(): React.ReactElement {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, padding: 20, backgroundColor: theme.surface },
-  h1: { fontSize: 22, fontWeight: "700", color: theme.text, marginBottom: 16 },
+  h1: { fontSize: 22, fontWeight: "700", color: theme.text, marginBottom: 16, textAlign: "left" },
   card: {
     padding: 16,
     borderRadius: theme.radiusLg,
@@ -122,9 +122,9 @@ const styles = StyleSheet.create({
     borderColor: theme.primaryMid,
     backgroundColor: theme.primaryLight,
   },
-  cardTitle: { fontSize: 16, fontWeight: "700", color: theme.text },
+  cardTitle: { fontSize: 16, fontWeight: "700", color: theme.text, textAlign: "left" },
   cardTitleOn: { color: theme.primary },
-  cardSub: { fontSize: 13, color: theme.muted, marginTop: 3 },
+  cardSub: { fontSize: 13, color: theme.muted, marginTop: 3, textAlign: "left" },
   btn: {
     marginTop: 16,
     backgroundColor: theme.primaryMid,

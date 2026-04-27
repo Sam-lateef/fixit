@@ -163,7 +163,12 @@ export default function OwnerLocationScreen(): React.ReactElement {
         </>
       ) : null}
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          locale === "ar-iq"
+            ? { textAlign: "right", writingDirection: "rtl" }
+            : { textAlign: "left", writingDirection: "ltr" },
+        ]}
         value={address}
         onChangeText={setAddress}
         placeholder={t("addressOptional")}

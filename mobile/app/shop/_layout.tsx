@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-import { useI18n } from "@/lib/i18n";
+import { StackBackButton } from "@/components/StackBackButton";
 import { theme } from "@/lib/theme";
 
 const brandHeaderOptions = {
@@ -10,10 +10,13 @@ const brandHeaderOptions = {
   headerTintColor: "#fff",
   headerTitleStyle: { color: "#fff", fontWeight: "700" as const },
   headerShadowVisible: false,
+  // Hide native back so iOS doesn't mirror under RTL (renders `Back ›`).
+  // Custom button below always renders `‹ Back` in LTR order.
+  headerBackVisible: false,
+  headerLeft: () => <StackBackButton />,
 } as const;
 
 export default function ShopStackLayout(): React.ReactElement {
-  const { t } = useI18n();
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
@@ -22,7 +25,6 @@ export default function ShopStackLayout(): React.ReactElement {
         options={{
           ...brandHeaderOptions,
           presentation: "modal",
-          headerBackTitle: t("back"),
         }}
       />
       <Stack.Screen
@@ -30,7 +32,6 @@ export default function ShopStackLayout(): React.ReactElement {
         options={{
           ...brandHeaderOptions,
           presentation: "modal",
-          headerBackTitle: t("back"),
         }}
       />
     </Stack>

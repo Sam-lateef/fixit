@@ -158,6 +158,8 @@ export default function OwnerHomeScreen(): React.ReactElement {
       data={posts}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.list}
+      // Allow pull-to-refresh even when the list is short / empty (iOS).
+      alwaysBounceVertical
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
@@ -335,6 +337,7 @@ export default function OwnerHomeScreen(): React.ReactElement {
 const styles = StyleSheet.create({
   list: {
     paddingHorizontal: 16,
+    paddingTop: 20,
     paddingBottom: 32,
     backgroundColor: theme.bg,
   },

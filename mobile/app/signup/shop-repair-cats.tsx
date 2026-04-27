@@ -86,7 +86,7 @@ export default function ShopRepairCatsStep(): React.ReactElement {
 
 const s = StyleSheet.create({
   container: { padding: 20, paddingBottom: 40, backgroundColor: theme.surface },
-  heading: { fontSize: 22, fontWeight: "700", color: theme.text },
+  heading: { fontSize: 22, fontWeight: "700", color: theme.text, textAlign: "left" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
   chip: {
     paddingVertical: 10,

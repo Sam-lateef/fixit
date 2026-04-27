@@ -195,8 +195,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.surface,
   },
   warn: { color: theme.danger, marginBottom: 16, fontSize: 15 },
-  h1: { fontSize: 22, fontWeight: "700", color: theme.text, marginBottom: 8 },
-  hint: { fontSize: 13, color: theme.muted, marginBottom: 12 },
+  h1: { fontSize: 22, fontWeight: "700", color: theme.text, marginBottom: 8, textAlign: "left" },
+  hint: { fontSize: 13, color: theme.muted, marginBottom: 12, textAlign: "left" },
   subHint: { fontSize: 12, color: theme.muted, marginBottom: 20, lineHeight: 18 },
   section: { marginBottom: 20 },
   sectionTitle: {

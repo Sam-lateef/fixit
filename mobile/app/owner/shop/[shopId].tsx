@@ -70,8 +70,6 @@ export default function OwnerViewShopScreen(): ReactElement {
       <Stack.Screen
         options={{
           title: shop?.name?.trim() ? shop.name : t("shopProfile"),
-          headerStyle: { backgroundColor: theme.surface },
-          headerTintColor: theme.text,
         }}
       />
       <ScrollView style={styles.root} contentContainerStyle={styles.scroll}>

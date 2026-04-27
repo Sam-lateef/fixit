@@ -56,7 +56,12 @@ export default function OwnerDetailsScreen(): React.ReactElement {
       {!fromProfile ? <WizardProgressBar step={1} totalSteps={2} /> : null}
       <Text style={styles.h1}>{t("name")}</Text>
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          locale === "ar-iq"
+            ? { textAlign: "right", writingDirection: "rtl" }
+            : { textAlign: "left", writingDirection: "ltr" },
+        ]}
         value={name}
         onChangeText={setName}
         placeholder={t("name")}

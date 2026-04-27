@@ -136,8 +136,9 @@ export default function ShopAreaStep(): React.ReactElement {
             <Switch
               value={partsNationwide}
               onValueChange={setPartsNationwide}
-              trackColor={{ false: theme.border, true: theme.primaryLight }}
-              thumbColor={partsNationwide ? theme.primaryMid : "#f4f4f5"}
+              trackColor={{ false: theme.border, true: theme.primaryMid }}
+              thumbColor="#fff"
+              ios_backgroundColor={theme.border}
             />
           </View>
           {!partsNationwide && (
@@ -195,7 +196,7 @@ function clampInt(text: string, min: number, max: number): number {
 
 const s = StyleSheet.create({
   container: { padding: 20, paddingBottom: 40, backgroundColor: theme.surface },
-  heading: { fontSize: 22, fontWeight: "700", color: theme.text },
+  heading: { fontSize: 22, fontWeight: "700", color: theme.text, textAlign: "left" },
   infoBanner: {
     marginTop: 12,
     padding: 14,
@@ -214,6 +215,7 @@ const s = StyleSheet.create({
     fontWeight: "700",
     color: theme.text,
     marginBottom: 10,
+    textAlign: "left",
   },
   radiusRow: {
     flexDirection: "row",

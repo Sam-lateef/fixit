@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.surface,
     padding: 24,
   },
-  title: { fontSize: 26, fontWeight: "800", color: theme.primary, marginTop: 8 },
+  title: { fontSize: 26, fontWeight: "800", color: theme.primary, marginTop: 8, textAlign: "left" },
   tag: {
     fontSize: 14,
     color: theme.mutedLight,

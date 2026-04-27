@@ -1,17 +1,20 @@
 import { router, type Href, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
+import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { WizardProgressBar } from "@/components/WizardProgressBar";
+import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
+
+type CatalogMake = { id: string; name: string; nameAr: string | null };
 
 const POPULAR_MAKES = [
   "Toyota",
@@ -26,8 +29,12 @@ const POPULAR_MAKES = [
   "Chevrolet",
 ];
 
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS: number[] = [];
+for (let y = CURRENT_YEAR + 1; y >= 1990; y--) YEAR_OPTIONS.push(y);
+
 export default function ShopMakesStep(): React.ReactElement {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const raw = useLocalSearchParams<{ data?: string }>();
   const prev: Record<string, unknown> = raw.data
     ? (JSON.parse(raw.data as string) as Record<string, unknown>)
@@ -36,6 +43,26 @@ export default function ShopMakesStep(): React.ReactElement {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [yearFrom, setYearFrom] = useState("");
   const [yearTo, setYearTo] = useState("");
+
+  // Full catalog for the searchable "more makes" picker
+  const [allMakes, setAllMakes] = useState<CatalogMake[]>([]);
+  const [makesPickerOpen, setMakesPickerOpen] = useState(false);
+  const [yearFromPickerOpen, setYearFromPickerOpen] = useState(false);
+  const [yearToPickerOpen, setYearToPickerOpen] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const data = await apiFetch<{ makes: CatalogMake[] }>(
+          "/api/v1/catalog/makes?market=IQ",
+          { skipAuth: true },
+        );
+        setAllMakes(data.makes);
+      } catch {
+        /* offline-tolerant — popular makes still work */
+      }
+    })();
+  }, []);
 
   function toggle(make: string): void {
     setSelected((p) => {
@@ -49,6 +76,11 @@ export default function ShopMakesStep(): React.ReactElement {
   function clearAll(): void {
     setSelected(new Set());
   }
+
+  // Selected makes that aren't in the popular list — render as their own chips
+  const extraSelected = Array.from(selected).filter(
+    (m) => !POPULAR_MAKES.includes(m),
+  );
 
   function handleContinue(): void {
     const merged = {
@@ -88,30 +120,81 @@ export default function ShopMakesStep(): React.ReactElement {
             </Pressable>
           );
         })}
+        {extraSelected.map((make) => (
+          <Pressable
+            key={make}
+            style={[s.chip, s.chipOn]}
+            onPress={() => toggle(make)}
+          >
+            <Text style={[s.chipText, s.chipTextOn]}>{make}</Text>
+          </Pressable>
+        ))}
       </View>
+
+      <Pressable style={s.searchBtn} onPress={() => setMakesPickerOpen(true)}>
+        <Text style={s.searchBtnText}>+ {t("allMakesSearchPlaceholder")}</Text>
+      </Pressable>
 
       <Text style={s.sectionLabel}>{t("yearRange")}</Text>
       <View style={s.yearRow}>
-        <TextInput
-          style={s.yearInput}
-          value={yearFrom}
-          onChangeText={setYearFrom}
-          placeholder={t("from")}
-          placeholderTextColor={theme.mutedLight}
-          keyboardType="number-pad"
-          maxLength={4}
-        />
+        <Pressable style={s.yearInput} onPress={() => setYearFromPickerOpen(true)}>
+          <Text style={[s.yearInputText, !yearFrom && s.yearInputPlaceholder]}>
+            {yearFrom || t("from")}
+          </Text>
+        </Pressable>
         <Text style={s.dash}>—</Text>
-        <TextInput
-          style={s.yearInput}
-          value={yearTo}
-          onChangeText={setYearTo}
-          placeholder={t("to")}
-          placeholderTextColor={theme.mutedLight}
-          keyboardType="number-pad"
-          maxLength={4}
-        />
+        <Pressable style={s.yearInput} onPress={() => setYearToPickerOpen(true)}>
+          <Text style={[s.yearInputText, !yearTo && s.yearInputPlaceholder]}>
+            {yearTo || t("to")}
+          </Text>
+        </Pressable>
       </View>
+
+      <SearchablePickerModal
+        visible={makesPickerOpen}
+        title=""
+        items={allMakes.map((m) => ({
+          id: m.name,
+          label: m.name,
+        }))}
+        onSelect={(id) => {
+          toggle(id);
+          setMakesPickerOpen(false);
+        }}
+        onRequestClose={() => setMakesPickerOpen(false)}
+        cancelLabel={t("cancel")}
+        searchPlaceholder={t("search")}
+      />
+
+      <SearchablePickerModal
+        visible={yearFromPickerOpen}
+        title=""
+        items={YEAR_OPTIONS.map((y) => ({ id: String(y), label: String(y) }))}
+        selectedId={yearFrom || undefined}
+        showSearch={false}
+        onSelect={(id) => {
+          setYearFrom(id);
+          setYearFromPickerOpen(false);
+        }}
+        onRequestClose={() => setYearFromPickerOpen(false)}
+        cancelLabel={t("cancel")}
+        searchPlaceholder={t("search")}
+      />
+
+      <SearchablePickerModal
+        visible={yearToPickerOpen}
+        title=""
+        items={YEAR_OPTIONS.map((y) => ({ id: String(y), label: String(y) }))}
+        selectedId={yearTo || undefined}
+        showSearch={false}
+        onSelect={(id) => {
+          setYearTo(id);
+          setYearToPickerOpen(false);
+        }}
+        onRequestClose={() => setYearToPickerOpen(false)}
+        cancelLabel={t("cancel")}
+        searchPlaceholder={t("search")}
+      />
 
       {selected.size > 0 && (
         <View style={s.meta}>
@@ -131,8 +214,8 @@ export default function ShopMakesStep(): React.ReactElement {
 
 const s = StyleSheet.create({
   container: { padding: 20, paddingBottom: 40, backgroundColor: theme.surface },
-  heading: { fontSize: 22, fontWeight: "700", color: theme.text },
-  sub: { fontSize: 14, color: theme.muted, marginTop: 4 },
+  heading: { fontSize: 22, fontWeight: "700", color: theme.text, textAlign: "left" },
+  sub: { fontSize: 14, color: theme.muted, marginTop: 4, textAlign: "left" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
   chip: {
     paddingVertical: 10,
@@ -143,11 +226,23 @@ const s = StyleSheet.create({
   chipOn: { backgroundColor: theme.primary },
   chipText: { fontSize: 14, color: theme.text },
   chipTextOn: { color: "#fff", fontWeight: "600" },
+  searchBtn: {
+    marginTop: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: theme.radiusMd,
+    borderWidth: 1,
+    borderColor: theme.primaryMid,
+    backgroundColor: theme.surface,
+    alignItems: "center",
+  },
+  searchBtnText: { color: theme.primaryMid, fontWeight: "600", fontSize: 14 },
   sectionLabel: {
     marginTop: 24,
     fontSize: 15,
     fontWeight: "600",
     color: theme.text,
+    textAlign: "left",
   },
   yearRow: {
     flexDirection: "row",
@@ -161,11 +256,11 @@ const s = StyleSheet.create({
     borderColor: theme.border,
     borderRadius: theme.radiusMd,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: theme.text,
-    textAlign: "center",
+    paddingVertical: 12,
+    backgroundColor: theme.surface,
   },
+  yearInputText: { fontSize: 15, color: theme.text, textAlign: "center" },
+  yearInputPlaceholder: { color: theme.mutedLight },
   dash: { color: theme.muted, fontSize: 18 },
   meta: {
     flexDirection: "row",

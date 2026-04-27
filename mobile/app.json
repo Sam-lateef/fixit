@@ -16,7 +16,10 @@
     "ios": {
       "bundleIdentifier": "com.fixitiq.app",
       "supportsTablet": true,
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.fixit.app",

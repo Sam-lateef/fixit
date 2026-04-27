@@ -102,11 +102,6 @@ export default function ShopOfferStep(): React.ReactElement {
               style={[s.card, on && s.cardOn]}
               onPress={() => toggle(svc.id)}
             >
-              <View style={[s.icon, { backgroundColor: svc.bg }]}>
-                <Text style={{ color: svc.fg, fontSize: 20, fontWeight: "700" }}>
-                  {label.charAt(0).toUpperCase()}
-                </Text>
-              </View>
               <Text style={[s.cardLabel, on && s.cardLabelOn]}>{label}</Text>
               {on ? (
                 <View style={s.check}>
@@ -131,8 +126,8 @@ export default function ShopOfferStep(): React.ReactElement {
 
 const s = StyleSheet.create({
   container: { padding: 20, paddingBottom: 40, backgroundColor: theme.surface },
-  heading: { fontSize: 22, fontWeight: "700", color: theme.text },
-  sub: { fontSize: 14, color: theme.muted, marginTop: 4 },
+  heading: { fontSize: 22, fontWeight: "700", color: theme.text, textAlign: "left" },
+  sub: { fontSize: 14, color: theme.muted, marginTop: 4, textAlign: "left" },
   cards: { marginTop: 20, gap: 12 },
   card: {
     flexDirection: "row",
@@ -147,14 +142,7 @@ const s = StyleSheet.create({
     borderColor: theme.primary,
     backgroundColor: theme.primaryLight,
   },
-  icon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardLabel: { flex: 1, marginLeft: 14, fontSize: 16, color: theme.text, fontWeight: "600" },
+  cardLabel: { flex: 1, fontSize: 16, color: theme.text, fontWeight: "600", textAlign: "left" },
   cardLabelOn: { color: theme.primary, fontWeight: "700" },
   check: {
     width: 26,

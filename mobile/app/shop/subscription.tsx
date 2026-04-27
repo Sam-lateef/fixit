@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: theme.text,
     marginBottom: 8,
+    textAlign: "left",
   },
   body: {
     fontSize: 15,

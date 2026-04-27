@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
   screenRoot: { flex: 1, backgroundColor: theme.bg },
   /** SectionList must fill the tab or rows never get a scroll viewport (Android). */
   listFlex: { flex: 1 },
-  list: { padding: 16, paddingBottom: 32, backgroundColor: theme.bg },
+  list: { padding: 16, paddingTop: 24, paddingBottom: 32, backgroundColor: theme.bg },
 
   sectionHeaderWrap: {
     marginTop: 8,
@@ -531,8 +531,8 @@ const styles = StyleSheet.create({
   },
   distText: { fontSize: 12, fontWeight: "700", color: "#1B4332" },
 
-  title: { marginTop: 10, color: theme.text, fontSize: 15, fontWeight: "700", lineHeight: 20 },
-  desc: { marginTop: 4, color: theme.muted, fontSize: 14, lineHeight: 20 },
+  title: { marginTop: 10, color: theme.text, fontSize: 15, fontWeight: "700", lineHeight: 20, textAlign: "left" },
+  desc: { marginTop: 4, color: theme.muted, fontSize: 14, lineHeight: 20, textAlign: "left" },
   carInfo: { marginTop: 4, fontSize: 13, color: theme.mutedLight },
 
   bottomRow: {

@@ -92,7 +92,7 @@ export function InboxThreadList(props: InboxThreadListProps): React.ReactElement
     <FlatList
       data={threads}
       keyExtractor={(item) => item.id}
-      contentContainerStyle={[styles.list, { paddingTop: 12 + contentTopInset }]}
+      contentContainerStyle={[styles.list, { paddingTop: 20 + contentTopInset }]}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }

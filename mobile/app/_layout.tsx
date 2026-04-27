@@ -8,6 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { useColorScheme, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import { I18nProvider, useI18n } from "@/lib/i18n";
 import { configureForegroundNotifications } from "@/lib/push-notifications";
@@ -50,11 +51,13 @@ const fixitDark = {
 
 export default function RootLayout(): React.ReactElement {
   return (
-    <I18nProvider>
-      <SubscriptionProvider>
-        <RootLayoutNav />
-      </SubscriptionProvider>
-    </I18nProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <I18nProvider>
+        <SubscriptionProvider>
+          <RootLayoutNav />
+        </SubscriptionProvider>
+      </I18nProvider>
+    </GestureHandlerRootView>
   );
 }
 

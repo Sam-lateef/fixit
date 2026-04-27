@@ -9,13 +9,16 @@ import {
   Modal,
   Platform,
   Pressable,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { Pressable as GHPressable } from "react-native-gesture-handler";
 
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { ShopProfileHero } from "@/components/shop/ShopProfileHero";
@@ -68,6 +71,10 @@ const POPULAR_MAKES = [
   "Toyota", "Kia", "Hyundai", "Nissan", "Honda",
   "GMC", "Isuzu", "Mitsubishi", "Suzuki", "Chevrolet",
 ];
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS: number[] = [];
+for (let y = CURRENT_YEAR + 1; y >= 1990; y--) YEAR_OPTIONS.push(y);
 
 function optionsForSection(section: EditSection): string[] {
   if (section === "makes") return POPULAR_MAKES;
@@ -151,8 +158,14 @@ export default function ShopProfileScreen(): React.ReactElement {
   const [makeSearchQuery, setMakeSearchQuery] = useState("");
   const [yearMinDraft, setYearMinDraft] = useState("");
   const [yearMaxDraft, setYearMaxDraft] = useState("");
+  // Inline sub-panels inside the makes editor (avoid nested Modals on iOS)
+  const [makesAllOpen, setMakesAllOpen] = useState(false);
+  const [yearFromOpen, setYearFromOpen] = useState(false);
+  const [yearToOpen, setYearToOpen] = useState(false);
+  const [makesAllQuery, setMakesAllQuery] = useState("");
   // Location editor state
   const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [locationAddressOnly, setLocationAddressOnly] = useState(false);
   const [editCity, setEditCity] = useState("");
   const [editDistrictId, setEditDistrictId] = useState<string | null>(null);
   const [editAddress, setEditAddress] = useState("");
@@ -162,6 +175,7 @@ export default function ShopProfileScreen(): React.ReactElement {
   const [editDistrictsLoading, setEditDistrictsLoading] = useState(false);
   const [editCityPickerOpen, setEditCityPickerOpen] = useState(false);
   const [editDistrictPickerOpen, setEditDistrictPickerOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     shopDevLog("GET /api/v1/shops/me start");
@@ -178,6 +192,17 @@ export default function ShopProfileScreen(): React.ReactElement {
       });
     }
   }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    void (async () => {
+      try {
+        await load();
+      } finally {
+        setRefreshing(false);
+      }
+    })();
+  }, [load]);
 
   useEffect(() => {
     void load();
@@ -261,6 +286,10 @@ export default function ShopProfileScreen(): React.ReactElement {
   const openEdit = (section: EditSection): void => {
     if (!shop) return;
     setPendingSelection(new Set(currentForSection(shop, section)));
+    setMakesAllOpen(false);
+    setYearFromOpen(false);
+    setYearToOpen(false);
+    setMakesAllQuery("");
     if (section === "makes") {
       const yf = shop.carYearMin ?? shop.yearFrom;
       const yt = shop.carYearMax ?? shop.yearTo;
@@ -275,6 +304,20 @@ export default function ShopProfileScreen(): React.ReactElement {
     setEditCity(shop.user.city ?? "");
     setEditDistrictId(shop.user.district?.id ?? null);
     setEditAddress(shop.user.address ?? "");
+    setLocationAddressOnly(false);
+    setEditCityPickerOpen(false);
+    setEditDistrictPickerOpen(false);
+    setLocationModalOpen(true);
+  };
+
+  const openAddressEdit = (): void => {
+    if (!shop) return;
+    setEditCity(shop.user.city ?? "");
+    setEditDistrictId(shop.user.district?.id ?? null);
+    setEditAddress(shop.user.address ?? "");
+    setLocationAddressOnly(true);
+    setEditCityPickerOpen(false);
+    setEditDistrictPickerOpen(false);
     setLocationModalOpen(true);
   };
 
@@ -307,13 +350,16 @@ export default function ShopProfileScreen(): React.ReactElement {
 
   const saveLocationEdit = (): void => {
     if (!shop) return;
-    if (!editCity) {
-      Alert.alert(t("errorTitle"), t("city"));
-      return;
-    }
-    if (!editDistrictId) {
-      Alert.alert(t("errorTitle"), t("pickDistrict"));
-      return;
+    // Address-only edit doesn't require city/district to be re-validated.
+    if (!locationAddressOnly) {
+      if (!editCity) {
+        Alert.alert(t("errorTitle"), t("city"));
+        return;
+      }
+      if (!editDistrictId) {
+        Alert.alert(t("errorTitle"), t("pickDistrict"));
+        return;
+      }
     }
     setSaving(true);
     void (async () => {
@@ -575,6 +621,10 @@ export default function ShopProfileScreen(): React.ReactElement {
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        alwaysBounceVertical
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {shop ? (
           <ShopProfileHero
@@ -606,7 +656,12 @@ export default function ShopProfileScreen(): React.ReactElement {
           <View style={styles.contactCard}>
             <Text style={styles.fieldLabel}>{t("shopProfilePersonalName")}</Text>
             <TextInput
-              style={styles.fieldInput}
+              style={[
+                styles.fieldInput,
+                locale === "ar-iq"
+                  ? { textAlign: "right", writingDirection: "rtl" }
+                  : { textAlign: "left", writingDirection: "ltr" },
+              ]}
               value={editUserName}
               onChangeText={setEditUserName}
               onEndEditing={commitUserNameIfChanged}
@@ -633,21 +688,22 @@ export default function ShopProfileScreen(): React.ReactElement {
             <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
               {t("city")} · {t("district")}
             </Text>
-            <Pressable onPress={openLocationEdit}>
+            <Pressable onPress={openLocationEdit} hitSlop={8}>
               <Text style={styles.fieldStatic} numberOfLines={3}>
                 {locationText.length > 0 ? `${locationText}  ›` : `${t("pickDistrict")}  ›`}
               </Text>
             </Pressable>
-            {shop.user.address?.trim() ? (
-              <>
-                <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
-                  {t("address")}
-                </Text>
-                <Text style={styles.fieldStatic} numberOfLines={4}>
-                  {shop.user.address.trim()}
-                </Text>
-              </>
-            ) : null}
+
+            <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
+              {t("address")}
+            </Text>
+            <Pressable onPress={openAddressEdit} hitSlop={8}>
+              <Text style={styles.fieldStatic} numberOfLines={4}>
+                {shop.user.address?.trim()
+                  ? `${shop.user.address.trim()}  ›`
+                  : `${t("address")}  ›`}
+              </Text>
+            </Pressable>
           </View>
         ) : null}
 
@@ -667,30 +723,32 @@ export default function ShopProfileScreen(): React.ReactElement {
         {/* Settings */}
         <View style={styles.sectionCard}>
           {shop?.offersTowing !== undefined ? (
-            <Pressable
-              style={styles.settingRow}
-              onPress={() => setServicePicker("offersTowing")}
-            >
+            <View style={styles.settingRow}>
               <Text style={styles.settingLabel}>{t("towing_")}</Text>
-              <Text style={[styles.settingValue, shop.offersTowing && styles.settingOn]}>
-                {shop.offersTowing ? t("on") : t("off")} ›
-              </Text>
-            </Pressable>
+              <Switch
+                value={shop.offersTowing}
+                onValueChange={(v) => putServiceField("offersTowing", v)}
+                trackColor={{ false: theme.border, true: theme.primaryMid }}
+                thumbColor="#fff"
+                ios_backgroundColor={theme.border}
+              />
+            </View>
           ) : null}
           {shop?.deliveryAvailable !== undefined ? (
             <>
               <View style={styles.settingDivider} />
-              <Pressable
-                style={styles.settingRow}
-                onPress={() => setServicePicker("deliveryAvailable")}
-              >
+              <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>{t("delivery")}</Text>
-                <Text
-                  style={[styles.settingValue, shop.deliveryAvailable && styles.settingOn]}
-                >
-                  {shop.deliveryAvailable ? t("on") : t("off")} ›
-                </Text>
-              </Pressable>
+                <Switch
+                  value={shop.deliveryAvailable}
+                  onValueChange={(v) =>
+                    putServiceField("deliveryAvailable", v)
+                  }
+                  trackColor={{ false: theme.border, true: theme.primaryMid }}
+                  thumbColor="#fff"
+                  ios_backgroundColor={theme.border}
+                />
+              </View>
             </>
           ) : null}
           <View style={styles.settingDivider} />
@@ -776,7 +834,7 @@ export default function ShopProfileScreen(): React.ReactElement {
 
       <SearchablePickerModal
         visible={languagePickerOpen}
-        title={t("chooseLanguageTitle")}
+        title={t("language")}
         showSearch={false}
         searchPlaceholder={t("search")}
         selectedId={locale}
@@ -843,178 +901,401 @@ export default function ShopProfileScreen(): React.ReactElement {
         visible={locationModalOpen}
         animationType="slide"
         transparent
-        onRequestClose={() => setLocationModalOpen(false)}
+        onRequestClose={() => {
+          // If a sub-picker is open, close it back to the form first.
+          if (editCityPickerOpen) {
+            setEditCityPickerOpen(false);
+            return;
+          }
+          if (editDistrictPickerOpen) {
+            setEditDistrictPickerOpen(false);
+            return;
+          }
+          setLocationModalOpen(false);
+        }}
       >
         <KeyboardAvoidingView
           style={styles.modalOverlay}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={0}
         >
+          <Pressable
+            style={styles.dismissArea}
+            onPress={() => {
+              setEditCityPickerOpen(false);
+              setEditDistrictPickerOpen(false);
+              setLocationModalOpen(false);
+            }}
+          />
           <SafeAreaView style={styles.modalSheet}>
             <View style={styles.modalHeader}>
+              {editCityPickerOpen || editDistrictPickerOpen ? (
+                <Pressable
+                  onPress={() => {
+                    setEditCityPickerOpen(false);
+                    setEditDistrictPickerOpen(false);
+                  }}
+                  hitSlop={8}
+                >
+                  <Text style={styles.modalClose}>‹</Text>
+                </Pressable>
+              ) : (
+                <View style={{ width: 24 }} />
+              )}
               <Text style={styles.modalTitle}>
-                {t("city")} · {t("district")}
+                {editCityPickerOpen
+                  ? t("city")
+                  : editDistrictPickerOpen
+                    ? t("district")
+                    : locationAddressOnly
+                      ? t("address")
+                      : `${t("city")} · ${t("district")}`}
               </Text>
-              <Pressable onPress={() => setLocationModalOpen(false)} hitSlop={8}>
+              <Pressable
+                onPress={() => {
+                  setEditCityPickerOpen(false);
+                  setEditDistrictPickerOpen(false);
+                  setLocationModalOpen(false);
+                }}
+                hitSlop={8}
+              >
                 <Text style={styles.modalClose}>✕</Text>
               </Pressable>
             </View>
 
-            <ScrollView
-              style={styles.locationModalScroll}
-              contentContainerStyle={styles.locationModalBody}
-              keyboardShouldPersistTaps="handled"
-            >
-              <Text style={styles.locationFieldLabel}>{t("city")}</Text>
-              <Pressable
-                style={styles.locationSelectInput}
-                onPress={() => setEditCityPickerOpen(true)}
+            {editCityPickerOpen ? (
+              <ScrollView
+                style={styles.locationModalScroll}
+                contentContainerStyle={styles.locationModalBody}
+                keyboardShouldPersistTaps="handled"
               >
-                <Text style={editCity ? styles.locationSelectValue : styles.locationSelectPlaceholder}>
-                  {editCity ? `${ownerCityLabel(editCity, locale)}  ›` : `${t("city")}  ›`}
-                </Text>
-              </Pressable>
+                {IRAQ_OWNER_CITIES.map((c) => {
+                  const on = editCity === c;
+                  return (
+                    <Pressable
+                      key={c}
+                      style={[styles.modalMakeRow, on && styles.modalMakeRowOn]}
+                      onPress={() => {
+                        setEditCity(c);
+                        setEditCityPickerOpen(false);
+                      }}
+                    >
+                      <Text style={[styles.modalMakeRowText, on && styles.modalMakeRowTextOn]}>
+                        {ownerCityLabel(c, locale)}
+                      </Text>
+                      {on ? <Text style={styles.modalMakeCheck}>✓</Text> : null}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            ) : editDistrictPickerOpen ? (
+              <ScrollView
+                style={styles.locationModalScroll}
+                contentContainerStyle={styles.locationModalBody}
+                keyboardShouldPersistTaps="handled"
+              >
+                {editDistricts.map((d) => {
+                  const on = editDistrictId === d.id;
+                  const label =
+                    locale === "ar-iq" && d.nameAr ? d.nameAr : d.name;
+                  return (
+                    <Pressable
+                      key={d.id}
+                      style={[styles.modalMakeRow, on && styles.modalMakeRowOn]}
+                      onPress={() => {
+                        setEditDistrictId(d.id);
+                        setEditDistrictPickerOpen(false);
+                      }}
+                    >
+                      <Text style={[styles.modalMakeRowText, on && styles.modalMakeRowTextOn]}>
+                        {label}
+                      </Text>
+                      {on ? <Text style={styles.modalMakeCheck}>✓</Text> : null}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            ) : (
+              <ScrollView
+                style={styles.locationModalScroll}
+                contentContainerStyle={styles.locationModalBody}
+                keyboardShouldPersistTaps="handled"
+              >
+                {!locationAddressOnly ? (
+                  <>
+                    <Text style={styles.locationFieldLabel}>{t("city")}</Text>
+                    <Pressable
+                      style={styles.locationSelectInput}
+                      onPress={() => setEditCityPickerOpen(true)}
+                    >
+                      <Text style={editCity ? styles.locationSelectValue : styles.locationSelectPlaceholder}>
+                        {editCity ? `${ownerCityLabel(editCity, locale)}  ›` : `${t("city")}  ›`}
+                      </Text>
+                    </Pressable>
 
-              <Text style={[styles.locationFieldLabel, styles.locationFieldSpaced]}>
-                {t("district")}
-              </Text>
-              {editDistrictsLoading ? (
-                <View style={styles.locationLoading}>
-                  <ActivityIndicator size="small" color={theme.primaryMid} />
-                </View>
-              ) : (
-                <Pressable
-                  style={[styles.locationSelectInput, !editCity && styles.locationSelectDisabled]}
-                  disabled={!editCity || editDistricts.length === 0}
-                  onPress={() => setEditDistrictPickerOpen(true)}
+                    <Text style={[styles.locationFieldLabel, styles.locationFieldSpaced]}>
+                      {t("district")}
+                    </Text>
+                    {editDistrictsLoading ? (
+                      <View style={styles.locationLoading}>
+                        <ActivityIndicator size="small" color={theme.primaryMid} />
+                      </View>
+                    ) : (
+                      <Pressable
+                        style={[styles.locationSelectInput, !editCity && styles.locationSelectDisabled]}
+                        disabled={!editCity || editDistricts.length === 0}
+                        onPress={() => setEditDistrictPickerOpen(true)}
+                      >
+                        <Text style={editDistrictId ? styles.locationSelectValue : styles.locationSelectPlaceholder}>
+                          {(() => {
+                            if (!editDistrictId) return `${t("pickDistrict")}  ›`;
+                            const d = editDistricts.find((x) => x.id === editDistrictId);
+                            if (!d) return `${t("pickDistrict")}  ›`;
+                            return `${locale === "ar-iq" && d.nameAr ? d.nameAr : d.name}  ›`;
+                          })()}
+                        </Text>
+                      </Pressable>
+                    )}
+                  </>
+                ) : null}
+
+                <Text
+                  style={[
+                    styles.locationFieldLabel,
+                    !locationAddressOnly && styles.locationFieldSpaced,
+                  ]}
                 >
-                  <Text style={editDistrictId ? styles.locationSelectValue : styles.locationSelectPlaceholder}>
-                    {(() => {
-                      if (!editDistrictId) return `${t("pickDistrict")}  ›`;
-                      const d = editDistricts.find((x) => x.id === editDistrictId);
-                      if (!d) return `${t("pickDistrict")}  ›`;
-                      return `${locale === "ar-iq" && d.nameAr ? d.nameAr : d.name}  ›`;
-                    })()}
-                  </Text>
-                </Pressable>
-              )}
+                  {t("address")}
+                </Text>
+                <TextInput
+                  style={[
+                    styles.locationInput,
+                    locale === "ar-iq"
+                      ? { textAlign: "right", writingDirection: "rtl" }
+                      : { textAlign: "left", writingDirection: "ltr" },
+                  ]}
+                  value={editAddress}
+                  onChangeText={setEditAddress}
+                  placeholder={t("address")}
+                  placeholderTextColor={theme.mutedLight}
+                  multiline
+                  maxLength={500}
+                  autoFocus={locationAddressOnly}
+                />
+              </ScrollView>
+            )}
 
-              <Text style={[styles.locationFieldLabel, styles.locationFieldSpaced]}>
-                {t("address")}
-              </Text>
-              <TextInput
-                style={styles.locationInput}
-                value={editAddress}
-                onChangeText={setEditAddress}
-                placeholder={t("address")}
-                placeholderTextColor={theme.mutedLight}
-                multiline
-                maxLength={500}
-              />
-            </ScrollView>
-
-            <Pressable
-              style={[styles.modalSaveBtn, saving && styles.modalSaveBtnDisabled]}
-              onPress={saveLocationEdit}
-              disabled={saving}
-            >
-              <Text style={styles.modalSaveBtnText}>{t("save")}</Text>
-            </Pressable>
+            {!editCityPickerOpen && !editDistrictPickerOpen ? (
+              <Pressable
+                style={[styles.modalSaveBtn, saving && styles.modalSaveBtnDisabled]}
+                onPress={saveLocationEdit}
+                disabled={saving}
+              >
+                <Text style={styles.modalSaveBtnText}>{t("save")}</Text>
+              </Pressable>
+            ) : null}
           </SafeAreaView>
         </KeyboardAvoidingView>
       </Modal>
-
-      <SearchablePickerModal
-        visible={editCityPickerOpen}
-        title={t("city")}
-        items={IRAQ_OWNER_CITIES.map((c) => ({
-          id: c,
-          label: ownerCityLabel(c, locale),
-        }))}
-        onSelect={(id) => {
-          setEditCity(id);
-          setEditCityPickerOpen(false);
-        }}
-        onRequestClose={() => setEditCityPickerOpen(false)}
-        cancelLabel={t("cancel")}
-        searchPlaceholder={t("search")}
-      />
-
-      <SearchablePickerModal
-        visible={editDistrictPickerOpen}
-        title={t("district")}
-        items={editDistricts.map((d) => ({
-          id: d.id,
-          label: locale === "ar-iq" && d.nameAr ? d.nameAr : d.name,
-        }))}
-        onSelect={(id) => {
-          setEditDistrictId(id);
-          setEditDistrictPickerOpen(false);
-        }}
-        onRequestClose={() => setEditDistrictPickerOpen(false)}
-        cancelLabel={t("cancel")}
-        searchPlaceholder={t("search")}
-      />
 
       {/* Edit chip picker modal */}
       <Modal
         visible={editSection !== null}
         animationType="slide"
         transparent
-        onRequestClose={() => setEditSection(null)}
+        onRequestClose={() => {
+          if (makesAllOpen) {
+            setMakesAllOpen(false);
+            return;
+          }
+          if (yearFromOpen) {
+            setYearFromOpen(false);
+            return;
+          }
+          if (yearToOpen) {
+            setYearToOpen(false);
+            return;
+          }
+          setEditSection(null);
+        }}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={0}
+        >
+          <Pressable
+            style={styles.dismissArea}
+            onPress={() => {
+              setMakesAllOpen(false);
+              setYearFromOpen(false);
+              setYearToOpen(false);
+              setEditSection(null);
+            }}
+          />
           <SafeAreaView style={styles.modalSheet}>
             <View style={styles.modalHeader}>
+              {makesAllOpen || yearFromOpen || yearToOpen ? (
+                <Pressable
+                  onPress={() => {
+                    setMakesAllOpen(false);
+                    setYearFromOpen(false);
+                    setYearToOpen(false);
+                  }}
+                  hitSlop={8}
+                >
+                  <Text style={styles.modalClose}>‹</Text>
+                </Pressable>
+              ) : (
+                <View style={{ width: 24 }} />
+              )}
               <Text style={styles.modalTitle}>
-                {titleKeyForSection(editSection) ? t(titleKeyForSection(editSection)!) : ""}
+                {makesAllOpen
+                  ? t("carMake")
+                  : yearFromOpen
+                    ? t("from")
+                    : yearToOpen
+                      ? t("to")
+                      : titleKeyForSection(editSection)
+                        ? t(titleKeyForSection(editSection)!)
+                        : ""}
               </Text>
-              <Pressable onPress={() => setEditSection(null)} hitSlop={8}>
+              <Pressable
+                onPress={() => {
+                  setMakesAllOpen(false);
+                  setYearFromOpen(false);
+                  setYearToOpen(false);
+                  setEditSection(null);
+                }}
+                hitSlop={8}
+              >
                 <Text style={styles.modalClose}>✕</Text>
               </Pressable>
             </View>
             {editSection === "makes" ? (
-              <>
-                <TextInput
-                  style={styles.modalSearch}
-                  value={makeSearchQuery}
-                  onChangeText={setMakeSearchQuery}
-                  placeholder={t("allMakesSearchPlaceholder")}
-                  placeholderTextColor={theme.mutedLight}
-                  autoCorrect={false}
-                />
-                {catalogMakesLoading ? (
-                  <View style={styles.modalLoading}>
-                    <ActivityIndicator color={theme.primaryMid} />
+              makesAllOpen ? (
+                /* Inline full-catalog make picker (multi-select with search) */
+                <>
+                  <View style={styles.modalSearchWrap}>
+                    <TextInput
+                      style={styles.modalSearchInput}
+                      value={makesAllQuery}
+                      onChangeText={setMakesAllQuery}
+                      placeholder={t("search")}
+                      placeholderTextColor={theme.mutedLight}
+                      autoCorrect={false}
+                      autoCapitalize="none"
+                    />
                   </View>
-                ) : null}
+                  <ScrollView
+                    style={styles.modalMakesScroll}
+                    contentContainerStyle={styles.modalMakesScrollContent}
+                    keyboardShouldPersistTaps="always"
+                    keyboardDismissMode="none"
+                    // @ts-expect-error iOS-only
+                    delaysContentTouches={false}
+                  >
+                    {catalogMakesLoading ? (
+                      <View style={styles.modalLoading}>
+                        <ActivityIndicator color={theme.primaryMid} />
+                      </View>
+                    ) : null}
+                    {(() => {
+                      const q = makesAllQuery.trim().toLowerCase();
+                      const list = [...catalogMakes].sort((a, b) =>
+                        a.name.localeCompare(b.name, "en"),
+                      );
+                      const filtered =
+                        q.length === 0
+                          ? list
+                          : list.filter((m) =>
+                              m.name.toLowerCase().includes(q),
+                            );
+                      return filtered.map((m) => {
+                        const on = pendingSelection.has(m.name);
+                        return (
+                          <GHPressable
+                            key={m.id}
+                            style={[
+                              styles.modalMakeRow,
+                              on && styles.modalMakeRowOn,
+                            ]}
+                            onPress={() => togglePending(m.name)}
+                          >
+                            <Text
+                              style={[
+                                styles.modalMakeRowText,
+                                on && styles.modalMakeRowTextOn,
+                              ]}
+                            >
+                              {m.name}
+                            </Text>
+                            {on ? (
+                              <Text style={styles.modalMakeCheck}>✓</Text>
+                            ) : null}
+                          </GHPressable>
+                        );
+                      });
+                    })()}
+                  </ScrollView>
+                </>
+              ) : yearFromOpen ? (
                 <ScrollView
                   style={styles.modalMakesScroll}
                   contentContainerStyle={styles.modalMakesScrollContent}
                   keyboardShouldPersistTaps="handled"
                 >
-                  <Text style={styles.modalSubheading}>{t("yearRange")}</Text>
-                  <View style={styles.modalYearRow}>
-                    <TextInput
-                      style={styles.modalYearInput}
-                      value={yearMinDraft}
-                      onChangeText={setYearMinDraft}
-                      placeholder={t("from")}
-                      placeholderTextColor={theme.mutedLight}
-                      keyboardType="number-pad"
-                      maxLength={4}
-                    />
-                    <Text style={styles.modalYearDash}>—</Text>
-                    <TextInput
-                      style={styles.modalYearInput}
-                      value={yearMaxDraft}
-                      onChangeText={setYearMaxDraft}
-                      placeholder={t("to")}
-                      placeholderTextColor={theme.mutedLight}
-                      keyboardType="number-pad"
-                      maxLength={4}
-                    />
-                  </View>
+                  {YEAR_OPTIONS.map((y) => {
+                    const on = yearMinDraft === String(y);
+                    return (
+                      <Pressable
+                        key={y}
+                        style={[styles.modalMakeRow, on && styles.modalMakeRowOn]}
+                        onPress={() => {
+                          setYearMinDraft(String(y));
+                          setYearFromOpen(false);
+                        }}
+                      >
+                        <Text style={[styles.modalMakeRowText, on && styles.modalMakeRowTextOn]}>
+                          {String(y)}
+                        </Text>
+                        {on ? <Text style={styles.modalMakeCheck}>✓</Text> : null}
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              ) : yearToOpen ? (
+                <ScrollView
+                  style={styles.modalMakesScroll}
+                  contentContainerStyle={styles.modalMakesScrollContent}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  {YEAR_OPTIONS.map((y) => {
+                    const on = yearMaxDraft === String(y);
+                    return (
+                      <Pressable
+                        key={y}
+                        style={[styles.modalMakeRow, on && styles.modalMakeRowOn]}
+                        onPress={() => {
+                          setYearMaxDraft(String(y));
+                          setYearToOpen(false);
+                        }}
+                      >
+                        <Text style={[styles.modalMakeRowText, on && styles.modalMakeRowTextOn]}>
+                          {String(y)}
+                        </Text>
+                        {on ? <Text style={styles.modalMakeCheck}>✓</Text> : null}
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              ) : (
+                /* Default makes editor view: chips + search button + year selectors */
+                <ScrollView
+                  style={styles.modalMakesScroll}
+                  contentContainerStyle={styles.modalMakesScrollContent}
+                  keyboardShouldPersistTaps="handled"
+                >
                   <Text style={[styles.modalSubheading, styles.modalSubheadingSpaced]}>
                     {t("popularInIraq")}
                   </Text>
@@ -1033,30 +1314,62 @@ export default function ShopProfileScreen(): React.ReactElement {
                         </Pressable>
                       );
                     })}
+                    {Array.from(pendingSelection)
+                      .filter((m) => !POPULAR_MAKES.includes(m))
+                      .map((item) => (
+                        <Pressable
+                          key={item}
+                          style={[styles.modalChip, styles.modalChipOn]}
+                          onPress={() => togglePending(item)}
+                        >
+                          <Text style={[styles.modalChipText, styles.modalChipTextOn]}>
+                            {item}
+                          </Text>
+                        </Pressable>
+                      ))}
                   </View>
+                  <Pressable
+                    style={styles.searchAllInlineBtn}
+                    onPress={() => setMakesAllOpen(true)}
+                  >
+                    <Text style={styles.searchAllInlineBtnText}>
+                      + {t("allMakesSearchPlaceholder")}
+                    </Text>
+                  </Pressable>
                   <Text style={[styles.modalSubheading, styles.modalSubheadingSpaced]}>
-                    {t("carMakes")}
+                    {t("yearRange")}
                   </Text>
-                  {sortedFilteredCatalogMakes.map((m) => {
-                    const canonical = m.name;
-                    const on = pendingSelection.has(canonical);
-                    const label =
-                      locale === "ar-iq" && m.nameAr ? m.nameAr : m.name;
-                    return (
-                      <Pressable
-                        key={m.id}
-                        style={[styles.modalMakeRow, on && styles.modalMakeRowOn]}
-                        onPress={() => togglePending(canonical)}
+                  <View style={styles.modalYearRow}>
+                    <Pressable
+                      style={styles.modalYearSelect}
+                      onPress={() => setYearFromOpen(true)}
+                    >
+                      <Text
+                        style={[
+                          styles.modalYearSelectText,
+                          !yearMinDraft && styles.modalYearSelectPlaceholder,
+                        ]}
                       >
-                        <Text style={[styles.modalMakeRowText, on && styles.modalMakeRowTextOn]}>
-                          {label}
-                        </Text>
-                        {on ? <Text style={styles.modalMakeCheck}>✓</Text> : null}
-                      </Pressable>
-                    );
-                  })}
+                        {yearMinDraft || t("from")}
+                      </Text>
+                    </Pressable>
+                    <Text style={styles.modalYearDash}>—</Text>
+                    <Pressable
+                      style={styles.modalYearSelect}
+                      onPress={() => setYearToOpen(true)}
+                    >
+                      <Text
+                        style={[
+                          styles.modalYearSelectText,
+                          !yearMaxDraft && styles.modalYearSelectPlaceholder,
+                        ]}
+                      >
+                        {yearMaxDraft || t("to")}
+                      </Text>
+                    </Pressable>
+                  </View>
                 </ScrollView>
-              </>
+              )
             ) : (
               <ScrollView contentContainerStyle={styles.modalChips}>
                 {options.map((item) => {
@@ -1075,15 +1388,17 @@ export default function ShopProfileScreen(): React.ReactElement {
                 })}
               </ScrollView>
             )}
-            <Pressable
-              style={[styles.modalSaveBtn, saving && styles.modalSaveBtnDisabled]}
-              disabled={saving}
-              onPress={saveEdit}
-            >
-              <Text style={styles.modalSaveBtnText}>{t("save")}</Text>
-            </Pressable>
+            {!yearFromOpen && !yearToOpen ? (
+              <Pressable
+                style={[styles.modalSaveBtn, saving && styles.modalSaveBtnDisabled]}
+                disabled={saving}
+                onPress={saveEdit}
+              >
+                <Text style={styles.modalSaveBtnText}>{t("save")}</Text>
+              </Pressable>
+            ) : null}
           </SafeAreaView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
@@ -1144,6 +1459,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: theme.text,
     lineHeight: 22,
+    textAlign: "left",
   },
   settingOn: { color: theme.primaryMid },
   settingDivider: { height: StyleSheet.hairlineWidth, backgroundColor: theme.border },
@@ -1162,7 +1478,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
   },
-  settingLabel: { fontSize: 15, color: theme.text },
+  settingLabel: { fontSize: 17, fontWeight: "600", color: theme.text },
   settingValue: { fontSize: 15, color: theme.mutedLight },
   settingChevron: { fontSize: 18, color: theme.mutedLight },
 
@@ -1196,6 +1512,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "flex-end",
   },
+  dismissArea: { flex: 1 },
   modalSheet: {
     backgroundColor: theme.surface,
     borderTopLeftRadius: 20,
@@ -1256,6 +1573,48 @@ const styles = StyleSheet.create({
     backgroundColor: theme.bg,
   },
   modalYearDash: { color: theme.muted, fontSize: 18 },
+  modalYearSelect: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: theme.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: theme.bg,
+  },
+  modalYearSelectText: { fontSize: 15, color: theme.text, textAlign: "center" },
+  modalYearSelectPlaceholder: { color: theme.mutedLight },
+  modalSearchWrap: {
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+  },
+  modalSearchInput: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: theme.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: theme.text,
+    backgroundColor: theme.bg,
+    textAlign: "left",
+  },
+  searchAllInlineBtn: {
+    marginTop: 24,
+    marginHorizontal: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: theme.radiusMd,
+    borderWidth: 1,
+    borderColor: theme.primaryMid,
+    backgroundColor: theme.bg,
+    alignItems: "center",
+  },
+  searchAllInlineBtnText: {
+    color: theme.primaryMid,
+    fontWeight: "600",
+    fontSize: 14,
+  },
   modalSubheading: {
     paddingHorizontal: 18,
     fontSize: 12,
@@ -1283,7 +1642,13 @@ const styles = StyleSheet.create({
     borderColor: theme.primaryMid,
     backgroundColor: "rgba(46, 125, 50, 0.08)",
   },
-  modalMakeRowText: { fontSize: 15, fontWeight: "600", color: theme.text, flex: 1 },
+  modalMakeRowText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: theme.text,
+    flex: 1,
+    textAlign: "center",
+  },
   modalMakeRowTextOn: { color: theme.primaryMid },
   modalMakeCheck: { fontSize: 16, fontWeight: "700", color: theme.primaryMid },
   modalChip: {
@@ -1309,7 +1674,7 @@ const styles = StyleSheet.create({
   modalSaveBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 
   // Location editor modal
-  locationModalScroll: { maxHeight: "80%" },
+  locationModalScroll: { flexShrink: 1 },
   locationModalBody: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 16 },
   locationFieldLabel: {
     fontSize: 13,
