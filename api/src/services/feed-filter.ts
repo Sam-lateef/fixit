@@ -182,48 +182,40 @@ export function filterPostsForShop(
     if (post.serviceType === "PARTS" && !shop.offersParts) continue;
     if (post.serviceType === "TOWING" && !shop.offersTowing) continue;
 
-    const isTowing = post.serviceType === "TOWING";
+    if (post.carMake && shop.carMakes.length > 0) {
+      const shopMakes = shop.carMakes.map(normTag);
+      if (!shopMakes.includes(normTag(post.carMake))) continue;
+    }
 
-    // Towing trucks travel to the customer regardless of make, year, or
-    // sub-district. The only meaningful filters for towing are:
-    // offersTowing (above) and same-city (below). Skip make/year/category
-    // and servedDistrictIds for towing posts.
-    if (!isTowing) {
-      if (post.carMake && shop.carMakes.length > 0) {
-        const shopMakes = shop.carMakes.map(normTag);
-        if (!shopMakes.includes(normTag(post.carMake))) continue;
-      }
+    if (post.carYear) {
+      if (shop.carYearMin && post.carYear < shop.carYearMin) continue;
+      if (shop.carYearMax && post.carYear > shop.carYearMax) continue;
+    }
 
-      if (post.carYear) {
-        if (shop.carYearMin && post.carYear < shop.carYearMin) continue;
-        if (shop.carYearMax && post.carYear > shop.carYearMax) continue;
-      }
-
-      if (
-        post.serviceType === "REPAIR" &&
-        post.repairCategory &&
-        shop.repairCategories.length > 0
-      ) {
-        const shopCats = shop.repairCategories.map(normTag);
-        const postCat = normTag(post.repairCategory);
-        // Generic / "Other" / custom-typed posts match shops that accept Other jobs.
-        const matched = isCatchAllCategory(post.repairCategory, REPAIR_CATEGORY_SLUGS)
-          ? shopCats.includes("other")
-          : shopCats.includes(postCat);
-        if (!matched) continue;
-      }
-      if (
-        post.serviceType === "PARTS" &&
-        post.partsCategory &&
-        shop.partsCategories.length > 0
-      ) {
-        const shopCats = shop.partsCategories.map(normTag);
-        const postCat = normTag(post.partsCategory);
-        const matched = isCatchAllCategory(post.partsCategory, PARTS_CATEGORY_SLUGS)
-          ? shopCats.includes("other")
-          : shopCats.includes(postCat);
-        if (!matched) continue;
-      }
+    if (
+      post.serviceType === "REPAIR" &&
+      post.repairCategory &&
+      shop.repairCategories.length > 0
+    ) {
+      const shopCats = shop.repairCategories.map(normTag);
+      const postCat = normTag(post.repairCategory);
+      // Generic / "Other" / custom-typed posts match shops that accept Other jobs.
+      const matched = isCatchAllCategory(post.repairCategory, REPAIR_CATEGORY_SLUGS)
+        ? shopCats.includes("other")
+        : shopCats.includes(postCat);
+      if (!matched) continue;
+    }
+    if (
+      post.serviceType === "PARTS" &&
+      post.partsCategory &&
+      shop.partsCategories.length > 0
+    ) {
+      const shopCats = shop.partsCategories.map(normTag);
+      const postCat = normTag(post.partsCategory);
+      const matched = isCatchAllCategory(post.partsCategory, PARTS_CATEGORY_SLUGS)
+        ? shopCats.includes("other")
+        : shopCats.includes(postCat);
+      if (!matched) continue;
     }
 
     // Parts shops with nationwide delivery bypass the city/district check.
@@ -239,10 +231,10 @@ export function filterPostsForShop(
     if (normalizeCityKey(shopCity) !== normalizeCityKey(postCity)) continue;
 
     // District-based filter: when shop has chosen specific districts,
-    // post.districtId must be in that list. Towing bypasses this — towing
-    // shops drive citywide and shouldn't be restricted by sub-district.
-    // Empty list = serve whole city (backwards-compat default).
-    if (!isTowing && shop.servedDistrictIds.length > 0) {
+    // post.districtId must be in that list. Empty list = serve whole
+    // city (backwards compat with shops that signed up before this
+    // field existed and never set it).
+    if (shop.servedDistrictIds.length > 0) {
       if (!post.districtId) continue;
       if (!shop.servedDistrictIds.includes(post.districtId)) continue;
     }
