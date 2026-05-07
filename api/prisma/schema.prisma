@@ -5,31 +5,51 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id          String @id @default(cuid())
-  phone       String? @unique
-  email       String? @unique
-  firebaseUid String? @unique
-  name        String?
-  userType    UserType
+  id           String             @id @default(cuid())
+  phone        String?            @unique
+  email        String?            @unique
+  firebaseUid  String?            @unique
+  name         String?
+  userType     UserType
   /// Role for admin dashboard access. Regular users = USER; admins log in via email+password.
-  role        Role   @default(USER)
+  role         Role               @default(USER)
   /// bcrypt hash for admin email+password login. Null for regular users.
   passwordHash String?
   /// Non-null = banned. Blocks login, posting, and bidding. Data preserved.
-  bannedAt    DateTime?
-  city       String?
-  districtId String?
-  district   District? @relation(fields: [districtId], references: [id])
-  address    String?
-  fcmToken   String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  bannedAt     DateTime?
+  bannedReason EnforcementReason?
+  bannedNotes  String?
+  city         String?
+  districtId   String?
+  district     District?          @relation(fields: [districtId], references: [id])
+  address      String?
+  /// Optional workshop GPS (shops). Used for maps + more accurate towing distance when set.
+  workshopLat  Float?
+  workshopLng  Float?
+  fcmToken     String?
+  /// Push + server-side copy: "en" or "ar-iq". Synced from the mobile app.
+  preferredLocale String?
+  rating       Float              @default(0)
+  reviewCount  Int                @default(0)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 
-  posts Post[]
-  shop  Shop?
+  posts           Post[]
+  shop            Shop?
+  ownedMedia      MediaAsset[]
+  reportsCreated  Report[]     @relation("ReportReporter")
+  reportsResolved Report[]     @relation("ReportResolver")
+  auditLogs       AuditLog[]   @relation("AuditActor")
+  hiddenMessages  Message[]    @relation("MessageHiddenBy")
+  lockedThreads   ChatThread[] @relation("ThreadLockedBy")
+  completedThreads ChatThread[] @relation("ThreadCompletedBy")
+  removedMedia    MediaAsset[] @relation("MediaRemovedBy")
+  jobReviewsGiven    JobReview[] @relation("JobReviewReviewer")
+  jobReviewsReceived JobReview[] @relation("JobReviewReviewee")
 }
 
 enum Role {
@@ -54,9 +74,9 @@ model Shop {
   /// Public hero / storefront image (HTTPS URL from uploads).
   coverImageUrl String?
 
-  offersRepair  Boolean @default(false)
-  offersParts   Boolean @default(false)
-  offersTowing  Boolean @default(false)
+  offersRepair Boolean @default(false)
+  offersParts  Boolean @default(false)
+  offersTowing Boolean @default(false)
 
   repairRadiusKm Int @default(15)
   partsRadiusKm  Int @default(20)
@@ -144,7 +164,7 @@ model VehicleModel {
   name   String
   nameAr String?
 
-  make    VehicleMake @relation(fields: [makeId], references: [id], onDelete: Cascade)
+  make    VehicleMake          @relation(fields: [makeId], references: [id], onDelete: Cascade)
   markets VehicleModelMarket[]
   years   VehicleModelYear[]
 
@@ -207,12 +227,15 @@ model Post {
   description String
   photoUrls   String[]
 
-  status    PostStatus @default(ACTIVE)
-  expiresAt DateTime
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  status         PostStatus         @default(ACTIVE)
+  takedownReason EnforcementReason?
+  takedownNotes  String?
+  expiresAt      DateTime
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
-  bids Bid[]
+  bids        Bid[]
+  mediaAssets MediaAsset[]
 }
 
 model Bid {
@@ -244,21 +267,110 @@ model Bid {
 }
 
 model ChatThread {
-  id        String    @id @default(cuid())
-  bidId     String    @unique
-  bid       Bid       @relation(fields: [bidId], references: [id])
-  messages  Message[]
-  createdAt DateTime  @default(now())
+  id         String             @id @default(cuid())
+  bidId      String             @unique
+  bid        Bid                @relation(fields: [bidId], references: [id])
+  messages   Message[]
+  lockedAt   DateTime?
+  lockedById String?
+  lockedBy   User?              @relation("ThreadLockedBy", fields: [lockedById], references: [id])
+  lockReason EnforcementReason?
+  lockNotes  String?
+  completedAt   DateTime?
+  completedById String?
+  completedBy   User?              @relation("ThreadCompletedBy", fields: [completedById], references: [id])
+  reviews       JobReview[]
+  createdAt  DateTime           @default(now())
+}
+
+model JobReview {
+  id             String     @id @default(cuid())
+  threadId       String
+  thread         ChatThread @relation(fields: [threadId], references: [id])
+  reviewerUserId String
+  reviewer       User       @relation("JobReviewReviewer", fields: [reviewerUserId], references: [id])
+  revieweeUserId String
+  reviewee       User       @relation("JobReviewReviewee", fields: [revieweeUserId], references: [id])
+  stars          Int
+  comment        String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@unique([threadId, reviewerUserId])
+  @@index([revieweeUserId, createdAt])
 }
 
 model Message {
-  id        String     @id @default(cuid())
-  threadId  String
-  thread    ChatThread @relation(fields: [threadId], references: [id])
-  senderId  String
-  content   String
-  readAt    DateTime?
-  createdAt DateTime   @default(now())
+  id           String             @id @default(cuid())
+  threadId     String
+  thread       ChatThread         @relation(fields: [threadId], references: [id])
+  senderId     String
+  content      String
+  readAt       DateTime?
+  hiddenAt     DateTime?
+  hiddenById   String?
+  hiddenBy     User?              @relation("MessageHiddenBy", fields: [hiddenById], references: [id])
+  hiddenReason EnforcementReason?
+  hiddenNotes  String?
+  createdAt    DateTime           @default(now())
+}
+
+model Report {
+  id              String            @id @default(cuid())
+  reporterUserId  String
+  reporter        User              @relation("ReportReporter", fields: [reporterUserId], references: [id])
+  targetType      ReportTargetType
+  targetId        String
+  reason          EnforcementReason
+  details         String?
+  status          ReportStatus      @default(OPEN)
+  priority        ReportPriority    @default(NORMAL)
+  assigneeId      String?
+  assignee        User?             @relation("ReportResolver", fields: [assigneeId], references: [id])
+  resolutionNotes String?
+  resolvedAt      DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+}
+
+model AuditLog {
+  id          String             @id @default(cuid())
+  actorUserId String
+  actor       User               @relation("AuditActor", fields: [actorUserId], references: [id])
+  action      ModerationAction
+  targetType  ReportTargetType
+  targetId    String
+  reason      EnforcementReason?
+  notes       String?
+  metadata    Json?
+  createdAt   DateTime           @default(now())
+
+  @@index([targetType, targetId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model MediaAsset {
+  id          String             @id @default(cuid())
+  key         String             @unique
+  ownerUserId String?
+  ownerUser   User?              @relation(fields: [ownerUserId], references: [id])
+  postId      String?
+  post        Post?              @relation(fields: [postId], references: [id])
+  url         String
+  mimeType    String?
+  status      MediaStatus        @default(ACTIVE)
+  removedAt   DateTime?
+  removedById String?
+  removedBy   User?              @relation("MediaRemovedBy", fields: [removedById], references: [id])
+  reason      EnforcementReason?
+  notes       String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([status, createdAt])
 }
 
 enum UserType {
@@ -293,9 +405,67 @@ enum BidStatus {
   WITHDRAWN
 }
 
+enum ReportTargetType {
+  USER
+  POST
+  MESSAGE
+}
+
+enum ReportStatus {
+  OPEN
+  IN_REVIEW
+  ACTION_TAKEN
+  DISMISSED
+  DUPLICATE
+}
+
+enum ReportPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum MediaStatus {
+  ACTIVE
+  HIDDEN
+  REMOVED
+}
+
+enum ModerationAction {
+  REPORT_CREATED
+  REPORT_ASSIGNED
+  REPORT_RESOLVED
+  USER_BANNED
+  USER_UNBANNED
+  USER_DELETED
+  POST_TAKEDOWN
+  POST_RESTORED
+  MESSAGE_HIDDEN
+  MESSAGE_UNHIDDEN
+  THREAD_LOCKED
+  THREAD_UNLOCKED
+  MEDIA_HIDDEN
+  MEDIA_RESTORED
+}
+
+enum EnforcementReason {
+  SPAM
+  SCAM_FRAUD
+  HARASSMENT
+  HATE
+  SEXUAL_CONTENT
+  VIOLENCE_THREAT
+  IMPERSONATION
+  PRIVATE_INFO
+  ILLEGAL_CONTENT
+  OFF_PLATFORM_CONDUCT
+  OTHER
+}
+
 model ShopNotifyBatch {
-  id        String   @id @default(cuid())
-  shopId    String
+  id         String   @id @default(cuid())
+  shopId     String
   lastSentAt DateTime @default(now())
 
   @@unique([shopId])

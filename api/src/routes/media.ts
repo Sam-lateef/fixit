@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
+import { prisma } from "../db/prisma.js";
 import { fetchR2ObjectBuffer } from "../services/r2.js";
 
 /**
@@ -18,6 +19,13 @@ export async function registerMediaRoutes(fastify: FastifyInstance): Promise<voi
         .parse((request.params as { key: string }).key);
       if (key.includes("..") || !key.startsWith("posts/")) {
         return reply.status(400).send({ error: "Invalid key" });
+      }
+      const media = await prisma.mediaAsset.findUnique({
+        where: { key },
+        select: { status: true },
+      });
+      if (media && media.status !== "ACTIVE") {
+        return reply.status(410).send({ error: "Media removed" });
       }
       try {
         const { buffer, contentType } = await fetchR2ObjectBuffer(key);

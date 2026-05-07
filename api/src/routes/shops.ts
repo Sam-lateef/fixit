@@ -2,6 +2,11 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { ServiceCategory } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../db/prisma.js";
+import {
+  refineWorkshopCoordsTogether,
+  workshopLatField,
+  workshopLngField,
+} from "../lib/workshop-coords.js";
 import { pickDefined } from "../util/object.js";
 
 function shopProfileDebugEnabled(): boolean {
@@ -28,7 +33,7 @@ function shopDebugLog(req: FastifyRequest, payload: Record<string, unknown>): vo
   req.log.info({ tag: "ShopProfile", ...payload });
 }
 
-const createShopSchema = z.object({
+const createShopBody = z.object({
   name: z.string().min(1).max(120),
   category: z.nativeEnum(ServiceCategory),
   offersRepair: z.boolean(),
@@ -46,9 +51,13 @@ const createShopSchema = z.object({
   servedDistrictIds: z.array(z.string().min(1)).optional(),
   partsNationwide: z.boolean(),
   city: z.string().min(1),
-  districtId: z.string().min(1),
-  address: z.string().max(500).optional(),
+  districtId: z.union([z.string().min(1), z.null()]).optional(),
+  address: z.string().min(1).max(500),
+  workshopLat: workshopLatField.optional(),
+  workshopLng: workshopLngField.optional(),
 });
+
+const createShopSchema = createShopBody.superRefine(refineWorkshopCoordsTogether);
 
 const coverImageUrlSchema = z
   .union([z.string().max(2048), z.null()])
@@ -58,13 +67,18 @@ const yearFieldUpdate = z
   .union([z.number().int().min(1950).max(2035), z.null()])
   .optional();
 
-const updateShopSchema = createShopSchema.partial().extend({
-  name: z.string().min(1).max(120).optional(),
-  coverImageUrl: coverImageUrlSchema,
-  /** Allow null on PATCH to clear year filters (partial() alone rejects null). */
-  carYearMin: yearFieldUpdate,
-  carYearMax: yearFieldUpdate,
-});
+const updateShopSchema = createShopBody
+  .partial()
+  .extend({
+    name: z.string().min(1).max(120).optional(),
+    coverImageUrl: coverImageUrlSchema,
+    /** Allow null on PATCH to clear year filters (partial() alone rejects null). */
+    carYearMin: yearFieldUpdate,
+    carYearMax: yearFieldUpdate,
+    /** partial() keeps districtId as optional string only; allow explicit null. */
+    districtId: z.union([z.string().min(1), z.null()]).optional(),
+  })
+  .superRefine(refineWorkshopCoordsTogether);
 
 export async function registerShopRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.post(
@@ -90,13 +104,24 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
       if (!hasOffer) {
         return reply.status(400).send({ error: "Select at least one service" });
       }
+      const userCreateData: {
+        city: string;
+        districtId: string | null;
+        address: string;
+        workshopLat?: number | null;
+        workshopLng?: number | null;
+      } = {
+        city: body.city,
+        districtId: body.districtId ?? null,
+        address: body.address,
+      };
+      if (body.workshopLat !== undefined && body.workshopLng !== undefined) {
+        userCreateData.workshopLat = body.workshopLat;
+        userCreateData.workshopLng = body.workshopLng;
+      }
       await prisma.user.update({
         where: { id: request.userId },
-        data: {
-          city: body.city,
-          districtId: body.districtId,
-          address: body.address,
-        },
+        data: userCreateData,
       });
       const shop = await prisma.shop.create({
         data: {
@@ -248,6 +273,8 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
         city: body.city,
         districtId: body.districtId,
         address: body.address,
+        workshopLat: body.workshopLat,
+        workshopLng: body.workshopLng,
       });
       const shopPatch = pickDefined({
         name: nameMerged,

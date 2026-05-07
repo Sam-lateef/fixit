@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../db/prisma.js";
 import { notifyOwnerNewBid } from "./posts.js";
 import { sendPush } from "../services/fcm.js";
+import { pushBidAccepted, resolvePushLocale } from "../services/push-i18n.js";
 
 const createBidSchema = z.object({
   priceEstimate: z.number().int().positive(),
@@ -46,23 +47,29 @@ export async function registerBidRoutes(fastify: FastifyInstance): Promise<void>
         return reply.status(400).send({ error: "Post not open for bids" });
       }
 
-      try {
-        const bid = await prisma.bid.create({
+      const existingBid = await prisma.bid.findUnique({
+        where: { postId_shopId: { postId, shopId: shop.id } },
+      });
+      if (existingBid && existingBid.status !== "WITHDRAWN") {
+        return reply.status(409).send({ error: "Bid already exists for this post" });
+      }
+      if (existingBid && existingBid.status === "WITHDRAWN") {
+        const bid = await prisma.bid.update({
+          where: { id: existingBid.id },
           data: {
-            postId,
-            shopId: shop.id,
             priceEstimate: parsed.data.priceEstimate,
             appointmentDate: parsed.data.appointmentDate
               ? new Date(parsed.data.appointmentDate)
-              : undefined,
-            appointmentTime: parsed.data.appointmentTime,
-            estimatedQty: parsed.data.estimatedQty,
-            durationUnit: parsed.data.durationUnit,
+              : null,
+            appointmentTime: parsed.data.appointmentTime ?? null,
+            estimatedQty: parsed.data.estimatedQty ?? null,
+            durationUnit: parsed.data.durationUnit ?? null,
             deliveryDate: parsed.data.deliveryDate
               ? new Date(parsed.data.deliveryDate)
-              : undefined,
-            deliveryWindow: parsed.data.deliveryWindow,
+              : null,
+            deliveryWindow: parsed.data.deliveryWindow ?? null,
             message: parsed.data.message,
+            status: "PENDING",
           },
           include: { shop: true },
         });
@@ -70,9 +77,31 @@ export async function registerBidRoutes(fastify: FastifyInstance): Promise<void>
           console.error(e),
         );
         return { bid };
-      } catch {
-        return reply.status(409).send({ error: "Bid already exists for this post" });
       }
+
+      const bid = await prisma.bid.create({
+        data: {
+          postId,
+          shopId: shop.id,
+          priceEstimate: parsed.data.priceEstimate,
+          appointmentDate: parsed.data.appointmentDate
+            ? new Date(parsed.data.appointmentDate)
+            : undefined,
+          appointmentTime: parsed.data.appointmentTime,
+          estimatedQty: parsed.data.estimatedQty,
+          durationUnit: parsed.data.durationUnit,
+          deliveryDate: parsed.data.deliveryDate
+            ? new Date(parsed.data.deliveryDate)
+            : undefined,
+          deliveryWindow: parsed.data.deliveryWindow,
+          message: parsed.data.message,
+        },
+        include: { shop: true },
+      });
+      void notifyOwnerNewBid(post.userId, post.id).catch((e) =>
+        console.error(e),
+      );
+      return { bid };
     },
   );
 
@@ -188,7 +217,12 @@ export async function registerBidRoutes(fastify: FastifyInstance): Promise<void>
         const chatThread = await tx.chatThread.create({
           data: { bidId: id },
         });
-        return { bid: accepted, chatThread, shopFcm: accepted.shop.user.fcmToken };
+        return {
+          bid: accepted,
+          chatThread,
+          shopFcm: accepted.shop.user.fcmToken,
+          shopPreferredLocale: accepted.shop.user.preferredLocale,
+        };
       });
 
       if ("error" in txResult) {
@@ -203,10 +237,12 @@ export async function registerBidRoutes(fastify: FastifyInstance): Promise<void>
 
       if (txResult.shopFcm) {
         try {
+          const loc = resolvePushLocale(txResult.shopPreferredLocale);
+          const copy = pushBidAccepted(loc);
           await sendPush(
             txResult.shopFcm,
-            "Your bid was accepted",
-            "The customer accepted your bid. Open chat to coordinate.",
+            copy.title,
+            copy.body,
             { bidId: id, threadId: txResult.chatThread.id, type: "ACCEPT" },
             false,
           );

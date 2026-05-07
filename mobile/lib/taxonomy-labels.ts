@@ -57,13 +57,13 @@ type CitySlug = (typeof IRAQ_OWNER_CITIES)[number];
 
 const REPAIR_I18N: Record<RepairSlug, { en: string; ar: string }> = {
   Engine: { en: "Engine", ar: "المحرك" },
-  Brakes: { en: "Brakes", ar: "الفرامل" },
+  Brakes: { en: "Brakes", ar: "بريكات" },
   Electrical: { en: "Electrical", ar: "الكهرباء" },
   AC: { en: "AC", ar: "التكييف" },
   Tyres: { en: "Tyres", ar: "الإطارات" },
-  Suspension: { en: "Suspension", ar: "التعليق" },
-  "Body & Paint": { en: "Body & Paint", ar: "الهيكل والدهان" },
-  Transmission: { en: "Transmission", ar: "ناقل الحركة" },
+  Suspension: { en: "Suspension", ar: "حداده الصدر" },
+  "Body & Paint": { en: "Body & Paint", ar: "سمكري وصباغ" },
+  Transmission: { en: "Transmission", ar: "الگير" },
   Exhaust: { en: "Exhaust", ar: "العادم" },
   "Oil & Fluids": { en: "Oil & Fluids", ar: "الزيوت والسوائل" },
   Other: { en: "Other", ar: "أخرى" },
@@ -71,10 +71,10 @@ const REPAIR_I18N: Record<RepairSlug, { en: string; ar: string }> = {
 
 const PARTS_I18N: Record<PartsSlug, { en: string; ar: string }> = {
   "Engine parts": { en: "Engine parts", ar: "قطع المحرك" },
-  Brakes: { en: "Brakes", ar: "الفرامل" },
+  Brakes: { en: "Brakes", ar: "بريكات" },
   Filters: { en: "Filters", ar: "الفلاتر" },
   Electrical: { en: "Electrical", ar: "الكهرباء" },
-  Suspension: { en: "Suspension", ar: "التعليق" },
+  Suspension: { en: "Suspension", ar: "حداده الصدر" },
   "Body parts": { en: "Body parts", ar: "قطع الهيكل" },
   Tyres: { en: "Tyres", ar: "الإطارات" },
   "AC parts": { en: "AC parts", ar: "قطع التكييف" },

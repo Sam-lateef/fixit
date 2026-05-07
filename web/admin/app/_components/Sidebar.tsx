@@ -11,6 +11,18 @@ export function Sidebar(): JSX.Element {
         <Link href="/posts" className="px-3 py-2 rounded hover:bg-gray-100">
           Posts
         </Link>
+        <Link href="/reports" className="px-3 py-2 rounded hover:bg-gray-100">
+          Reports
+        </Link>
+        <Link href="/chat/threads" className="px-3 py-2 rounded hover:bg-gray-100">
+          Chat
+        </Link>
+        <Link href="/media" className="px-3 py-2 rounded hover:bg-gray-100">
+          Media
+        </Link>
+        <Link href="/audit" className="px-3 py-2 rounded hover:bg-gray-100">
+          Audit
+        </Link>
       </nav>
       <form action="/api/logout" method="POST" className="mt-auto">
         <button

@@ -1,8 +1,9 @@
 import type { FastifyInstance } from "fastify";
-import { Prisma } from "@prisma/client";
+import { EnforcementReason, Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../db/prisma.js";
 import { cascadeDeleteUser } from "../../services/delete-user.js";
+import { createAuditLog, safeTrim } from "../../services/moderation.js";
 
 const listQuerySchema = z.object({
   q: z.string().trim().min(1).optional(),
@@ -15,6 +16,11 @@ const listQuerySchema = z.object({
 export async function registerAdminUserRoutes(
   fastify: FastifyInstance,
 ): Promise<void> {
+  const banBodySchema = z.object({
+    reason: z.nativeEnum(EnforcementReason).optional(),
+    notes: z.string().max(2000).optional(),
+  });
+
   fastify.get(
     "/api/v1/admin/users",
     { preHandler: [fastify.requireAdmin] },
@@ -91,10 +97,26 @@ export async function registerAdminUserRoutes(
       if (id === request.userId) {
         return reply.status(400).send({ error: "Cannot ban yourself" });
       }
+      const parsed = banBodySchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.status(400).send({ error: "Invalid body" });
+      }
       const user = await prisma.user.update({
         where: { id },
-        data: { bannedAt: new Date() },
+        data: {
+          bannedAt: new Date(),
+          bannedReason: parsed.data.reason ?? null,
+          bannedNotes: safeTrim(parsed.data.notes),
+        },
         select: { id: true, bannedAt: true },
+      });
+      await createAuditLog({
+        actorUserId: request.userId,
+        action: "USER_BANNED",
+        targetType: "USER",
+        targetId: id,
+        reason: parsed.data.reason ?? null,
+        notes: safeTrim(parsed.data.notes),
       });
       return { user };
     },
@@ -107,8 +129,14 @@ export async function registerAdminUserRoutes(
       const { id } = request.params as { id: string };
       const user = await prisma.user.update({
         where: { id },
-        data: { bannedAt: null },
+        data: { bannedAt: null, bannedReason: null, bannedNotes: null },
         select: { id: true, bannedAt: true },
+      });
+      await createAuditLog({
+        actorUserId: request.userId,
+        action: "USER_UNBANNED",
+        targetType: "USER",
+        targetId: id,
       });
       return { user };
     },
@@ -130,6 +158,12 @@ export async function registerAdminUserRoutes(
         return reply.status(404).send({ error: "Not found" });
       }
       await cascadeDeleteUser(id);
+      await createAuditLog({
+        actorUserId: request.userId,
+        action: "USER_DELETED",
+        targetType: "USER",
+        targetId: id,
+      });
       return { ok: true };
     },
   );

@@ -2,6 +2,7 @@ import { apiFetch } from "./api";
 import { getToken } from "./auth-storage";
 import { isDevNavHubEnabled } from "./dev-nav-hub";
 import { registerPushToken } from "./push-notifications";
+import { syncStoredLocaleToServer } from "./sync-preferred-locale";
 
 type MeUser = {
   id: string;
@@ -37,6 +38,7 @@ export async function resolveInitialRoute(): Promise<BootstrapTarget> {
     const { user } = await apiFetch<{ user: MeUser }>("/api/v1/users/me");
     // Refresh FCM token on every authenticated launch (handles token rotation).
     void registerPushToken();
+    void syncStoredLocaleToServer();
     if (user.userType === "SHOP") {
       if (!user.shop) {
         return { path: "/signup/shop" };

@@ -25,6 +25,9 @@ fly postgres attach --app fixit-api fixit-pg-db
 ```
 
 `attach` injects `DATABASE_URL` into the `fixit-api` app (check: `fly secrets list -a fixit-api`).
+When using Supabase instead of Fly Postgres, set both:
+- `DATABASE_URL` = pooled/runtime URL
+- `DIRECT_URL` = direct DB URL for Prisma migrations (`directUrl` in Prisma schema)
 
 ## 4. Secrets (required before first deploy)
 

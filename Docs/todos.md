@@ -10,6 +10,7 @@ Prioritized. Update on **`/end`** or **`/checkpoint`**.
 
 ## Medium
 
+- [ ] **iOS QA (Mac):** `npx expo run:ios` or EAS build; confirm Maps `Linking`, `expo-location` permission, push locale, shop signup, towing chat pickup card, workshop pin flows (see `docs/progress.md` Handoff 2026-05-09).
 - [ ] RevenueCat / shop paywall flows in dev vs prod keys.
 - [ ] Any open items from `docs/debugs.md`.
 

@@ -5,20 +5,32 @@ import { z } from "zod";
 import { prisma } from "../db/prisma.js";
 import { E164_WHATSAPP_OTP, e164WhatsAppOtpHint } from "../lib/phone.js";
 import { cascadeDeleteUser } from "../services/delete-user.js";
+import {
+  refineWorkshopCoordsTogether,
+  workshopLatField,
+  workshopLngField,
+} from "../lib/workshop-coords.js";
 
 const deleteAccountBodySchema = z.object({
   confirm: z.literal("DELETE_MY_FIXIT_ACCOUNT"),
 });
 
-const updateMeSchema = z.object({
-  name: z.string().min(1).max(120).optional(),
-  phone: z.string().regex(E164_WHATSAPP_OTP, e164WhatsAppOtpHint()).optional(),
-  city: z.string().min(1).max(80).optional(),
-  districtId: z.string().min(1).max(64).optional(),
-  address: z.string().max(500).optional(),
-  fcmToken: z.string().max(512).optional(),
-  userType: z.nativeEnum(UserType).optional(),
-});
+const updateMeSchema = z
+  .object({
+    name: z.string().min(1).max(120).optional(),
+    phone: z.string().regex(E164_WHATSAPP_OTP, e164WhatsAppOtpHint()).optional(),
+    city: z.string().min(1).max(80).optional(),
+    districtId: z.union([z.string().min(1).max(64), z.null()]).optional(),
+    address: z.string().max(500).optional(),
+    workshopLat: workshopLatField.optional(),
+    workshopLng: workshopLngField.optional(),
+    /** Set to null (or omit) to clear; same device token must not stay on other users. */
+    fcmToken: z.union([z.string().min(1).max(512), z.null()]).optional(),
+    /** Synced from mobile for localized push notifications. */
+    preferredLocale: z.enum(["en", "ar-iq"]).optional(),
+    userType: z.nativeEnum(UserType).optional(),
+  })
+  .superRefine(refineWorkshopCoordsTogether);
 
 export async function registerUserRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.get(
@@ -75,16 +87,42 @@ export async function registerUserRoutes(fastify: FastifyInstance): Promise<void
       if (data.address !== undefined) {
         patch.address = data.address;
       }
+      if (data.workshopLat !== undefined && data.workshopLng !== undefined) {
+        if (data.workshopLat === null || data.workshopLng === null) {
+          patch.workshopLat = null;
+          patch.workshopLng = null;
+        } else {
+          patch.workshopLat = data.workshopLat;
+          patch.workshopLng = data.workshopLng;
+        }
+      }
       if (data.fcmToken !== undefined) {
-        patch.fcmToken = data.fcmToken;
+        const nextToken =
+          data.fcmToken === null || data.fcmToken.length === 0 ? null : data.fcmToken;
+        patch.fcmToken = nextToken;
       }
       if (data.userType !== undefined) {
         patch.userType = data.userType;
       }
-      const user = await prisma.user.update({
-        where: { id: request.userId },
-        data: patch,
-        include: { district: true },
+      if (data.preferredLocale !== undefined) {
+        patch.preferredLocale = data.preferredLocale;
+      }
+      const user = await prisma.$transaction(async (tx) => {
+        if (
+          data.fcmToken !== undefined &&
+          typeof patch.fcmToken === "string" &&
+          patch.fcmToken.length > 0
+        ) {
+          await tx.user.updateMany({
+            where: { fcmToken: patch.fcmToken, id: { not: request.userId } },
+            data: { fcmToken: null },
+          });
+        }
+        return tx.user.update({
+          where: { id: request.userId },
+          data: patch,
+          include: { district: true },
+        });
       });
       return { user };
     },

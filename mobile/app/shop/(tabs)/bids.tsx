@@ -1,6 +1,6 @@
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { router, type Href } from "expo-router";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -117,9 +117,11 @@ export default function ShopBidsScreen(): React.ReactElement {
     }
   }, []);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -149,6 +151,7 @@ export default function ShopBidsScreen(): React.ReactElement {
           void (async () => {
             try {
               await apiFetch(`/api/v1/bids/${bidId}`, { method: "DELETE" });
+              Alert.alert(t("bidWithdrawnSuccess"));
               await load();
             } catch (e) {
               Alert.alert(t("errorTitle"), friendlyApiError(e, t));

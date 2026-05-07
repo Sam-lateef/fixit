@@ -33,6 +33,20 @@ type PostDetail = {
 
 type Resp = { post: PostDetail };
 
+function toAdminImageSrc(rawUrl: string): string {
+  const trimmed = rawUrl.trim();
+  try {
+    const parsed = new URL(trimmed);
+    const key = parsed.pathname.replace(/^\/+/, "");
+    if (key.startsWith("posts/")) {
+      return `/api/media/${key}`;
+    }
+    return trimmed;
+  } catch {
+    return trimmed;
+  }
+}
+
 export default async function PostDetailPage({
   params,
 }: {
@@ -101,7 +115,7 @@ export default async function PostDetailPage({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       key={url}
-                      src={url.trim()}
+                      src={toAdminImageSrc(url)}
                       alt=""
                       className="w-32 h-32 object-cover rounded border border-gray-200"
                     />

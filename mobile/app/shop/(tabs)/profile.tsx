@@ -1,5 +1,7 @@
 import { router, type Href } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import * as Location from "expo-location";
 import {
   ActivityIndicator,
   Alert,
@@ -32,6 +34,7 @@ import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "@/lib/legal-public-urls";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
+import { openGoogleMapsAt } from "@/lib/open-google-maps";
 import { openAppNotificationSettings } from "@/lib/push-notifications";
 import { promptDeleteAccount } from "@/lib/delete-account";
 import { isValidWhatsappE164 } from "@/lib/whatsapp-e164";
@@ -64,6 +67,8 @@ function normalizeShopMe(raw: ShopProfilePayload): ShopMe {
     user: {
       ...raw.user,
       address: raw.user.address ?? null,
+      workshopLat: raw.user.workshopLat ?? null,
+      workshopLng: raw.user.workshopLng ?? null,
     },
   };
 }
@@ -176,6 +181,8 @@ export default function ShopProfileScreen(): React.ReactElement {
   const [editCity, setEditCity] = useState("");
   const [editDistrictId, setEditDistrictId] = useState<string | null>(null);
   const [editAddress, setEditAddress] = useState("");
+  const [editWorkshopLat, setEditWorkshopLat] = useState<number | null>(null);
+  const [editWorkshopLng, setEditWorkshopLng] = useState<number | null>(null);
   const [editDistricts, setEditDistricts] = useState<
     { id: string; name: string; nameAr: string; city: string }[]
   >([]);
@@ -220,9 +227,11 @@ export default function ShopProfileScreen(): React.ReactElement {
     })();
   }, [load]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
 
   useEffect(() => {
     shopDevLog("ShopProfile tab: screen mounted / focused render");
@@ -320,6 +329,8 @@ export default function ShopProfileScreen(): React.ReactElement {
     setEditCity(shop.user.city ?? "");
     setEditDistrictId(shop.user.district?.id ?? null);
     setEditAddress(shop.user.address ?? "");
+    setEditWorkshopLat(shop.user.workshopLat ?? null);
+    setEditWorkshopLng(shop.user.workshopLng ?? null);
     setLocationAddressOnly(false);
     setEditCityPickerOpen(false);
     setEditDistrictPickerOpen(false);
@@ -331,10 +342,31 @@ export default function ShopProfileScreen(): React.ReactElement {
     setEditCity(shop.user.city ?? "");
     setEditDistrictId(shop.user.district?.id ?? null);
     setEditAddress(shop.user.address ?? "");
+    setEditWorkshopLat(shop.user.workshopLat ?? null);
+    setEditWorkshopLng(shop.user.workshopLng ?? null);
     setLocationAddressOnly(true);
     setEditCityPickerOpen(false);
     setEditDistrictPickerOpen(false);
     setLocationModalOpen(true);
+  };
+
+  const useDeviceLocationForWorkshopPin = (): void => {
+    void (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(t("errorTitle"), t("locationPermissionNeeded"));
+        return;
+      }
+      try {
+        const pos = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        setEditWorkshopLat(pos.coords.latitude);
+        setEditWorkshopLng(pos.coords.longitude);
+      } catch {
+        Alert.alert(t("errorTitle"), t("locationDetectFailed"));
+      }
+    })();
   };
 
   // Load district list when city changes inside the location editor.
@@ -366,14 +398,14 @@ export default function ShopProfileScreen(): React.ReactElement {
 
   const saveLocationEdit = (): void => {
     if (!shop) return;
+    if (!editAddress.trim()) {
+      Alert.alert(t("errorTitle"), t("addressRequired"));
+      return;
+    }
     // Address-only edit doesn't require city/district to be re-validated.
     if (!locationAddressOnly) {
       if (!editCity) {
         Alert.alert(t("errorTitle"), t("city"));
-        return;
-      }
-      if (!editDistrictId) {
-        Alert.alert(t("errorTitle"), t("pickDistrict"));
         return;
       }
     }
@@ -384,10 +416,13 @@ export default function ShopProfileScreen(): React.ReactElement {
           method: "PUT",
           body: JSON.stringify({
             city: editCity,
-            districtId: editDistrictId,
+            districtId: editDistrictId ?? null,
             address: editAddress.trim(),
+            workshopLat: editWorkshopLat,
+            workshopLng: editWorkshopLng,
           }),
         });
+        Alert.alert(t("saved"));
         setLocationModalOpen(false);
         await load();
       } catch (e) {
@@ -449,6 +484,7 @@ export default function ShopProfileScreen(): React.ReactElement {
             servedDistrictIds: servedAllDraft ? [] : Array.from(servedSelection),
           }),
         });
+        Alert.alert(t("saved"));
         setServedModalOpen(false);
         await load();
       } catch (e) {
@@ -500,6 +536,7 @@ export default function ShopProfileScreen(): React.ReactElement {
           method: "PUT",
           body: JSON.stringify(body),
         });
+        Alert.alert(t("saved"));
         shopDevLog("saveEdit chips PUT ok → load()", { section: editSection });
         await load();
         shopDevLog("saveEdit load() finished");
@@ -645,6 +682,7 @@ export default function ShopProfileScreen(): React.ReactElement {
         shopDevLogShopSnapshot("commitName: PUT ok, applying state", normalized);
         setShop(normalized);
         setShopNameDraft(normalized.name);
+        Alert.alert(t("saved"));
       } catch (e) {
         shopDevLog("commitName: PUT fail", {
           message: e instanceof Error ? e.message : String(e),
@@ -781,6 +819,25 @@ export default function ShopProfileScreen(): React.ReactElement {
                   : `${t("address")}  ›`}
               </Text>
             </Pressable>
+
+            {shop.user.workshopLat != null &&
+            shop.user.workshopLng != null &&
+            Number.isFinite(shop.user.workshopLat) &&
+            Number.isFinite(shop.user.workshopLng) ? (
+              <>
+                <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
+                  {t("workshopMapPin")}
+                </Text>
+                <Pressable
+                  onPress={() =>
+                    openGoogleMapsAt(shop.user.workshopLat as number, shop.user.workshopLng as number)
+                  }
+                  hitSlop={8}
+                >
+                  <Text style={styles.fieldStatic}>{t("openInGoogleMaps")}  ›</Text>
+                </Pressable>
+              </>
+            ) : null}
 
             <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
               {t("servedDistricts")}
@@ -1098,6 +1155,23 @@ export default function ShopProfileScreen(): React.ReactElement {
                 contentContainerStyle={styles.locationModalBody}
                 keyboardShouldPersistTaps="handled"
               >
+                <Pressable
+                  style={[styles.modalMakeRow, !editDistrictId && styles.modalMakeRowOn]}
+                  onPress={() => {
+                    setEditDistrictId(null);
+                    setEditDistrictPickerOpen(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.modalMakeRowText,
+                      !editDistrictId && styles.modalMakeRowTextOn,
+                    ]}
+                  >
+                    {t("districtSkipOption")}
+                  </Text>
+                  {!editDistrictId ? <Text style={styles.modalMakeCheck}>✓</Text> : null}
+                </Pressable>
                 {editDistricts.map((d) => {
                   const on = editDistrictId === d.id;
                   const label =
@@ -1140,6 +1214,7 @@ export default function ShopProfileScreen(): React.ReactElement {
                     <Text style={[styles.locationFieldLabel, styles.locationFieldSpaced]}>
                       {t("district")}
                     </Text>
+                    <Text style={styles.locationFieldHint}>{t("districtOptionalHint")}</Text>
                     {editDistrictsLoading ? (
                       <View style={styles.locationLoading}>
                         <ActivityIndicator size="small" color={theme.primaryMid} />
@@ -1152,9 +1227,9 @@ export default function ShopProfileScreen(): React.ReactElement {
                       >
                         <Text style={editDistrictId ? styles.locationSelectValue : styles.locationSelectPlaceholder}>
                           {(() => {
-                            if (!editDistrictId) return `${t("pickDistrict")}  ›`;
+                            if (!editDistrictId) return `${t("districtOptionalPick")}  ›`;
                             const d = editDistricts.find((x) => x.id === editDistrictId);
-                            if (!d) return `${t("pickDistrict")}  ›`;
+                            if (!d) return `${t("districtOptionalPick")}  ›`;
                             return `${locale === "ar-iq" && d.nameAr ? d.nameAr : d.name}  ›`;
                           })()}
                         </Text>
@@ -1186,6 +1261,47 @@ export default function ShopProfileScreen(): React.ReactElement {
                   maxLength={500}
                   autoFocus={locationAddressOnly}
                 />
+
+                <Text style={[styles.locationFieldLabel, styles.locationFieldSpaced]}>
+                  {t("workshopMapPin")}
+                </Text>
+                <Text style={styles.locationFieldHint}>{t("workshopMapPinHint")}</Text>
+                <Pressable
+                  style={styles.workshopPinBtn}
+                  onPress={useDeviceLocationForWorkshopPin}
+                >
+                  <Text style={styles.workshopPinBtnText}>{t("useCurrentLocationForPin")}</Text>
+                </Pressable>
+                {editWorkshopLat != null && editWorkshopLng != null ? (
+                  <View style={styles.workshopPinPreview}>
+                    <Text style={styles.workshopPinCoords} numberOfLines={1}>
+                      {editWorkshopLat.toFixed(5)}, {editWorkshopLng.toFixed(5)}
+                    </Text>
+                    <View style={styles.workshopPinRow}>
+                      <Pressable
+                        style={styles.workshopPinBtnSecondary}
+                        onPress={() => {
+                          setEditWorkshopLat(null);
+                          setEditWorkshopLng(null);
+                        }}
+                      >
+                        <Text style={styles.workshopPinBtnSecondaryText}>
+                          {t("clearWorkshopMapPin")}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.workshopPinBtnSecondary}
+                        onPress={() =>
+                          openGoogleMapsAt(editWorkshopLat, editWorkshopLng)
+                        }
+                      >
+                        <Text style={styles.workshopPinBtnSecondaryText}>
+                          {t("openInGoogleMaps")}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ) : null}
               </ScrollView>
             )}
 
@@ -1892,6 +2008,13 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   locationFieldSpaced: { marginTop: 16 },
+  locationFieldHint: {
+    fontSize: 12,
+    color: theme.muted,
+    marginBottom: 8,
+    lineHeight: 17,
+    textAlign: "left",
+  },
   locationSelectInput: {
     borderWidth: 1,
     borderColor: theme.border,
@@ -1916,5 +2039,40 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     textAlign: "left",
     backgroundColor: theme.surface,
+  },
+  workshopPinBtn: {
+    marginTop: 10,
+    backgroundColor: theme.primaryMid,
+    paddingVertical: 12,
+    borderRadius: theme.radiusMd,
+    alignItems: "center",
+  },
+  workshopPinBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  workshopPinPreview: { marginTop: 12 },
+  workshopPinCoords: {
+    fontSize: 12,
+    color: theme.muted,
+    fontVariant: ["tabular-nums"],
+    textAlign: "left",
+  },
+  workshopPinRow: {
+    marginTop: 10,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  workshopPinBtnSecondary: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: theme.radiusMd,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.surface,
+  },
+  workshopPinBtnSecondaryText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: theme.primaryMid,
+    textAlign: "left",
   },
 });

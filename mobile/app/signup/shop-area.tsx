@@ -88,6 +88,11 @@ export default function ShopAreaStep(): React.ReactElement {
 
   function handleCreate(): void {
     setErr("");
+    const addr = String(prev.address ?? "").trim();
+    if (addr.length === 0) {
+      setErr(t("addressRequired"));
+      return;
+    }
     if (!serveAll && selected.size === 0 && !(offersParts && partsNationwide)) {
       setErr(t("servedDistrictsRequired"));
       return;
@@ -97,7 +102,7 @@ export default function ShopAreaStep(): React.ReactElement {
     const carYearMin = parseSignupYear(prev.yearFrom);
     const carYearMax = parseSignupYear(prev.yearTo);
 
-    const body = {
+    const body: Record<string, unknown> = {
       name: prev.shopName,
       category: prev.category ?? "CARS",
       offersRepair,
@@ -114,11 +119,17 @@ export default function ShopAreaStep(): React.ReactElement {
         : [],
       deliveryAvailable: Boolean(prev.deliveryAvailable),
       city: prev.city,
-      districtId: prev.districtId,
-      address: (prev.address as string) || undefined,
+      districtId: prev.districtId ?? null,
+      address: addr,
       servedDistrictIds: serveAll ? [] : Array.from(selected),
       partsNationwide: offersParts ? partsNationwide : false,
     };
+    const wLat = prev.workshopLat;
+    const wLng = prev.workshopLng;
+    if (typeof wLat === "number" && typeof wLng === "number") {
+      body.workshopLat = wLat;
+      body.workshopLng = wLng;
+    }
 
     void (async () => {
       try {

@@ -8,6 +8,11 @@ import {
 } from "./feed-filter.js";
 import { haversineKm } from "./haversine.js";
 import { sendPush } from "./fcm.js";
+import {
+  pushNewRequestNearYou,
+  pushTowingNearby,
+  resolvePushLocale,
+} from "./push-i18n.js";
 
 const BATCH_MS = 15 * 60 * 1000;
 
@@ -29,16 +34,23 @@ async function notifyTowingShops(post: Post): Promise<void> {
   });
   for (const shop of shops) {
     const d = shop.user.district;
-    if (!d) continue;
-    const dist = haversineKm(
-      { lat: d.lat, lng: d.lng },
-      { lat: post.lat, lng: post.lng },
-    );
+    const hasPin =
+      shop.user.workshopLat != null &&
+      shop.user.workshopLng != null &&
+      Number.isFinite(shop.user.workshopLat) &&
+      Number.isFinite(shop.user.workshopLng);
+    if (!hasPin && !d) continue;
+    const from = hasPin
+      ? { lat: shop.user.workshopLat as number, lng: shop.user.workshopLng as number }
+      : { lat: d!.lat, lng: d!.lng };
+    const dist = haversineKm(from, { lat: post.lat, lng: post.lng });
     if (dist <= shop.towingRadiusKm && shop.user.fcmToken) {
+      const loc = resolvePushLocale(shop.user.preferredLocale);
+      const copy = pushTowingNearby(loc, dist.toFixed(1));
       await sendPush(
         shop.user.fcmToken,
-        "Urgent towing needed nearby",
-        `Someone needs a tow in your area — ${dist.toFixed(1)} km from you`,
+        copy.title,
+        copy.body,
         { postId: post.id, type: "TOWING" },
         true,
       );
@@ -78,10 +90,12 @@ async function notifyRepairPartsBatched(post: Post): Promise<void> {
       create: { shopId: shop.id, lastSentAt: now },
       update: { lastSentAt: now },
     });
+    const loc = resolvePushLocale(shop.user.preferredLocale);
+    const copy = pushNewRequestNearYou(loc);
     await sendPush(
       shop.user.fcmToken,
-      "New request near you",
-      "A customer posted a new job that may match your shop.",
+      copy.title,
+      copy.body,
       { postId: post.id, type: post.serviceType },
       false,
     );

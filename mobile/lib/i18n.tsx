@@ -10,9 +10,11 @@ import React, {
 } from "react";
 import { DevSettings, I18nManager } from "react-native";
 
+import { FIXIT_LOCALE_STORAGE_KEY } from "./locale-storage";
+import { syncPreferredLocaleToServer } from "./sync-preferred-locale";
 import { arIq, en, LocaleId, StringKey } from "./strings";
 
-export const FIXIT_LOCALE_STORAGE_KEY = "fixit_locale";
+export { FIXIT_LOCALE_STORAGE_KEY };
 
 const LOCALE_KEY = FIXIT_LOCALE_STORAGE_KEY;
 
@@ -66,6 +68,7 @@ export function I18nProvider({
   const setLocale = useCallback((loc: LocaleId) => {
     setLocaleState(loc);
     void AsyncStorage.setItem(LOCALE_KEY, loc);
+    void syncPreferredLocaleToServer(loc);
   }, []);
 
   const t = useCallback(

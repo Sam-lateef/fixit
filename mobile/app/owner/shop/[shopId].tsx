@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,6 +19,10 @@ import { useI18n } from "@/lib/i18n";
 import {
   ownerCityLabel,
 } from "@/lib/taxonomy-labels";
+import {
+  canOpenShopInGoogleMaps,
+  openShopInGoogleMaps,
+} from "@/lib/open-google-maps";
 import { theme } from "@/lib/theme";
 
 function normalizeShopPayload(raw: ShopProfilePayload): ShopProfilePayload {
@@ -27,6 +32,8 @@ function normalizeShopPayload(raw: ShopProfilePayload): ShopProfilePayload {
     user: {
       ...raw.user,
       address: raw.user.address ?? null,
+      workshopLat: raw.user.workshopLat ?? null,
+      workshopLng: raw.user.workshopLng ?? null,
     },
   };
 }
@@ -112,6 +119,16 @@ export default function OwnerViewShopScreen(): ReactElement {
                   <Text style={styles.value}>{shop.user.address.trim()}</Text>
                 </>
               ) : null}
+              {canOpenShopInGoogleMaps(shop.user) ? (
+                <>
+                  <Text style={[styles.label, styles.labelSpaced]}>
+                    {t("openWorkshopInMaps")}
+                  </Text>
+                  <Pressable onPress={() => openShopInGoogleMaps(shop.user)}>
+                    <Text style={styles.mapsLink}>{t("openInGoogleMaps")} ›</Text>
+                  </Pressable>
+                </>
+              ) : null}
             </View>
             <ShopServiceOverview
               shop={shop}
@@ -159,6 +176,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: theme.text,
     lineHeight: 22,
+  },
+  mapsLink: {
+    marginTop: 6,
+    fontSize: 16,
+    fontWeight: "700",
+    color: theme.primaryMid,
+    textAlign: "left",
   },
   center: {
     paddingTop: 48,

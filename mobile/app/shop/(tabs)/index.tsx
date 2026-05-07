@@ -2,6 +2,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { router, type Href } from "expo-router";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Modal,
   Pressable,
   RefreshControl,
@@ -16,6 +17,7 @@ import { PostImageLightbox } from "@/components/PostImageLightbox";
 import { ShopPremiumGate } from "@/components/ShopPremiumGate";
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import { confirmAndSubmitReport } from "@/lib/report-content";
 import type { StringKey } from "@/lib/strings";
 import {
   ownerCityLabel,
@@ -97,26 +99,14 @@ type FeedSection = {
 };
 
 type FilterTab = "ALL" | "REPAIR" | "PARTS" | "TOWING";
-type SortOption = "newest" | "oldest" | "distance";
+type SortOption = "newest" | "oldest";
 
 function applySort(list: Post[], sortBy: SortOption): Post[] {
   const out = [...list];
   if (sortBy === "newest") {
     out.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  } else if (sortBy === "oldest") {
-    out.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   } else {
-    // distance: posts with known distance first (ascending), then unknowns by recency
-    out.sort((a, b) => {
-      const da = a.distanceKm;
-      const db = b.distanceKm;
-      if (da == null && db == null) {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-      if (da == null) return 1;
-      if (db == null) return -1;
-      return da - db;
-    });
+    out.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   }
   return out;
 }
@@ -283,10 +273,6 @@ export default function ShopFeedScreen(): React.ReactElement {
     [t],
   );
 
-  useEffect(() => {
-    void load(filter);
-  }, [load, filter]);
-
   useFocusEffect(
     useCallback(() => {
       void load(filter);
@@ -432,6 +418,16 @@ export default function ShopFeedScreen(): React.ReactElement {
           const openBid = (): void => {
             router.push(`/shop/bid/${p.id}` as Href);
           };
+          const openPostMoreMenu = (): void => {
+            Alert.alert("", "", [
+              { text: t("cancel"), style: "cancel" },
+              {
+                text: t("reportThisPost"),
+                style: "destructive",
+                onPress: () => confirmAndSubmitReport(t, "POST", p.id),
+              },
+            ]);
+          };
 
           return (
             <View
@@ -442,7 +438,7 @@ export default function ShopFeedScreen(): React.ReactElement {
               ]}
             >
               <Pressable onPress={openBid}>
-              {/* Top row: service tag + badges + distance */}
+              {/* Top row: service tag + badges */}
               <View style={styles.cardTopRow}>
                 <View style={styles.tagRow}>
                   <View
@@ -478,9 +474,11 @@ export default function ShopFeedScreen(): React.ReactElement {
                     </View>
                   ) : null}
                 </View>
-                {p.distanceKm != null ? (
+                {isTowing && p.distanceKm != null ? (
                   <View style={styles.distPill}>
-                    <Text style={styles.distText}>{p.distanceKm} {t("distKm")}</Text>
+                    <Text style={styles.distText}>
+                      {p.distanceKm} {t("distKm")}
+                    </Text>
                   </View>
                 ) : null}
               </View>
@@ -585,13 +583,28 @@ export default function ShopFeedScreen(): React.ReactElement {
                   <Text style={styles.metaText}>{hrs}{t("hrsLeft")}</Text>
                 </View>
                 {!hasBid ? (
+                  <View style={styles.bottomActions}>
+                    <Pressable
+                      style={styles.moreBtn}
+                      onPress={openPostMoreMenu}
+                    >
+                      <Text style={styles.moreBtnText}>⋮</Text>
+                    </Pressable>
+                    <Pressable
+                      style={styles.bidBtn}
+                      onPress={openBid}
+                    >
+                      <Text style={styles.bidBtnText}>{t("placeBid")}</Text>
+                    </Pressable>
+                  </View>
+                ) : (
                   <Pressable
-                    style={styles.bidBtn}
-                    onPress={openBid}
+                    style={styles.moreBtn}
+                    onPress={openPostMoreMenu}
                   >
-                    <Text style={styles.bidBtnText}>{t("placeBid")}</Text>
+                    <Text style={styles.moreBtnText}>⋮</Text>
                   </Pressable>
-                ) : null}
+                )}
               </View>
               </Pressable>
             </View>
@@ -622,14 +635,10 @@ export default function ShopFeedScreen(): React.ReactElement {
                 <Text style={styles.sortHeaderClose}>✕</Text>
               </Pressable>
             </View>
-            {(["newest", "oldest", "distance"] as const).map((opt, i) => {
+            {(["newest", "oldest"] as const).map((opt, i) => {
               const active = sortBy === opt;
               const label =
-                opt === "newest"
-                  ? t("sortNewest")
-                  : opt === "oldest"
-                    ? t("sortOldest")
-                    : t("sortDistance");
+                opt === "newest" ? t("sortNewest") : t("sortOldest");
               return (
                 <Pressable
                   key={opt}
@@ -894,6 +903,24 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: theme.radiusMd,
+  },
+  bottomActions: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
+  moreBtn: {
+    backgroundColor: theme.surface,
+    borderWidth: 1,
+    borderColor: theme.border,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: theme.radiusMd,
+  },
+  moreBtnText: {
+    color: theme.text,
+    fontWeight: "700",
+    fontSize: 13,
   },
   bidBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
   bidSentBadge: {

@@ -116,6 +116,25 @@ export async function registerPushToken(): Promise<void> {
 }
 
 /**
+ * Clears the push token on the server for the current session user.
+ * Call while JWT is still valid, before clearing local auth (sign-out).
+ * Prevents the previous account from receiving pushes on this device after switch-account.
+ */
+export async function unregisterPushTokenOnServer(): Promise<void> {
+  if (Platform.OS === "web") {
+    return;
+  }
+  try {
+    await apiFetch("/api/v1/users/me", {
+      method: "PUT",
+      body: JSON.stringify({ fcmToken: null }),
+    });
+  } catch {
+    /* non-fatal — sign-out must proceed */
+  }
+}
+
+/**
  * Configure how notifications appear while the app is foregrounded.
  * Call once at app startup (before any screen renders).
  */

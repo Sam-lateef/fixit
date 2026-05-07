@@ -32,6 +32,9 @@ export type ShopProfilePayload = {
     phone: string | null;
     city: string | null;
     address: string | null;
+    /** Saved workshop GPS for Maps + towing distance; optional. */
+    workshopLat: number | null;
+    workshopLng: number | null;
     district: { id: string; name: string; nameAr: string; city: string } | null;
   };
 };

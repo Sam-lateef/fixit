@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import type { UserType } from "@prisma/client";
 import { prisma } from "../db/prisma.js";
 import { sendPush } from "../services/fcm.js";
+import { pushNewMessageTitle, resolvePushLocale } from "../services/push-i18n.js";
 
 type JwtPayload = { sub: string; userType: UserType };
 
@@ -65,6 +66,10 @@ export function initSocket(io: IOServer): ChatIoBridge {
           cb?.({ error: "Forbidden" });
           return;
         }
+        if (thread.lockedAt || thread.completedAt) {
+          cb?.({ error: "Thread is closed" });
+          return;
+        }
         const message = await prisma.message.create({
           data: { threadId, senderId: userId, content },
         });
@@ -78,9 +83,10 @@ export function initSocket(io: IOServer): ChatIoBridge {
         });
         if (recipient?.fcmToken) {
           try {
+            const loc = resolvePushLocale(recipient.preferredLocale);
             await sendPush(
               recipient.fcmToken,
-              "New message",
+              pushNewMessageTitle(loc),
               content.slice(0, 80),
               { threadId, type: "CHAT" },
               false,

@@ -24,6 +24,11 @@ import { registerDevSessionRoutes } from "./routes/dev-session.js";
 import { registerAdminAuthRoutes } from "./routes/admin/auth.js";
 import { registerAdminUserRoutes } from "./routes/admin/users.js";
 import { registerAdminPostRoutes } from "./routes/admin/posts.js";
+import { registerReportRoutes } from "./routes/reports.js";
+import { registerAdminReportRoutes } from "./routes/admin/reports.js";
+import { registerAdminChatRoutes } from "./routes/admin/chat.js";
+import { registerAdminMediaRoutes } from "./routes/admin/media.js";
+import { registerAdminAuditRoutes } from "./routes/admin/audit.js";
 import { initSocket } from "./socket/chat.js";
 import { startPostExpiryJob } from "./cron/expiry.js";
 import { registerWebDist } from "./register-web-dist.js";
@@ -87,10 +92,15 @@ export async function buildApp(): Promise<AppWithIo> {
   await registerGeocodeRoutes(fastify);
   await registerUploadRoutes(fastify);
   await registerMediaRoutes(fastify);
+  await registerReportRoutes(fastify);
 
   await registerAdminAuthRoutes(fastify);
   await registerAdminUserRoutes(fastify);
   await registerAdminPostRoutes(fastify);
+  await registerAdminReportRoutes(fastify);
+  await registerAdminChatRoutes(fastify);
+  await registerAdminMediaRoutes(fastify);
+  await registerAdminAuditRoutes(fastify);
 
   const io = new IOServer(fastify.server, {
     cors: { origin: true, credentials: true },

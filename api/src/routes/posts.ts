@@ -5,7 +5,9 @@ import { z } from "zod";
 import { prisma } from "../db/prisma.js";
 import { notifyShopsNewPost } from "../services/notify-shops.js";
 import { sendPush } from "../services/fcm.js";
+import { pushBidForOwner, resolvePushLocale } from "../services/push-i18n.js";
 import { sortBidsByScore } from "../services/bid-score.js";
+import { syncPostMediaAssets } from "../services/media-assets.js";
 
 const createPostSchema = z
   .object({
@@ -78,13 +80,9 @@ export async function notifyOwnerNewBid(
     where: { id: postUserId },
   });
   if (!owner?.fcmToken) return;
-  await sendPush(
-    owner.fcmToken,
-    "New bid on your post",
-    "A shop placed a bid on your request.",
-    { postId, type: "BID" },
-    false,
-  );
+  const loc = resolvePushLocale(owner.preferredLocale);
+  const copy = pushBidForOwner(loc);
+  await sendPush(owner.fcmToken, copy.title, copy.body, { postId, type: "BID" }, false);
 }
 
 export async function registerPostRoutes(fastify: FastifyInstance): Promise<void> {
@@ -155,6 +153,7 @@ export async function registerPostRoutes(fastify: FastifyInstance): Promise<void
           expiresAt,
         },
       });
+      await syncPostMediaAssets(post.id, request.userId, body.photoUrls);
 
       void notifyShopsNewPost(post).catch((e) =>
         console.error("[notifyShopsNewPost]", e),
@@ -287,6 +286,9 @@ export async function registerPostRoutes(fastify: FastifyInstance): Promise<void
         where: { id },
         data,
       });
+      if (body.photoUrls !== undefined) {
+        await syncPostMediaAssets(updated.id, request.userId, body.photoUrls);
+      }
       return { post: updated };
     },
   );

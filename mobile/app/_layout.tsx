@@ -3,10 +3,11 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { Stack } from "expo-router";
+import * as Notifications from "expo-notifications";
+import { Stack, useRouter, type Href } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useColorScheme, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
@@ -62,13 +63,55 @@ export default function RootLayout(): React.ReactElement {
 }
 
 function RootLayoutNav(): React.ReactElement {
+  const router = useRouter();
   const colorScheme = useColorScheme();
   const dark = colorScheme === "dark";
   const { isRtl } = useI18n();
+  const lastOpenedThreadRef = useRef<string | null>(null);
+  const lastOpenAtRef = useRef<number>(0);
 
   useEffect(() => {
     void SplashScreen.hideAsync().catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    function openThreadFromNotificationData(data: unknown): void {
+      if (data === null || typeof data !== "object") {
+        return;
+      }
+      const record = data as Record<string, unknown>;
+      const type = typeof record.type === "string" ? record.type : "";
+      const threadId = typeof record.threadId === "string" ? record.threadId.trim() : "";
+      if (type !== "CHAT" || threadId.length === 0) {
+        return;
+      }
+      const now = Date.now();
+      if (
+        lastOpenedThreadRef.current === threadId &&
+        now - lastOpenAtRef.current < 2000
+      ) {
+        return;
+      }
+      lastOpenedThreadRef.current = threadId;
+      lastOpenAtRef.current = now;
+      router.push(`/chat/${threadId}` as Href);
+    }
+
+    void (async () => {
+      const last = await Notifications.getLastNotificationResponseAsync();
+      if (last) {
+        openThreadFromNotificationData(last.notification.request.content.data);
+      }
+    })();
+
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      openThreadFromNotificationData(response.notification.request.content.data);
+    });
+
+    return () => {
+      sub.remove();
+    };
+  }, [router]);
 
   return (
     <ThemeProvider value={dark ? fixitDark : fixitLight}>
@@ -78,6 +121,7 @@ function RootLayoutNav(): React.ReactElement {
           <Stack.Screen name="index" />
           <Stack.Screen name="language-gate" />
           <Stack.Screen name="dev" />
+          <Stack.Screen name="report" />
           <Stack.Screen name="chat" />
           <Stack.Screen name="auth" />
           <Stack.Screen name="signup" />

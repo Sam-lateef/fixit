@@ -23,6 +23,8 @@ export type InboxThreadListProps = {
   contentTopInset?: number;
 };
 
+type ThreadState = "ACTIVE" | "COMPLETED";
+
 type ThreadRow = {
   id: string;
   updatedAt: string;
@@ -60,20 +62,26 @@ export function InboxThreadList(props: InboxThreadListProps): React.ReactElement
   const navigation = useNavigation();
   const [threads, setThreads] = useState<ThreadRow[]>([]);
   const [myUserId, setMyUserId] = useState<string | null>(null);
+  const [state, setState] = useState<ThreadState>("ACTIVE");
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     try {
       const [threadsRes, meRes] = await Promise.all([
-        apiFetch<{ threads: ThreadRow[] }>("/api/v1/threads"),
+        apiFetch<{ threads: ThreadRow[] }>(`/api/v1/threads?state=${state}`),
         apiFetch<{ user: { id: string } }>("/api/v1/users/me"),
       ]);
-      setThreads(threadsRes.threads);
+      const sortedThreads = [...threadsRes.threads].sort((a, b) => {
+        const aTs = new Date(a.lastMessage?.createdAt ?? a.updatedAt).getTime();
+        const bTs = new Date(b.lastMessage?.createdAt ?? b.updatedAt).getTime();
+        return bTs - aTs;
+      });
+      setThreads(sortedThreads);
       setMyUserId(meRes.user.id);
     } catch {
       /* stay empty */
     }
-  }, []);
+  }, [state]);
 
   useEffect(() => {
     void load();
@@ -110,7 +118,29 @@ export function InboxThreadList(props: InboxThreadListProps): React.ReactElement
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
       ListEmptyComponent={
-        <Text style={styles.empty}>{t("noThreads")}</Text>
+        <Text style={styles.empty}>
+          {state === "COMPLETED" ? t("noCompletedThreads") : t("noThreads")}
+        </Text>
+      }
+      ListHeaderComponent={
+        <View style={styles.filterTabs}>
+          <Pressable
+            style={[styles.filterTab, state === "ACTIVE" && styles.filterTabActive]}
+            onPress={() => setState("ACTIVE")}
+          >
+            <Text style={[styles.filterTabText, state === "ACTIVE" && styles.filterTabTextActive]}>
+              {t("inboxActive")}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.filterTab, state === "COMPLETED" && styles.filterTabActive]}
+            onPress={() => setState("COMPLETED")}
+          >
+            <Text style={[styles.filterTabText, state === "COMPLETED" && styles.filterTabTextActive]}>
+              {t("inboxCompleted")}
+            </Text>
+          </Pressable>
+        </View>
       }
       renderItem={({ item }) => {
         const isOwner =
@@ -205,6 +235,18 @@ const styles = StyleSheet.create({
     backgroundColor: theme.bg,
   },
   empty: { color: theme.muted, marginTop: 24, textAlign: "center" },
+  filterTabs: { flexDirection: "row", gap: 8, marginBottom: 12 },
+  filterTab: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: theme.radiusMd,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.surface,
+  },
+  filterTabActive: { backgroundColor: theme.primaryMid, borderColor: theme.primaryMid },
+  filterTabText: { color: theme.text, fontWeight: "600" },
+  filterTabTextActive: { color: "#fff" },
   card: {
     flexDirection: "row",
     alignItems: "center",

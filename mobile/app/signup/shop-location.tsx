@@ -1,7 +1,9 @@
+import * as Location from "expo-location";
 import { router, type Href, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,6 +16,7 @@ import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { useI18n } from "@/lib/i18n";
+import { openGoogleMapsAt } from "@/lib/open-google-maps";
 import { IRAQ_OWNER_CITIES, ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
 
@@ -30,6 +33,8 @@ export default function ShopLocationStep(): React.ReactElement {
   const [city, setCity] = useState("");
   const [districtId, setDistrictId] = useState<string | null>(null);
   const [address, setAddress] = useState("");
+  const [workshopLat, setWorkshopLat] = useState<number | null>(null);
+  const [workshopLng, setWorkshopLng] = useState<number | null>(null);
 
   const [districts, setDistricts] = useState<District[]>([]);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -57,6 +62,34 @@ export default function ShopLocationStep(): React.ReactElement {
     })();
   }, [city]);
 
+  useEffect(() => {
+    const la = prev.workshopLat;
+    const lo = prev.workshopLng;
+    if (typeof la === "number" && typeof lo === "number") {
+      setWorkshopLat(la);
+      setWorkshopLng(lo);
+    }
+  }, [raw.data]);
+
+  function useDeviceWorkshopPin(): void {
+    void (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(t("errorTitle"), t("locationPermissionNeeded"));
+        return;
+      }
+      try {
+        const pos = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        setWorkshopLat(pos.coords.latitude);
+        setWorkshopLng(pos.coords.longitude);
+      } catch {
+        Alert.alert(t("errorTitle"), t("locationDetectFailed"));
+      }
+    })();
+  }
+
   function districtLabel(d: District): string {
     return locale === "ar-iq" && d.nameAr ? d.nameAr : d.name;
   }
@@ -71,18 +104,22 @@ export default function ShopLocationStep(): React.ReactElement {
       setErr(t("city"));
       return;
     }
-    if (!districtId) {
-      setErr(t("pickDistrict"));
+    if (!address.trim()) {
+      setErr(t("addressRequired"));
       return;
     }
 
-    const merged = {
+    const merged: Record<string, unknown> = {
       ...prev,
       shopName: shopName.trim(),
       city,
-      districtId,
+      districtId: districtId ?? null,
       address: address.trim(),
     };
+    if (workshopLat != null && workshopLng != null) {
+      merged.workshopLat = workshopLat;
+      merged.workshopLng = workshopLng;
+    }
     router.push({
       pathname: "/signup/shop-area" as Href,
       params: { data: JSON.stringify(merged) },
@@ -122,6 +159,7 @@ export default function ShopLocationStep(): React.ReactElement {
         {city !== "" && (
           <>
             <Text style={s.label}>{t("district")}</Text>
+            <Text style={s.hintInline}>{t("districtOptionalHint")}</Text>
             {loadingDistricts ? (
               <ActivityIndicator
                 color={theme.primaryMid}
@@ -138,9 +176,9 @@ export default function ShopLocationStep(): React.ReactElement {
                   style={districtId ? s.selectText : s.selectPlaceholder}
                 >
                   {(() => {
-                    if (!districtId) return t("pickDistrict");
+                    if (!districtId) return t("districtOptionalPick");
                     const d = districts.find((x) => x.id === districtId);
-                    return d ? districtLabel(d) : t("pickDistrict");
+                    return d ? districtLabel(d) : t("districtOptionalPick");
                   })()}
                 </Text>
               </Pressable>
@@ -161,6 +199,36 @@ export default function ShopLocationStep(): React.ReactElement {
           placeholder={t("shopAddress")}
           placeholderTextColor={theme.mutedLight}
         />
+
+        <Text style={s.label}>{t("workshopMapPin")}</Text>
+        <Text style={s.hintInline}>{t("workshopMapPinHint")}</Text>
+        <Pressable style={s.pinBtn} onPress={useDeviceWorkshopPin}>
+          <Text style={s.pinBtnText}>{t("useCurrentLocationForPin")}</Text>
+        </Pressable>
+        {workshopLat != null && workshopLng != null ? (
+          <View style={s.pinPreview}>
+            <Text style={s.pinCoords} numberOfLines={1}>
+              {workshopLat.toFixed(5)}, {workshopLng.toFixed(5)}
+            </Text>
+            <View style={s.pinRow}>
+              <Pressable
+                style={s.pinSecondary}
+                onPress={() => {
+                  setWorkshopLat(null);
+                  setWorkshopLng(null);
+                }}
+              >
+                <Text style={s.pinSecondaryText}>{t("clearWorkshopMapPin")}</Text>
+              </Pressable>
+              <Pressable
+                style={s.pinSecondary}
+                onPress={() => openGoogleMapsAt(workshopLat, workshopLng)}
+              >
+                <Text style={s.pinSecondaryText}>{t("openInGoogleMaps")}</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
 
         {err !== "" && <Text style={s.err}>{err}</Text>}
 
@@ -236,6 +304,7 @@ const s = StyleSheet.create({
   selectText: { fontSize: 16, color: theme.text, textAlign: "left" },
   selectPlaceholder: { fontSize: 16, color: theme.mutedLight, textAlign: "left" },
   hint: { marginTop: 10, fontSize: 13, color: theme.muted, textAlign: "left" },
+  hintInline: { marginTop: 6, fontSize: 13, color: theme.muted, textAlign: "left" },
   err: { marginTop: 12, color: theme.danger, fontSize: 13 },
   btn: {
     marginTop: 28,
@@ -245,4 +314,34 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   btnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  pinBtn: {
+    marginTop: 10,
+    backgroundColor: theme.primaryMid,
+    paddingVertical: 12,
+    borderRadius: theme.radiusMd,
+    alignItems: "center",
+  },
+  pinBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  pinPreview: { marginTop: 12 },
+  pinCoords: {
+    fontSize: 12,
+    color: theme.muted,
+    fontVariant: ["tabular-nums"],
+    textAlign: "left",
+  },
+  pinRow: { marginTop: 10, flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  pinSecondary: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: theme.radiusMd,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.surface,
+  },
+  pinSecondaryText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: theme.primaryMid,
+    textAlign: "left",
+  },
 });

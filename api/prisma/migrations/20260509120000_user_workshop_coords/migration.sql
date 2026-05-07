@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN "workshopLat" DOUBLE PRECISION,
+ADD COLUMN "workshopLng" DOUBLE PRECISION;

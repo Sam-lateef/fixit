@@ -86,13 +86,25 @@ export function computeDistanceKmForPost(
   if (post.serviceType === "PARTS" && shop.partsNationwide) {
     return null;
   }
-  if (!post.lat || !post.lng || !shop.user.district) {
+  if (!post.lat || !post.lng) {
     return null;
   }
-  const dist = haversineKm(
-    { lat: shop.user.district.lat, lng: shop.user.district.lng },
-    { lat: post.lat, lng: post.lng },
-  );
+  const pinLat = shop.user.workshopLat;
+  const pinLng = shop.user.workshopLng;
+  const hasWorkshopPin =
+    pinLat != null &&
+    pinLng != null &&
+    Number.isFinite(pinLat) &&
+    Number.isFinite(pinLng);
+  const origin = hasWorkshopPin
+    ? { lat: pinLat, lng: pinLng }
+    : shop.user.district
+      ? { lat: shop.user.district.lat, lng: shop.user.district.lng }
+      : null;
+  if (!origin) {
+    return null;
+  }
+  const dist = haversineKm(origin, { lat: post.lat, lng: post.lng });
   return parseFloat(dist.toFixed(1));
 }
 

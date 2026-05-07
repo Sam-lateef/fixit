@@ -1,7 +1,8 @@
 import type { FastifyInstance } from "fastify";
-import { Prisma } from "@prisma/client";
+import { EnforcementReason, Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../db/prisma.js";
+import { createAuditLog, safeTrim } from "../../services/moderation.js";
 
 const listQuerySchema = z.object({
   q: z.string().trim().min(1).optional(),
@@ -15,6 +16,10 @@ const listQuerySchema = z.object({
 export async function registerAdminPostRoutes(
   fastify: FastifyInstance,
 ): Promise<void> {
+  const takedownSchema = z.object({
+    reason: z.nativeEnum(EnforcementReason).optional(),
+    notes: z.string().max(2000).optional(),
+  });
   fastify.get(
     "/api/v1/admin/posts",
     { preHandler: [fastify.requireAdmin] },
@@ -86,10 +91,18 @@ export async function registerAdminPostRoutes(
     { preHandler: [fastify.requireAdmin] },
     async (request, reply) => {
       const { id } = request.params as { id: string };
+      const parsed = takedownSchema.safeParse(request.body ?? {});
+      if (!parsed.success) {
+        return reply.status(400).send({ error: "Invalid body" });
+      }
       try {
         await prisma.post.update({
           where: { id },
-          data: { status: "DELETED" },
+          data: {
+            status: "DELETED",
+            takedownReason: parsed.data.reason ?? null,
+            takedownNotes: safeTrim(parsed.data.notes),
+          },
         });
       } catch (e) {
         if (
@@ -100,6 +113,14 @@ export async function registerAdminPostRoutes(
         }
         throw e;
       }
+      await createAuditLog({
+        actorUserId: request.userId,
+        action: "POST_TAKEDOWN",
+        targetType: "POST",
+        targetId: id,
+        reason: parsed.data.reason ?? null,
+        notes: safeTrim(parsed.data.notes),
+      });
       return { ok: true };
     },
   );

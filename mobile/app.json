@@ -23,7 +23,7 @@
       }
     },
     "android": {
-      "package": "com.fixit.app",
+      "package": "com.fixitiq.app",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/fixit-adaptive-fg-1024.png",

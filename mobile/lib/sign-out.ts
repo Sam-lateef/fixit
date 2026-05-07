@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 
 import { clearToken } from "@/lib/auth-storage";
 import { getFirebaseAuth, isFirebaseClientConfigured } from "@/lib/firebase";
+import { unregisterPushTokenOnServer } from "@/lib/push-notifications";
 import { syncRevenueCatUser } from "@/lib/revenuecat";
 
 /**
@@ -26,6 +27,7 @@ async function signOutGoogleNativeSdkIfAvailable(): Promise<void> {
  * and RevenueCat on native.
  */
 export async function signOutFromApp(): Promise<void> {
+  await unregisterPushTokenOnServer();
   await clearToken();
   if (isFirebaseClientConfigured()) {
     try {
