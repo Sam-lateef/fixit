@@ -74,10 +74,33 @@ function readExpoProjectId(): string | undefined {
  *   POST https://exp.host/--/api/v2/push/send
  *   body: [{ to: expoPushToken, title, body, data }]
  */
+/**
+ * Android 8+ requires a notification channel for tray notifications to display.
+ * Without this, Expo creates a low-importance fallback that's silent on many OEMs
+ * (MIUI, OPPO, Vivo). Must run before getExpoPushTokenAsync.
+ */
+async function ensureAndroidNotificationChannel(): Promise<void> {
+  if (Platform.OS !== "android") return;
+  try {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "Default",
+      importance: Notifications.AndroidImportance.MAX,
+      sound: "default",
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#2D6A4F",
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    });
+  } catch (e) {
+    console.warn("[push] setNotificationChannelAsync failed:", e);
+  }
+}
+
 export async function registerPushToken(): Promise<void> {
   if (Platform.OS === "web") return;
 
   try {
+    await ensureAndroidNotificationChannel();
+
     const { status: existing } = await Notifications.getPermissionsAsync();
     let finalStatus = existing;
 

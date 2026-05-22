@@ -1,4 +1,5 @@
 import admin from "firebase-admin";
+import { prisma } from "../db/prisma.js";
 import { ensureFirebaseAdminInitialized } from "./firebase-app.js";
 
 export function isFcmConfigured(): boolean {
@@ -10,6 +11,38 @@ function isExpoPushToken(token: string): boolean {
   return (
     token.startsWith("ExponentPushToken[") || token.startsWith("ExpoPushToken[")
   );
+}
+
+/** Last 6 chars of an ExponentPushToken — enough to disambiguate in logs without dumping the full token. */
+function tokenSuffix(token: string): string {
+  return token.length > 8 ? `...${token.slice(-8)}` : token;
+}
+
+type ExpoTicket = {
+  status?: string;
+  id?: string;
+  message?: string;
+  details?: { error?: string; [k: string]: unknown };
+};
+
+/**
+ * Clear an invalid push token from any user holding it. Used when Expo reports
+ * DeviceNotRegistered — the user uninstalled, signed out, or rotated tokens.
+ */
+async function clearStaleToken(token: string): Promise<void> {
+  try {
+    const result = await prisma.user.updateMany({
+      where: { fcmToken: token },
+      data: { fcmToken: null },
+    });
+    if (result.count > 0) {
+      console.info(
+        `[expo-push] cleared stale token ${tokenSuffix(token)} from ${result.count} user(s)`,
+      );
+    }
+  } catch (e) {
+    console.warn("[expo-push] failed to clear stale token", e);
+  }
 }
 
 async function sendViaExpo(
@@ -37,11 +70,47 @@ async function sendViaExpo(
       },
     ]),
   });
+
+  const rawBody = await res.text().catch(() => "");
+
   if (!res.ok) {
     console.warn(
-      `[expo-push] send failed ${res.status} ${res.statusText}`,
-      await res.text().catch(() => ""),
+      `[expo-push] send failed ${res.status} ${res.statusText} for ${tokenSuffix(token)}: ${rawBody}`,
     );
+    return;
+  }
+
+  let parsed: { data?: ExpoTicket | ExpoTicket[]; errors?: unknown[] } | null = null;
+  try {
+    parsed = rawBody ? JSON.parse(rawBody) : null;
+  } catch {
+    console.warn(`[expo-push] non-JSON response for ${tokenSuffix(token)}: ${rawBody}`);
+    return;
+  }
+
+  if (!parsed) return;
+
+  if (Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+    console.warn(`[expo-push] top-level errors for ${tokenSuffix(token)}:`, parsed.errors);
+    return;
+  }
+
+  const tickets: ExpoTicket[] = Array.isArray(parsed.data)
+    ? parsed.data
+    : parsed.data
+      ? [parsed.data]
+      : [];
+
+  for (const ticket of tickets) {
+    if (ticket.status === "error") {
+      const errCode = ticket.details?.error ?? "unknown";
+      console.warn(
+        `[expo-push] ticket error for ${tokenSuffix(token)}: ${errCode} — ${ticket.message ?? ""}`,
+      );
+      if (errCode === "DeviceNotRegistered") {
+        await clearStaleToken(token);
+      }
+    }
   }
 }
 
