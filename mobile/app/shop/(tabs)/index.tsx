@@ -17,6 +17,7 @@ import { PostImageLightbox } from "@/components/PostImageLightbox";
 import { ShopPremiumGate } from "@/components/ShopPremiumGate";
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import { pushEvents } from "@/lib/push-events";
 import { confirmAndSubmitReport } from "@/lib/report-content";
 import type { StringKey } from "@/lib/strings";
 import {
@@ -278,6 +279,22 @@ export default function ShopFeedScreen(): React.ReactElement {
       void load(filter);
     }, [load, filter]),
   );
+
+  // Auto-refresh the feed when a new matching request arrives while the app
+  // is foregrounded. Mirrors the owner-side BID refresh.
+  useEffect(() => {
+    const refetch = (): void => {
+      void load(filter);
+    };
+    const unsubs = [
+      pushEvents.on("REPAIR", refetch),
+      pushEvents.on("PARTS", refetch),
+      pushEvents.on("TOWING", refetch),
+    ];
+    return () => {
+      for (const u of unsubs) u();
+    };
+  }, [load, filter]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

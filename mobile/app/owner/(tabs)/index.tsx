@@ -1,7 +1,7 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFocusEffect } from "@react-navigation/native";
 import { router, type Href } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -16,6 +16,7 @@ import { PostImageLightbox } from "@/components/PostImageLightbox";
 import { apiFetch, formatIqd } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
+import { pushEvents } from "@/lib/push-events";
 import { ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
 
@@ -134,6 +135,22 @@ export default function OwnerHomeScreen(): React.ReactElement {
       void load();
     }, [load]),
   );
+
+  // Auto-refresh when a new bid arrives or one of ours is accepted while the
+  // app is foregrounded. Push delivery already happens; this just keeps the
+  // visible list in sync without requiring pull-to-refresh.
+  useEffect(() => {
+    const unsubBid = pushEvents.on("BID", () => {
+      void load();
+    });
+    const unsubAccept = pushEvents.on("ACCEPT", () => {
+      void load();
+    });
+    return () => {
+      unsubBid();
+      unsubAccept();
+    };
+  }, [load]);
 
   const deletePost = (id: string): void => {
     Alert.alert(t("deletePost"), "", [

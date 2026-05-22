@@ -12,8 +12,22 @@ import { useColorScheme, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import { I18nProvider, useI18n } from "@/lib/i18n";
+import { pushEvents, type PushEventType } from "@/lib/push-events";
 import { configureForegroundNotifications } from "@/lib/push-notifications";
 import { theme } from "@/lib/theme";
+
+const PUSH_EVENT_TYPES: ReadonlySet<PushEventType> = new Set([
+  "BID",
+  "ACCEPT",
+  "CHAT",
+  "REPAIR",
+  "PARTS",
+  "TOWING",
+]);
+
+function isPushEventType(value: unknown): value is PushEventType {
+  return typeof value === "string" && PUSH_EVENT_TYPES.has(value as PushEventType);
+}
 
 export { ErrorBoundary } from "expo-router";
 
@@ -108,8 +122,21 @@ function RootLayoutNav(): React.ReactElement {
       openThreadFromNotificationData(response.notification.request.content.data);
     });
 
+    // Foreground receipts: when a push arrives while the app is open, emit a
+    // typed event so screens showing affected data can refetch without the
+    // user pulling-to-refresh.
+    const receivedSub = Notifications.addNotificationReceivedListener((notif) => {
+      const data = notif.request.content.data;
+      if (data === null || typeof data !== "object") return;
+      const type = (data as Record<string, unknown>).type;
+      if (isPushEventType(type)) {
+        pushEvents.emit(type);
+      }
+    });
+
     return () => {
       sub.remove();
+      receivedSub.remove();
     };
   }, [router]);
 
