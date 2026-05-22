@@ -1177,12 +1177,15 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 8 },
   chip: {
-    paddingHorizontal: 14,
+    // Extra horizontal padding + overflow:'visible' guards Arabic last-char
+    // clipping on Samsung One UI 8 (RN underestimates Arabic text width).
+    paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: theme.radiusMd,
     backgroundColor: theme.chip,
     borderWidth: 1,
     borderColor: theme.border,
+    overflow: "visible",
   },
   chipOn: { backgroundColor: theme.primaryMid, borderColor: theme.primaryMid },
 

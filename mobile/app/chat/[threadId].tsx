@@ -594,11 +594,14 @@ const styles = StyleSheet.create({
   bubbleWrapThem: { alignSelf: "flex-start" },
   bubble: {
     backgroundColor: theme.surface,
-    paddingHorizontal: 12,
+    // Extra horizontal padding + overflow:'visible' guards Arabic last-char
+    // clipping on Samsung One UI 8 (RN underestimates Arabic text width).
+    paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: theme.border,
+    overflow: "visible",
   },
   bubbleMine: { backgroundColor: theme.primaryMid, borderColor: theme.primaryMid },
   bubbleText: { color: theme.text, fontSize: 15 },

@@ -272,12 +272,15 @@ const s = StyleSheet.create({
   toggleLabel: { fontSize: 15, color: theme.text },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
-    paddingHorizontal: 12,
+    // Extra horizontal padding + overflow:'visible' guards Arabic last-char
+    // clipping on Samsung One UI 8 (RN underestimates Arabic text width).
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 999,
     backgroundColor: theme.chip,
     borderWidth: 1,
     borderColor: theme.border,
+    overflow: "visible",
   },
   chipOn: { backgroundColor: theme.primaryMid, borderColor: theme.primaryMid },
   chipText: { fontSize: 14, color: theme.text, fontWeight: "600" },

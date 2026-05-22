@@ -195,9 +195,12 @@ const styles = StyleSheet.create({
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
     backgroundColor: theme.chip,
-    paddingHorizontal: 12,
+    // Extra horizontal padding + overflow:'visible' guards Arabic last-char
+    // clipping on Samsung One UI 8 (RN underestimates Arabic text width).
+    paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 16,
+    overflow: "visible",
   },
   chipText: { fontSize: 13, color: theme.text, fontWeight: "500" },
   emptyHint: { fontSize: 14, color: theme.mutedLight },

@@ -90,9 +90,13 @@ const s = StyleSheet.create({
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
   chip: {
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    // Extra horizontal padding + overflow:'visible' guards Arabic last-char
+    // clipping on Samsung One UI 8 where RN measures text width slightly
+    // narrower than it rasterizes (See chat/bubble + signup chip files).
+    paddingHorizontal: 20,
     borderRadius: 20,
     backgroundColor: theme.chip,
+    overflow: "visible",
   },
   chipOn: { backgroundColor: theme.primary },
   chipText: { fontSize: 14, color: theme.text },
