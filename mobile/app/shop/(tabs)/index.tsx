@@ -2,7 +2,6 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { router, type Href } from "expo-router";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
-  Alert,
   Modal,
   Pressable,
   RefreshControl,
@@ -438,14 +437,9 @@ export default function ShopFeedScreen(): React.ReactElement {
             router.push(`/shop/bid/${p.id}` as Href);
           };
           const openPostMoreMenu = (): void => {
-            Alert.alert("", "", [
-              { text: t("cancel"), style: "cancel" },
-              {
-                text: t("reportThisPost"),
-                style: "destructive",
-                onPress: () => confirmAndSubmitReport(t, "POST", p.id),
-              },
-            ]);
+            // Single-action ⋮ → straight to /report. Wrapping with
+            // Alert.alert("", "", [...]) shows an empty popup on Android.
+            confirmAndSubmitReport(t, "POST", p.id);
           };
 
           return (

@@ -3,7 +3,6 @@ import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -77,15 +76,10 @@ export default function OwnerViewShopScreen(): ReactElement {
 
   const openReportMenu = (): void => {
     if (!shop?.user.id) return;
-    const userId = shop.user.id;
-    Alert.alert("", "", [
-      { text: t("cancel"), style: "cancel" },
-      {
-        text: t("reportThisUser"),
-        style: "destructive",
-        onPress: () => confirmAndSubmitReport(t, "USER", userId),
-      },
-    ]);
+    // Tap goes straight to /report — the screen has its own Cancel button.
+    // Wrapping with Alert.alert("", "", [...]) renders an empty popup on
+    // Android and adds friction with no clarity benefit.
+    confirmAndSubmitReport(t, "USER", shop.user.id);
   };
 
   return (

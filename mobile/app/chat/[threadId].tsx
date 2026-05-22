@@ -364,14 +364,9 @@ export default function ChatThreadScreen(): React.ReactElement {
     targetType: "USER" | "MESSAGE",
     targetId: string,
   ): void => {
-    Alert.alert("", "", [
-      { text: t("cancel"), style: "cancel" },
-      {
-        text: targetType === "MESSAGE" ? t("reportThisMessage") : t("reportThisUser"),
-        style: "destructive",
-        onPress: () => confirmAndSubmitReport(t, targetType, targetId),
-      },
-    ]);
+    // Tap goes straight to /report (single-action ⋮). Wrapping with
+    // Alert.alert("", "", [...]) renders an empty popup on Android.
+    confirmAndSubmitReport(t, targetType, targetId);
   };
 
   return (
