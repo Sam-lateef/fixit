@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../db/prisma.js";
+import { safePreview } from "../lib/safe-preview.js";
 import { sendPush } from "../services/fcm.js";
 import { pushNewMessageTitle, resolvePushLocale } from "../services/push-i18n.js";
 
@@ -243,7 +244,7 @@ export function registerChatRoutes(
           await sendPush(
             recipient.fcmToken,
             pushNewMessageTitle(loc),
-            body.data.content.slice(0, 80),
+            safePreview(body.data.content, 80),
             { threadId: id, type: "CHAT" },
             false,
           );

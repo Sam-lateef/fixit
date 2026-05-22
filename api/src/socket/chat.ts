@@ -2,6 +2,7 @@ import type { Server as IOServer } from "socket.io";
 import jwt from "jsonwebtoken";
 import type { UserType } from "@prisma/client";
 import { prisma } from "../db/prisma.js";
+import { safePreview } from "../lib/safe-preview.js";
 import { sendPush } from "../services/fcm.js";
 import { pushNewMessageTitle, resolvePushLocale } from "../services/push-i18n.js";
 
@@ -87,7 +88,7 @@ export function initSocket(io: IOServer): ChatIoBridge {
             await sendPush(
               recipient.fcmToken,
               pushNewMessageTitle(loc),
-              content.slice(0, 80),
+              safePreview(content, 80),
               { threadId, type: "CHAT" },
               false,
             );
