@@ -80,10 +80,13 @@ export async function cascadeDeleteUser(userId: string): Promise<void> {
       where: { removedById: userId },
       data: { removedById: null },
     });
-    // AuditLog.actorUserId is REQUIRED — only set by admin actions. If an
-    // admin self-deletes via this path, the user.delete will still fail
-    // and surface the constraint. That's intentional: admins should be
-    // off-boarded through a separate flow that reassigns audit entries.
+    // AuditLog.actorUserId is REQUIRED and any user (not just admins) can
+    // accumulate audit rows via routes that record their own actions. We
+    // delete those rows when the user is deleted — the actor entity is gone
+    // so the entry has no meaningful actor anyway. If long-term audit
+    // retention becomes a compliance requirement, this should be reworked
+    // to anonymize (e.g. point at a sentinel "deleted-user" row) instead.
+    await tx.auditLog.deleteMany({ where: { actorUserId: userId } });
 
     await tx.user.delete({ where: { id: userId } });
   });
