@@ -30,3 +30,6 @@ ios/
 backups/
 *.dump
 *.sql.gz
+
+# Local SHA paste file for compare-google-sha.ps1 (delete after checking)
+tmp/sha-fingerprints.input.txt

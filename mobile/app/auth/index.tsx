@@ -15,7 +15,7 @@ import { GoogleOAuthButton } from "@/components/auth/GoogleOAuthButton";
 import { friendlyApiError } from "@/lib/api-error";
 import { navigateAfterLogin } from "@/lib/auth-routing";
 import { setToken } from "@/lib/auth-storage";
-import { isFirebaseClientConfigured } from "@/lib/firebase";
+import { getGoogleSignInSetupIssue, isFirebaseClientConfigured } from "@/lib/firebase";
 import { shouldUseNativeGoogleSignIn } from "@/lib/google-oauth-redirect";
 import { useI18n } from "@/lib/i18n";
 import { registerPushToken } from "@/lib/push-notifications";
@@ -66,6 +66,14 @@ export default function AuthWelcomeScreen(): React.ReactElement {
   // button is rendered — the existing spinner covers that state.
   const useNativeGoogle =
     nativeEligible && (!needsPlayServicesCheck || (androidPlayServicesChecked && androidPlayServicesOk));
+
+  const googleSetupIssue = getGoogleSignInSetupIssue();
+  const googleConfigHint =
+    googleSetupIssue === "firebase"
+      ? t("authFirebaseConfigHint")
+      : googleSetupIssue === "webClient"
+        ? t("authGoogleClientHint")
+        : null;
 
   function handleGoogleSignedIn(res: BackendAuthResponse): void {
     void (async () => {
@@ -129,6 +137,12 @@ export default function AuthWelcomeScreen(): React.ReactElement {
         />
       )}
 
+      {useNativeGoogle && googleConfigHint ? (
+        <Text style={styles.configHint}>
+          {__DEV__ ? googleConfigHint : t("authGoogleBuildNotConfigured")}
+        </Text>
+      ) : null}
+
       {Platform.OS === "ios" ? (
         <Pressable
           style={[styles.btn, styles.btnPrimary, busy && styles.btnDisabled]}
@@ -184,4 +198,5 @@ const styles = StyleSheet.create({
   btnPrimaryText: { color: "#fff", fontWeight: "700", fontSize: 16 },
   btnDisabled: { opacity: 0.5 },
   err: { marginTop: 16, color: theme.danger, fontSize: 14 },
+  configHint: { marginTop: 12, color: theme.muted, fontSize: 13, textAlign: "center", lineHeight: 18 },
 });

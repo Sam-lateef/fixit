@@ -51,3 +51,15 @@ export function getFirebaseAuth(): Auth {
 export function isFirebaseClientConfigured(): boolean {
   return missingFirebaseEnvKeys().length === 0;
 }
+
+/** Why native Google is disabled at build time (empty `EXPO_PUBLIC_*` on EAS without eas.json env). */
+export function getGoogleSignInSetupIssue(): "firebase" | "webClient" | null {
+  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() ?? "";
+  if (webClientId.length === 0) {
+    return "webClient";
+  }
+  if (missingFirebaseEnvKeys().length > 0) {
+    return "firebase";
+  }
+  return null;
+}

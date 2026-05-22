@@ -58,6 +58,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "925833254957-q88c8f43f3rstdgakil41en72dtj6afi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fixitiq.app",
+            "certificate_hash": "544fa980454452fd7360c27adeb0559489659598"
+          }
+        },
+        {
+          "client_id": "925833254957-ud5dkjusdgq0fvv9bgnrjg3fd6kkb9pi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fixitiq.app",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
           "client_id": "925833254957-i5gu3kvnjm9gkhpcnjruv1aed5m4n6ri.apps.googleusercontent.com",
           "client_type": 3
         }

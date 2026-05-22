@@ -12,6 +12,18 @@
       },
       "ios": {
         "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://fixit-api.fly.dev",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCKxmL6bYMnyto8Yjw7_T--emGeMVbMEIo",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "fixit-9191d.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "fixit-9191d",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "fixit-9191d.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "925833254957",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:925833254957:web:ec6df23ac247360ad000a4",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "925833254957-i5gu3kvnjm9gkhpcnjruv1aed5m4n6ri.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "925833254957-q88c8f43f3rstdgakil41en72dtj6afi.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "925833254957-4de1a17l3dt2u0v2dc5fc7staobvv3t3.apps.googleusercontent.com"
       }
     },
     "preview": {
@@ -21,6 +33,18 @@
       },
       "ios": {
         "distribution": "internal"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://fixit-api.fly.dev",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCKxmL6bYMnyto8Yjw7_T--emGeMVbMEIo",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "fixit-9191d.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "fixit-9191d",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "fixit-9191d.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "925833254957",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:925833254957:web:ec6df23ac247360ad000a4",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "925833254957-i5gu3kvnjm9gkhpcnjruv1aed5m4n6ri.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "925833254957-q88c8f43f3rstdgakil41en72dtj6afi.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "925833254957-4de1a17l3dt2u0v2dc5fc7staobvv3t3.apps.googleusercontent.com"
       }
     },
     "production": {
@@ -30,6 +54,18 @@
       },
       "ios": {
         "distribution": "store"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://fixit-api.fly.dev",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCKxmL6bYMnyto8Yjw7_T--emGeMVbMEIo",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "fixit-9191d.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "fixit-9191d",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "fixit-9191d.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "925833254957",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:925833254957:web:ec6df23ac247360ad000a4",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "925833254957-i5gu3kvnjm9gkhpcnjruv1aed5m4n6ri.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "925833254957-q88c8f43f3rstdgakil41en72dtj6afi.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "925833254957-4de1a17l3dt2u0v2dc5fc7staobvv3t3.apps.googleusercontent.com"
       }
     }
   },
