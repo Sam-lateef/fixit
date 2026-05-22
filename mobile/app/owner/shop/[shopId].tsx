@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +17,7 @@ import { ShopServiceOverview } from "@/components/shop/ShopServiceOverview";
 import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
+import { confirmAndSubmitReport } from "@/lib/report-content";
 import {
   ownerCityLabel,
 } from "@/lib/taxonomy-labels";
@@ -73,11 +75,34 @@ export default function OwnerViewShopScreen(): ReactElement {
   const locationLine = [cityShown, districtShown].filter(Boolean).join(" · ");
   const contactName = shop?.user.name?.trim() || "";
 
+  const openReportMenu = (): void => {
+    if (!shop?.user.id) return;
+    const userId = shop.user.id;
+    Alert.alert("", "", [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("reportThisUser"),
+        style: "destructive",
+        onPress: () => confirmAndSubmitReport(t, "USER", userId),
+      },
+    ]);
+  };
+
   return (
     <>
       <Stack.Screen
         options={{
           title: shop?.name?.trim() ? shop.name : t("shopProfile"),
+          headerRight: () =>
+            shop?.user.id ? (
+              <Pressable
+                onPress={openReportMenu}
+                hitSlop={12}
+                style={styles.headerMenuBtn}
+              >
+                <Text style={styles.headerMenuText}>⋮</Text>
+              </Pressable>
+            ) : null,
         }}
       />
       <ScrollView style={styles.root} contentContainerStyle={styles.scroll}>
@@ -154,6 +179,16 @@ export default function OwnerViewShopScreen(): ReactElement {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.bg },
   scroll: { paddingBottom: 32 },
+  headerMenuBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  headerMenuText: {
+    fontSize: 22,
+    color: theme.text,
+    fontWeight: "700",
+    lineHeight: 24,
+  },
   contactCard: {
     backgroundColor: theme.surface,
     marginHorizontal: 16,

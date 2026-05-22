@@ -31,6 +31,8 @@ export type ShopProfilePayload = {
    *  so the profile can render names without an extra round-trip). */
   servedDistricts: { id: string; name: string; nameAr: string; city: string }[];
   user: {
+    /** Owner user id — needed for "report this user" actions. */
+    id: string;
     name: string | null;
     phone: string | null;
     city: string | null;

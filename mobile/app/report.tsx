@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { submitReport } from "@/lib/report-content";
 import { useI18n } from "@/lib/i18n";
@@ -23,6 +24,7 @@ function isReportTargetType(value: string): value is ReportTargetType {
 
 export default function ReportScreen(): React.ReactElement {
   const { t, locale } = useI18n();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ targetType?: string; targetId?: string }>();
   const [details, setDetails] = useState("");
   const [busy, setBusy] = useState(false);
@@ -70,7 +72,15 @@ export default function ReportScreen(): React.ReactElement {
 
   return (
     <KeyboardAvoidingView
-      style={styles.screen}
+      style={[
+        styles.screen,
+        {
+          paddingTop: insets.top + 12,
+          paddingBottom: insets.bottom + 12,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+        },
+      ]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={0}
     >
