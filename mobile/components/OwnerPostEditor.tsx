@@ -26,8 +26,12 @@ import { useI18n } from "@/lib/i18n";
 import type { StringKey } from "@/lib/strings";
 import {
   IRAQ_OWNER_CITIES,
+  MOTORCYCLE_PARTS_CATEGORY_SLUGS,
+  MOTORCYCLE_REPAIR_CATEGORY_SLUGS,
   PARTS_CATEGORY_SLUGS,
   REPAIR_CATEGORY_SLUGS,
+  motorcyclePartsCategoryLabel,
+  motorcycleRepairCategoryLabel,
   ownerCityLabel,
   partsCategoryLabel,
   repairCategoryLabel,
@@ -36,6 +40,7 @@ import { theme } from "@/lib/theme";
 import { uploadPhotoUri } from "@/lib/upload-photo";
 
 type ServiceType = "REPAIR" | "PARTS" | "TOWING";
+type VehicleType = "CAR" | "MOTORCYCLE";
 
 type District = { id: string; name: string; nameAr: string; city: string };
 type UserProfile = {
@@ -59,6 +64,12 @@ const BAGHDAD_FALLBACK = { lat: 33.3152, lng: 44.4219 };
 
 const REPAIR_OPTIONS = REPAIR_CATEGORY_SLUGS.filter((s) => s !== "Other");
 const PARTS_OPTIONS = PARTS_CATEGORY_SLUGS.filter((s) => s !== "Other");
+const MOTO_REPAIR_OPTIONS = MOTORCYCLE_REPAIR_CATEGORY_SLUGS.filter(
+  (s) => s !== "Other",
+);
+const MOTO_PARTS_OPTIONS = MOTORCYCLE_PARTS_CATEGORY_SLUGS.filter(
+  (s) => s !== "Other",
+);
 
 const DESC_LIMIT = 300;
 
@@ -77,6 +88,7 @@ type PostForEdit = {
   status: string;
   serviceType: ServiceType;
   category: string;
+  vehicleType: VehicleType;
   title: string | null;
   description: string;
   districtId: string | null;
@@ -88,6 +100,7 @@ type PostForEdit = {
   carMake: string | null;
   carModel: string | null;
   carYear: number | null;
+  motorcycleDetails: string | null;
   towingFromLat: number | null;
   towingFromLng: number | null;
   towingFromAddress: string | null;
@@ -143,6 +156,8 @@ export function OwnerPostEditor({
   const category = "CARS" as const;
   const [title, setTitle] = useState("");
   const [serviceType, setServiceType] = useState<ServiceType>("REPAIR");
+  const [vehicleType, setVehicleType] = useState<VehicleType>("CAR");
+  const [motorcycleDetails, setMotorcycleDetails] = useState("");
   const [districts, setDistricts] = useState<District[]>([]);
   const [city, setCity] = useState("Baghdad");
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
@@ -300,6 +315,8 @@ export function OwnerPostEditor({
       areaPrefillDoneRef.current = true;
       setTitle(post.title ?? "");
       setServiceType(post.serviceType);
+      setVehicleType(post.vehicleType ?? "CAR");
+      setMotorcycleDetails(post.motorcycleDetails ?? "");
 
       const { districts: allDistricts } = await apiFetch<{ districts: District[] }>(
         "/api/v1/districts",
@@ -548,21 +565,29 @@ export function OwnerPostEditor({
       Alert.alert(t("errorTitle"), t("districtRequired"));
       return;
     }
+    if (vehicleType === "MOTORCYCLE" && motorcycleDetails.trim().length === 0) {
+      Alert.alert(t("errorTitle"), t("motorcycleDetailsRequired"));
+      return;
+    }
     setBusy(true);
     void (async () => {
       try {
         const photoUrls = await resolvePickedPhotos(pickedPhotos);
 
         if (editPostId) {
+          const isMoto = vehicleType === "MOTORCYCLE";
           const patch: Record<string, unknown> = { photoUrls };
           if (title.trim()) patch.title = title.trim();
+          if (isMoto) {
+            patch.motorcycleDetails = motorcycleDetails.trim();
+          }
           if (serviceType === "REPAIR") {
             patch.description = desc;
             patch.districtId = districtId;
             patch.repairCategory = resolvedRepairCat();
-            if (carMake.trim()) patch.carMake = carMake.trim();
-            if (carModel.trim()) patch.carModel = carModel.trim();
-            if (carYear.trim()) {
+            if (!isMoto && carMake.trim()) patch.carMake = carMake.trim();
+            if (!isMoto && carModel.trim()) patch.carModel = carModel.trim();
+            if (!isMoto && carYear.trim()) {
               const y = Number(carYear.trim());
               if (!Number.isNaN(y)) patch.carYear = y;
             }
@@ -573,9 +598,9 @@ export function OwnerPostEditor({
             patch.conditionNew = conditionNew;
             patch.conditionUsed = conditionUsed;
             if (deliveryNeeded !== null) patch.deliveryNeeded = deliveryNeeded;
-            if (carMake.trim()) patch.carMake = carMake.trim();
-            if (carModel.trim()) patch.carModel = carModel.trim();
-            if (carYear.trim()) {
+            if (!isMoto && carMake.trim()) patch.carMake = carMake.trim();
+            if (!isMoto && carModel.trim()) patch.carModel = carModel.trim();
+            if (!isMoto && carYear.trim()) {
               const y = Number(carYear.trim());
               if (!Number.isNaN(y)) patch.carYear = y;
             }
@@ -595,19 +620,24 @@ export function OwnerPostEditor({
             { text: "OK", onPress: () => router.back() },
           ]);
         } else {
+          const isMoto = vehicleType === "MOTORCYCLE";
           const body: Record<string, unknown> = {
             serviceType,
             category: "CARS",
+            vehicleType,
             description: desc,
             photoUrls,
           };
           if (title.trim()) body.title = title.trim();
+          if (isMoto) {
+            body.motorcycleDetails = motorcycleDetails.trim();
+          }
           if (serviceType === "REPAIR") {
             body.districtId = districtId;
             body.repairCategory = resolvedRepairCat();
-            if (carMake.trim()) body.carMake = carMake.trim();
-            if (carModel.trim()) body.carModel = carModel.trim();
-            if (carYear.trim()) {
+            if (!isMoto && carMake.trim()) body.carMake = carMake.trim();
+            if (!isMoto && carModel.trim()) body.carModel = carModel.trim();
+            if (!isMoto && carYear.trim()) {
               const y = Number(carYear.trim());
               if (!Number.isNaN(y)) body.carYear = y;
             }
@@ -617,9 +647,9 @@ export function OwnerPostEditor({
             body.conditionNew = conditionNew;
             body.conditionUsed = conditionUsed;
             if (deliveryNeeded !== null) body.deliveryNeeded = deliveryNeeded;
-            if (carMake.trim()) body.carMake = carMake.trim();
-            if (carModel.trim()) body.carModel = carModel.trim();
-            if (carYear.trim()) {
+            if (!isMoto && carMake.trim()) body.carMake = carMake.trim();
+            if (!isMoto && carModel.trim()) body.carModel = carModel.trim();
+            if (!isMoto && carYear.trim()) {
               const y = Number(carYear.trim());
               if (!Number.isNaN(y)) body.carYear = y;
             }
@@ -653,6 +683,8 @@ export function OwnerPostEditor({
           setCarMake("");
           setCarModel("");
           setCarYear("");
+          setVehicleType("CAR");
+          setMotorcycleDetails("");
           setTowingFrom("");
           setTowingLat(BAGHDAD_FALLBACK.lat);
           setTowingLng(BAGHDAD_FALLBACK.lng);
@@ -701,6 +733,32 @@ export function OwnerPostEditor({
         ) : null}
         <View pointerEvents={readOnly ? "none" : "auto"}>
         {/* First release: CARS only — category picker hidden */}
+
+        {/* Vehicle type (Car / Motorcycle) — drives whether the rest of the
+            form shows make/model/year pickers (Car) or one free-text input
+            (Motorcycle) and which category chip set is used. */}
+        <Text style={styles.label}>{t("vehicleType")}</Text>
+        <View style={styles.row}>
+          {(["CAR", "MOTORCYCLE"] as const).map((v) => (
+            <Pressable
+              key={v}
+              style={[styles.chip, vehicleType === v && styles.chipOn]}
+              onPress={() => {
+                setVehicleType(v);
+                // Switching vehicle type invalidates the chosen category;
+                // both car and moto stores use repairCat/partsCat state.
+                setRepairCat(null);
+                setRepairOther("");
+                setPartsCat(null);
+                setPartsOther("");
+              }}
+            >
+              <Text style={[styles.chipText, vehicleType === v && styles.chipTextOn]}>
+                {v === "CAR" ? t("vehicleTypeCar") : t("vehicleTypeMotorcycle")}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
 
         {/* Service type */}
         <Text style={styles.label}>{t("services")}</Text>
@@ -770,19 +828,21 @@ export function OwnerPostEditor({
         {/* Detail fields */}
         <>
 
-        {/* Repair category chips */}
+        {/* Repair category chips — different chip set for motorcycle posts */}
         {serviceType === "REPAIR" ? (
           <>
             <Text style={styles.label}>{t("repairCategories")}</Text>
             <View style={styles.row}>
-              {REPAIR_OPTIONS.map((cat) => (
+              {(vehicleType === "MOTORCYCLE" ? MOTO_REPAIR_OPTIONS : REPAIR_OPTIONS).map((cat) => (
                 <Pressable
                   key={cat}
                   style={[styles.chip, repairCat === cat && styles.chipOn]}
                   onPress={() => setRepairCat(repairCat === cat ? null : cat)}
                 >
                   <Text style={[styles.chipText, repairCat === cat && styles.chipTextOn]}>
-                    {repairCategoryLabel(cat, locale)}
+                    {vehicleType === "MOTORCYCLE"
+                      ? motorcycleRepairCategoryLabel(cat, locale)
+                      : repairCategoryLabel(cat, locale)}
                   </Text>
                 </Pressable>
               ))}
@@ -812,19 +872,21 @@ export function OwnerPostEditor({
           </>
         ) : null}
 
-        {/* Parts category chips */}
+        {/* Parts category chips — different chip set for motorcycle posts */}
         {serviceType === "PARTS" ? (
           <>
             <Text style={styles.label}>{t("partsCategories")}</Text>
             <View style={styles.row}>
-              {PARTS_OPTIONS.map((cat) => (
+              {(vehicleType === "MOTORCYCLE" ? MOTO_PARTS_OPTIONS : PARTS_OPTIONS).map((cat) => (
                 <Pressable
                   key={cat}
                   style={[styles.chip, partsCat === cat && styles.chipOn]}
                   onPress={() => setPartsCat(partsCat === cat ? null : cat)}
                 >
                   <Text style={[styles.chipText, partsCat === cat && styles.chipTextOn]}>
-                    {partsCategoryLabel(cat, locale)}
+                    {vehicleType === "MOTORCYCLE"
+                      ? motorcyclePartsCategoryLabel(cat, locale)
+                      : partsCategoryLabel(cat, locale)}
                   </Text>
                 </Pressable>
               ))}
@@ -896,8 +958,28 @@ export function OwnerPostEditor({
           </>
         ) : null}
 
+        {/* Motorcycle: single free-text input for make/model/year */}
+        {serviceType !== "TOWING" && vehicleType === "MOTORCYCLE" ? (
+          <>
+            <Text style={styles.label}>{t("motorcycleDetails")}</Text>
+            <TextInput
+              style={[
+                styles.input,
+                locale === "ar-iq"
+                  ? { textAlign: "right", writingDirection: "rtl" }
+                  : { textAlign: "left", writingDirection: "ltr" },
+              ]}
+              value={motorcycleDetails}
+              onChangeText={setMotorcycleDetails}
+              placeholder={t("motorcycleDetailsPlaceholder")}
+              placeholderTextColor={theme.mutedLight}
+              maxLength={200}
+            />
+          </>
+        ) : null}
+
         {/* Car make + model + year (CARS category only, Repair & Parts) */}
-        {serviceType !== "TOWING" && category === "CARS" ? (
+        {serviceType !== "TOWING" && category === "CARS" && vehicleType === "CAR" ? (
           <>
             <Pressable style={styles.selectInput} onPress={() => {
               setPickerMode("make");

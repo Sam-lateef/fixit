@@ -40,12 +40,14 @@ type Post = {
   id: string;
   serviceType: string;
   category: string;
+  vehicleType?: "CAR" | "MOTORCYCLE";
   title: string | null;
   repairCategory: string | null;
   partsCategory: string | null;
   carMake: string | null;
   carModel: string | null;
   carYear: number | null;
+  motorcycleDetails: string | null;
   deliveryNeeded: boolean;
   towingToAddress: string | null;
   description: string;
@@ -509,9 +511,12 @@ export default function ShopFeedScreen(): React.ReactElement {
 
               {/* Title + description, thumbnail: right in English, left in Arabic (RTL mirrors row-reverse) */}
               {(() => {
-                const carLine = [p.carMake, p.carModel, p.carYear]
-                  .filter(Boolean)
-                  .join(" · ");
+                const isMoto = p.vehicleType === "MOTORCYCLE";
+                const carLine = isMoto
+                  ? p.motorcycleDetails?.trim()
+                    ? `🏍 ${p.motorcycleDetails.trim()}`
+                    : ""
+                  : [p.carMake, p.carModel, p.carYear].filter(Boolean).join(" · ");
                 const showCar = carLine.length > 0;
                 const cityLabel = p.district
                   ? ownerCityLabel(p.district.city, locale)

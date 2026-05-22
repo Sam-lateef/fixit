@@ -696,13 +696,15 @@ export default function ShopProfileScreen(): React.ReactElement {
   };
 
   const putServiceField = (
-    field: "offersTowing" | "deliveryAvailable",
+    field: "offersTowing" | "deliveryAvailable" | "servicesMotorcycles",
     value: boolean,
   ): void => {
     const body =
       field === "offersTowing"
         ? { offersTowing: value }
-        : { deliveryAvailable: value };
+        : field === "servicesMotorcycles"
+          ? { servicesMotorcycles: value }
+          : { deliveryAvailable: value };
     void (async () => {
       try {
         await apiFetch("/api/v1/shops/me", {
@@ -904,6 +906,23 @@ export default function ShopProfileScreen(): React.ReactElement {
                   value={shop.deliveryAvailable}
                   onValueChange={(v) =>
                     putServiceField("deliveryAvailable", v)
+                  }
+                  trackColor={{ false: theme.border, true: theme.primaryMid }}
+                  thumbColor="#fff"
+                  ios_backgroundColor={theme.border}
+                />
+              </View>
+            </>
+          ) : null}
+          {shop?.servicesMotorcycles !== undefined ? (
+            <>
+              <View style={styles.settingDivider} />
+              <View style={styles.settingRow}>
+                <Text style={styles.settingLabel}>{t("servicesMotorcyclesToggle")}</Text>
+                <Switch
+                  value={shop.servicesMotorcycles}
+                  onValueChange={(v) =>
+                    putServiceField("servicesMotorcycles", v)
                   }
                   trackColor={{ false: theme.border, true: theme.primaryMid }}
                   thumbColor="#fff"

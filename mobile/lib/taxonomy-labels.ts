@@ -28,6 +28,29 @@ export const PARTS_CATEGORY_SLUGS = [
   "Other",
 ] as const;
 
+/** Motorcycle-specific category slugs — bespoke smaller set vs cars. Stored as
+ *  English in API (Post.repairCategory / Post.partsCategory) when
+ *  Post.vehicleType === "MOTORCYCLE". */
+export const MOTORCYCLE_REPAIR_CATEGORY_SLUGS = [
+  "Engine",
+  "Brakes",
+  "Electrical",
+  "Tyres",
+  "Chain & Sprocket",
+  "Bodywork",
+  "Other",
+] as const;
+
+export const MOTORCYCLE_PARTS_CATEGORY_SLUGS = [
+  "Engine parts",
+  "Brakes",
+  "Electrical",
+  "Tyres",
+  "Chain & Sprocket",
+  "Oils",
+  "Other",
+] as const;
+
 export const IRAQ_OWNER_CITIES = [
   "Baghdad",
   "Basra",
@@ -54,6 +77,8 @@ export const IRAQ_OWNER_CITIES = [
 type RepairSlug = (typeof REPAIR_CATEGORY_SLUGS)[number];
 type PartsSlug = (typeof PARTS_CATEGORY_SLUGS)[number];
 type CitySlug = (typeof IRAQ_OWNER_CITIES)[number];
+type MotoRepairSlug = (typeof MOTORCYCLE_REPAIR_CATEGORY_SLUGS)[number];
+type MotoPartsSlug = (typeof MOTORCYCLE_PARTS_CATEGORY_SLUGS)[number];
 
 const REPAIR_I18N: Record<RepairSlug, { en: string; ar: string }> = {
   Engine: { en: "Engine", ar: "المحرك" },
@@ -79,6 +104,26 @@ const PARTS_I18N: Record<PartsSlug, { en: string; ar: string }> = {
   Tyres: { en: "Tyres", ar: "الإطارات" },
   "AC parts": { en: "AC parts", ar: "قطع التكييف" },
   Exhaust: { en: "Exhaust", ar: "العادم" },
+  Other: { en: "Other", ar: "أخرى" },
+};
+
+const MOTO_REPAIR_I18N: Record<MotoRepairSlug, { en: string; ar: string }> = {
+  Engine: { en: "Engine", ar: "المحرك" },
+  Brakes: { en: "Brakes", ar: "بريكات" },
+  Electrical: { en: "Electrical", ar: "الكهربا" },
+  Tyres: { en: "Tyres", ar: "الإطارات" },
+  "Chain & Sprocket": { en: "Chain & Sprocket", ar: "الجنزير والترس" },
+  Bodywork: { en: "Bodywork", ar: "السمكرة" },
+  Other: { en: "Other", ar: "أخرى" },
+};
+
+const MOTO_PARTS_I18N: Record<MotoPartsSlug, { en: string; ar: string }> = {
+  "Engine parts": { en: "Engine parts", ar: "قطع المحرك" },
+  Brakes: { en: "Brakes", ar: "بريكات" },
+  Electrical: { en: "Electrical", ar: "الكهربا" },
+  Tyres: { en: "Tyres", ar: "الإطارات" },
+  "Chain & Sprocket": { en: "Chain & Sprocket", ar: "الجنزير والترس" },
+  Oils: { en: "Oils", ar: "الزيوت" },
   Other: { en: "Other", ar: "أخرى" },
 };
 
@@ -115,6 +160,28 @@ export function repairCategoryLabel(slug: string, locale: LocaleId): string {
 
 export function partsCategoryLabel(slug: string, locale: LocaleId): string {
   const row = PARTS_I18N[slug as PartsSlug];
+  if (!row) {
+    return slug;
+  }
+  return locale === "en" ? row.en : row.ar;
+}
+
+export function motorcycleRepairCategoryLabel(
+  slug: string,
+  locale: LocaleId,
+): string {
+  const row = MOTO_REPAIR_I18N[slug as MotoRepairSlug];
+  if (!row) {
+    return slug;
+  }
+  return locale === "en" ? row.en : row.ar;
+}
+
+export function motorcyclePartsCategoryLabel(
+  slug: string,
+  locale: LocaleId,
+): string {
+  const row = MOTO_PARTS_I18N[slug as MotoPartsSlug];
   if (!row) {
     return slug;
   }

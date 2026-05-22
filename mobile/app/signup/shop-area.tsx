@@ -27,6 +27,7 @@ export default function ShopAreaStep(): React.ReactElement {
   const offersRepair = Boolean(prev.offersRepair);
   const offersParts = Boolean(prev.offersParts);
   const offersTowing = Boolean(prev.offersTowing);
+  const servicesMotorcycles = Boolean(prev.servicesMotorcycles);
   const cityFromPrev = (prev.city as string | undefined) ?? "";
   const homeDistrictId = (prev.districtId as string | undefined) ?? "";
 
@@ -108,6 +109,7 @@ export default function ShopAreaStep(): React.ReactElement {
       offersRepair,
       offersParts,
       offersTowing,
+      servicesMotorcycles,
       carMakes: (prev.makes as string[]) ?? [],
       carYearMin,
       carYearMax,

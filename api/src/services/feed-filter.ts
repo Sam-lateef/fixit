@@ -194,17 +194,24 @@ export function filterPostsForShop(
     if (post.serviceType === "PARTS" && !shop.offersParts) continue;
     if (post.serviceType === "TOWING" && !shop.offersTowing) continue;
 
-    if (post.carMake && shop.carMakes.length > 0) {
+    // Motorcycle posts gate on the shop's servicesMotorcycles toggle and skip
+    // car-specific filters (make/year/category) — the shop opts in to ALL
+    // motorcycle categories with one switch (no per-category opt-in).
+    const isMotoPost = post.vehicleType === "MOTORCYCLE";
+    if (isMotoPost && !shop.servicesMotorcycles) continue;
+
+    if (!isMotoPost && post.carMake && shop.carMakes.length > 0) {
       const shopMakes = shop.carMakes.map(normTag);
       if (!shopMakes.includes(normTag(post.carMake))) continue;
     }
 
-    if (post.carYear) {
+    if (!isMotoPost && post.carYear) {
       if (shop.carYearMin && post.carYear < shop.carYearMin) continue;
       if (shop.carYearMax && post.carYear > shop.carYearMax) continue;
     }
 
     if (
+      !isMotoPost &&
       post.serviceType === "REPAIR" &&
       post.repairCategory &&
       shop.repairCategories.length > 0
@@ -218,6 +225,7 @@ export function filterPostsForShop(
       if (!matched) continue;
     }
     if (
+      !isMotoPost &&
       post.serviceType === "PARTS" &&
       post.partsCategory &&
       shop.partsCategories.length > 0

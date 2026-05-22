@@ -11,6 +11,9 @@ export type ShopProfilePayload = {
   offersRepair: boolean;
   offersParts: boolean;
   offersTowing: boolean;
+  /** Whether the shop services motorcycles. Single toggle that opts the shop
+   *  into all motorcycle leads for whichever services (offers*) they provide. */
+  servicesMotorcycles: boolean;
   deliveryAvailable: boolean;
   rating: number;
   reviewCount: number;

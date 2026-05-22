@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { Prisma } from "@prisma/client";
-import { ServiceCategory, ServiceType } from "@prisma/client";
+import { ServiceCategory, ServiceType, VehicleType } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../db/prisma.js";
 import { notifyShopsNewPost } from "../services/notify-shops.js";
@@ -13,6 +13,7 @@ const createPostSchema = z
   .object({
     serviceType: z.nativeEnum(ServiceType),
     category: z.nativeEnum(ServiceCategory),
+    vehicleType: z.nativeEnum(VehicleType).optional(),
     title: z.string().min(1).max(150).optional(),
     repairCategory: z.string().max(80).optional(),
     partsCategory: z.string().max(80).optional(),
@@ -21,6 +22,7 @@ const createPostSchema = z
     carMake: z.string().max(80).optional(),
     carModel: z.string().max(80).optional(),
     carYear: z.number().int().min(1950).max(2035).optional(),
+    motorcycleDetails: z.string().min(1).max(200).optional(),
     deliveryNeeded: z.boolean().optional(),
     towingFromLat: z.number().optional(),
     towingFromLng: z.number().optional(),
@@ -45,6 +47,15 @@ const createPostSchema = z
         message: "districtId required for REPAIR and PARTS",
       });
     }
+    if (data.vehicleType === "MOTORCYCLE") {
+      if (!data.motorcycleDetails || data.motorcycleDetails.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["motorcycleDetails"],
+          message: "motorcycleDetails required when vehicleType=MOTORCYCLE",
+        });
+      }
+    }
   });
 
 const updatePostSchema = z
@@ -59,6 +70,7 @@ const updatePostSchema = z
     carMake: z.string().max(80).optional(),
     carModel: z.string().max(80).optional(),
     carYear: z.number().int().min(1950).max(2035).nullable().optional(),
+    motorcycleDetails: z.string().min(1).max(200).nullable().optional(),
     deliveryNeeded: z.boolean().optional(),
     districtId: z.string().min(1).optional(),
     towingFromLat: z.number().optional(),
@@ -126,19 +138,24 @@ export async function registerPostRoutes(fastify: FastifyInstance): Promise<void
         districtId = d.id;
       }
 
+      const isMoto = body.vehicleType === "MOTORCYCLE";
       const post = await prisma.post.create({
         data: {
           userId: request.userId,
           serviceType: body.serviceType,
           category: body.category,
+          vehicleType: body.vehicleType ?? "CAR",
           title: body.title,
           repairCategory: body.repairCategory,
           partsCategory: body.partsCategory,
           conditionNew: body.conditionNew ?? false,
           conditionUsed: body.conditionUsed ?? false,
-          carMake: body.carMake,
-          carModel: body.carModel,
-          carYear: body.carYear,
+          // For motorcycle posts, car-specific fields are nulled — clients
+          // shouldn't send them, but defensively drop them here too.
+          carMake: isMoto ? null : body.carMake,
+          carModel: isMoto ? null : body.carModel,
+          carYear: isMoto ? null : body.carYear,
+          motorcycleDetails: isMoto ? body.motorcycleDetails?.trim() : null,
           deliveryNeeded: body.deliveryNeeded ?? false,
           towingFromLat: body.towingFromLat,
           towingFromLng: body.towingFromLng,
@@ -248,6 +265,11 @@ export async function registerPostRoutes(fastify: FastifyInstance): Promise<void
       }
       if (body.carYear !== undefined) {
         data.carYear = body.carYear;
+      }
+      if (body.motorcycleDetails !== undefined) {
+        data.motorcycleDetails = body.motorcycleDetails
+          ? body.motorcycleDetails.trim()
+          : null;
       }
       if (body.deliveryNeeded !== undefined) {
         data.deliveryNeeded = body.deliveryNeeded;

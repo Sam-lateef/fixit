@@ -48,9 +48,11 @@ type JobReview = {
 
 type ThreadPost = {
   serviceType: string;
+  vehicleType?: "CAR" | "MOTORCYCLE";
   repairCategory: string | null;
   partsCategory: string | null;
   carMake: string | null;
+  motorcycleDetails: string | null;
   description: string;
   lat: number | null;
   lng: number | null;
@@ -126,7 +128,11 @@ function buildPostContext(
   if (cat) {
     parts.push(cat);
   }
-  if (bid.post.carMake) {
+  if (bid.post.vehicleType === "MOTORCYCLE") {
+    if (bid.post.motorcycleDetails?.trim()) {
+      parts.push(`🏍 ${bid.post.motorcycleDetails.trim()}`);
+    }
+  } else if (bid.post.carMake) {
     parts.push(bid.post.carMake);
   }
   return parts.join(" · ");

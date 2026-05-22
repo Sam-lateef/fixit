@@ -52,6 +52,7 @@ export default function ShopOfferStep(): React.ReactElement {
   const isCars = category === "CARS";
 
   const [selected, setSelected] = useState<Set<ServiceId>>(new Set());
+  const [servicesMotorcycles, setServicesMotorcycles] = useState(false);
 
   function toggle(id: ServiceId): void {
     setSelected((prev) => {
@@ -68,6 +69,7 @@ export default function ShopOfferStep(): React.ReactElement {
       offersRepair: selected.has("repair"),
       offersParts: selected.has("parts"),
       offersTowing: isCars && selected.has("towing"),
+      servicesMotorcycles: isCars ? servicesMotorcycles : false,
       // Non-CARS shops have no make/category preferences
       carMakes: isCars ? undefined : [],
       repairCategories: isCars ? undefined : [],
@@ -112,6 +114,25 @@ export default function ShopOfferStep(): React.ReactElement {
           );
         })}
       </View>
+
+      {isCars ? (
+        <View style={s.motoSection}>
+          <Pressable
+            style={[s.card, servicesMotorcycles && s.cardOn]}
+            onPress={() => setServicesMotorcycles((v) => !v)}
+          >
+            <Text style={[s.cardLabel, servicesMotorcycles && s.cardLabelOn]}>
+              {t("servicesMotorcyclesToggle")}
+            </Text>
+            {servicesMotorcycles ? (
+              <View style={s.check}>
+                <Text style={s.checkMark}>✓</Text>
+              </View>
+            ) : null}
+          </Pressable>
+          <Text style={s.motoHint}>{t("servicesMotorcyclesHint")}</Text>
+        </View>
+      ) : null}
 
       <Pressable
         style={[s.btn, selected.size === 0 && s.btnOff]}
@@ -162,4 +183,6 @@ const s = StyleSheet.create({
   },
   btnOff: { opacity: 0.4 },
   btnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  motoSection: { marginTop: 12, gap: 8 },
+  motoHint: { fontSize: 12, color: theme.muted, textAlign: "left" },
 });

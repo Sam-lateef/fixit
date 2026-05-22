@@ -11,6 +11,8 @@ export const en = {
     "Add EXPO_PUBLIC_FIREBASE_* keys from the Firebase console (same project as the API service account).",
   authGoogleClientHint:
     "Set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID (Web client ID from Google Cloud / Firebase).",
+  authGoogleBuildNotConfigured:
+    "Google sign-in was not included in this app build. Install a new test APK built after Firebase/Google env vars were set (EAS preview rebuild).",
   authExpoGoGoogleRedirectHint:
     "Expo Go: run `npx expo login`, set EXPO_PUBLIC_EXPO_PROJECT_FULL_NAME=@yourExpoUsername/fixit in .env, add Authorized redirect URI https://auth.expo.io/@yourExpoUsername/fixit to the Google Web client, restart Metro.",
   authGoogleNativeHint:
@@ -237,6 +239,16 @@ export const en = {
   openWorkshopInMaps: "Workshop location",
   towingCustomerPickup: "Customer pickup (tow truck)",
   locationPermissionNeeded: "Allow location access to drop your map pin.",
+  vehicleType: "Vehicle type",
+  vehicleTypeCar: "Car",
+  vehicleTypeMotorcycle: "Motorcycle",
+  motorcycleDetails: "Motorcycle make, model, year",
+  motorcycleDetailsPlaceholder: "e.g. Honda CB400 2018",
+  motorcycleDetailsRequired: "Enter motorcycle make / model / year",
+  servicesMotorcyclesToggle: "I service motorcycles",
+  servicesMotorcyclesHint:
+    "Receive motorcycle leads for whichever services (Repair / Parts / Towing) you offer.",
+  motorcycleBadge: "Motorcycle",
   serviceArea: "Your service area",
   serviceAreaHint: "Controls which requests appear in your feed",
   servedDistricts: "Districts you serve",
@@ -338,6 +350,8 @@ export const arIq: Record<keyof typeof en, string> = {
     "أضف مفاتيح EXPO_PUBLIC_FIREBASE_* من Firebase (نفس مشروع الـ API).",
   authGoogleClientHint:
     "عيّن EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID (معرّف عميل الويب من Google / Firebase).",
+  authGoogleBuildNotConfigured:
+    "تسجيل Google غير مضمّن في نسخة التطبيق هذه. ثبّت APK تجريبي جديد بعد ضبط متغيرات Firebase/Google في EAS.",
   authExpoGoGoogleRedirectHint:
     "Expo Go: نفّذ `npx expo login`، عيّن EXPO_PUBLIC_EXPO_PROJECT_FULL_NAME=@اسمك/fixit في .env، وأضف رابط إعادة التوجيه https://auth.expo.io/@اسمك/fixit في عميل Google للويب، ثم أعد تشغيل Metro.",
   authGoogleNativeHint:
@@ -561,6 +575,16 @@ export const arIq: Record<keyof typeof en, string> = {
   openWorkshopInMaps: "موقع الورشة",
   towingCustomerPickup: "موقع الزبون (سحب)",
   locationPermissionNeeded: "فعّل صلاحية الموقع لإضافة نقطة على الخريطة.",
+  vehicleType: "نوع المركبة",
+  vehicleTypeCar: "سيارة",
+  vehicleTypeMotorcycle: "دراجة نارية",
+  motorcycleDetails: "نوع وموديل وسنة الدراجة",
+  motorcycleDetailsPlaceholder: "مثال: هوندا CB400 2018",
+  motorcycleDetailsRequired: "اكتب نوع وموديل وسنة الدراجة",
+  servicesMotorcyclesToggle: "أصلّح/أوفّر قطع للدراجات النارية",
+  servicesMotorcyclesHint:
+    "تستلم طلبات الدراجات النارية حسب الخدمات التي تقدمها (إصلاح / قطع / سحب).",
+  motorcycleBadge: "دراجة نارية",
   serviceArea: "نطاق الخدمة",
   serviceAreaHint: "يتحكم بالطلبات التي تظهر لك",
   servedDistricts: "المناطق التي تخدمها",

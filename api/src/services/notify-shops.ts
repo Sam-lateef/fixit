@@ -28,8 +28,13 @@ export async function notifyShopsNewPost(post: Post): Promise<void> {
 
 async function notifyTowingShops(post: Post): Promise<void> {
   if (!post.lat || !post.lng) return;
+  const isMoto = post.vehicleType === "MOTORCYCLE";
   const shops = await prisma.shop.findMany({
-    where: { offersTowing: true, user: { fcmToken: { not: null } } },
+    where: {
+      offersTowing: true,
+      user: { fcmToken: { not: null } },
+      ...(isMoto ? { servicesMotorcycles: true } : {}),
+    },
     include: { user: { include: { district: true } } },
   });
   for (const shop of shops) {
@@ -59,6 +64,7 @@ async function notifyTowingShops(post: Post): Promise<void> {
 }
 
 async function notifyRepairPartsBatched(post: Post): Promise<void> {
+  const isMoto = post.vehicleType === "MOTORCYCLE";
   const serviceWhere =
     post.serviceType === "REPAIR"
       ? { offersRepair: true as const }
@@ -67,6 +73,7 @@ async function notifyRepairPartsBatched(post: Post): Promise<void> {
     where: {
       user: { fcmToken: { not: null } },
       ...serviceWhere,
+      ...(isMoto ? { servicesMotorcycles: true } : {}),
     },
     include: { user: { include: { district: true } } },
   });
@@ -109,22 +116,26 @@ async function shopShouldSeePost(
   if (post.serviceType === "REPAIR" && !shop.offersRepair) return false;
   if (post.serviceType === "PARTS" && !shop.offersParts) return false;
 
-  if (post.carMake && shop.carMakes.length > 0) {
+  // Motorcycle posts: gate on servicesMotorcycles, skip car-specific filters.
+  const isMoto = post.vehicleType === "MOTORCYCLE";
+  if (isMoto && !shop.servicesMotorcycles) return false;
+
+  if (!isMoto && post.carMake && shop.carMakes.length > 0) {
     const shopMakes = shop.carMakes.map(normTag);
     if (!shopMakes.includes(normTag(post.carMake))) return false;
   }
-  if (post.carYear) {
+  if (!isMoto && post.carYear) {
     if (shop.carYearMin && post.carYear < shop.carYearMin) return false;
     if (shop.carYearMax && post.carYear > shop.carYearMax) return false;
   }
-  if (post.serviceType === "REPAIR" && post.repairCategory) {
+  if (!isMoto && post.serviceType === "REPAIR" && post.repairCategory) {
     const shopCats = shop.repairCategories.map(normTag);
     const matched = isCatchAllCategory(post.repairCategory, REPAIR_CATEGORY_SLUGS)
       ? shopCats.includes("other")
       : shopCats.includes(normTag(post.repairCategory));
     if (!matched) return false;
   }
-  if (post.serviceType === "PARTS" && post.partsCategory) {
+  if (!isMoto && post.serviceType === "PARTS" && post.partsCategory) {
     const shopCats = shop.partsCategories.map(normTag);
     const matched = isCatchAllCategory(post.partsCategory, PARTS_CATEGORY_SLUGS)
       ? shopCats.includes("other")

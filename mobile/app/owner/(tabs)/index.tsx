@@ -42,6 +42,7 @@ type Post = {
   id: string;
   serviceType: string;
   category?: string;
+  vehicleType?: "CAR" | "MOTORCYCLE";
   title: string | null;
   description: string;
   status: string;
@@ -51,6 +52,7 @@ type Post = {
   carMake: string | null;
   carYear: number | null;
   carModel: string | null;
+  motorcycleDetails: string | null;
   photoUrls: string[];
   bids: Bid[];
 };
@@ -80,9 +82,14 @@ function categoryLabel(post: Post): string | null {
   return null;
 }
 
-/** Implementation guide §16 — My Posts card: car make, model, year. */
+/** Implementation guide §16 — My Posts card: vehicle line. For cars uses
+ *  make · model · year; for motorcycles uses the free-text motorcycleDetails. */
 function carDetailLine(post: Post): string | null {
   if (post.serviceType === "TOWING") return null;
+  if (post.vehicleType === "MOTORCYCLE") {
+    const moto = post.motorcycleDetails?.trim();
+    return moto && moto.length > 0 ? `🏍 ${moto}` : null;
+  }
   const parts: string[] = [];
   if (post.carMake?.trim()) parts.push(post.carMake.trim());
   if (post.carModel?.trim()) parts.push(post.carModel.trim());

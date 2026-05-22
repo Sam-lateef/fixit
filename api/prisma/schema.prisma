@@ -8,47 +8,47 @@ datasource db {
 }
 
 model User {
-  id           String             @id @default(cuid())
-  phone        String?            @unique
-  email        String?            @unique
-  firebaseUid  String?            @unique
-  name         String?
-  userType     UserType
+  id              String             @id @default(cuid())
+  phone           String?            @unique
+  email           String?            @unique
+  firebaseUid     String?            @unique
+  name            String?
+  userType        UserType
   /// Role for admin dashboard access. Regular users = USER; admins log in via email+password.
-  role         Role               @default(USER)
+  role            Role               @default(USER)
   /// bcrypt hash for admin email+password login. Null for regular users.
-  passwordHash String?
+  passwordHash    String?
   /// Non-null = banned. Blocks login, posting, and bidding. Data preserved.
-  bannedAt     DateTime?
-  bannedReason EnforcementReason?
-  bannedNotes  String?
-  city         String?
-  districtId   String?
-  district     District?          @relation(fields: [districtId], references: [id])
-  address      String?
+  bannedAt        DateTime?
+  bannedReason    EnforcementReason?
+  bannedNotes     String?
+  city            String?
+  districtId      String?
+  district        District?          @relation(fields: [districtId], references: [id])
+  address         String?
   /// Optional workshop GPS (shops). Used for maps + more accurate towing distance when set.
-  workshopLat  Float?
-  workshopLng  Float?
-  fcmToken     String?
+  workshopLat     Float?
+  workshopLng     Float?
+  fcmToken        String?
   /// Push + server-side copy: "en" or "ar-iq". Synced from the mobile app.
   preferredLocale String?
-  rating       Float              @default(0)
-  reviewCount  Int                @default(0)
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  rating          Float              @default(0)
+  reviewCount     Int                @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
 
-  posts           Post[]
-  shop            Shop?
-  ownedMedia      MediaAsset[]
-  reportsCreated  Report[]     @relation("ReportReporter")
-  reportsResolved Report[]     @relation("ReportResolver")
-  auditLogs       AuditLog[]   @relation("AuditActor")
-  hiddenMessages  Message[]    @relation("MessageHiddenBy")
-  lockedThreads   ChatThread[] @relation("ThreadLockedBy")
-  completedThreads ChatThread[] @relation("ThreadCompletedBy")
-  removedMedia    MediaAsset[] @relation("MediaRemovedBy")
-  jobReviewsGiven    JobReview[] @relation("JobReviewReviewer")
-  jobReviewsReceived JobReview[] @relation("JobReviewReviewee")
+  posts              Post[]
+  shop               Shop?
+  ownedMedia         MediaAsset[]
+  reportsCreated     Report[]     @relation("ReportReporter")
+  reportsResolved    Report[]     @relation("ReportResolver")
+  auditLogs          AuditLog[]   @relation("AuditActor")
+  hiddenMessages     Message[]    @relation("MessageHiddenBy")
+  lockedThreads      ChatThread[] @relation("ThreadLockedBy")
+  completedThreads   ChatThread[] @relation("ThreadCompletedBy")
+  removedMedia       MediaAsset[] @relation("MediaRemovedBy")
+  jobReviewsGiven    JobReview[]  @relation("JobReviewReviewer")
+  jobReviewsReceived JobReview[]  @relation("JobReviewReviewee")
 }
 
 enum Role {
@@ -73,9 +73,12 @@ model Shop {
   /// Public hero / storefront image (HTTPS URL from uploads).
   coverImageUrl String?
 
-  offersRepair Boolean @default(false)
-  offersParts  Boolean @default(false)
-  offersTowing Boolean @default(false)
+  offersRepair        Boolean @default(false)
+  offersParts         Boolean @default(false)
+  offersTowing        Boolean @default(false)
+  /// Whether this shop services motorcycles. When true, the shop receives leads
+  /// for posts with vehicleType=MOTORCYCLE that match its offers* booleans.
+  servicesMotorcycles Boolean @default(false)
 
   repairRadiusKm Int @default(15)
   partsRadiusKm  Int @default(20)
@@ -199,13 +202,19 @@ model Post {
 
   serviceType ServiceType
   category    ServiceCategory @default(CARS)
+  /// Vehicle type for the post. Motorcycle posts use motorcycleDetails free text
+  /// instead of carMake/carModel/carYear and a bespoke (small) category set.
+  vehicleType VehicleType     @default(CAR)
 
-  title          String?
-  repairCategory String?
-  partsCategory  String?
-  carMake        String?
-  carModel       String?
-  carYear        Int?
+  title             String?
+  repairCategory    String?
+  partsCategory     String?
+  carMake           String?
+  carModel          String?
+  carYear           Int?
+  /// Free-text "make model year" for motorcycle posts (vehicleType=MOTORCYCLE).
+  /// Required at the API layer when vehicleType=MOTORCYCLE; null otherwise.
+  motorcycleDetails String?
 
   conditionNew  Boolean @default(false)
   conditionUsed Boolean @default(false)
@@ -266,20 +275,20 @@ model Bid {
 }
 
 model ChatThread {
-  id         String             @id @default(cuid())
-  bidId      String             @unique
-  bid        Bid                @relation(fields: [bidId], references: [id])
-  messages   Message[]
-  lockedAt   DateTime?
-  lockedById String?
-  lockedBy   User?              @relation("ThreadLockedBy", fields: [lockedById], references: [id])
-  lockReason EnforcementReason?
-  lockNotes  String?
+  id            String             @id @default(cuid())
+  bidId         String             @unique
+  bid           Bid                @relation(fields: [bidId], references: [id])
+  messages      Message[]
+  lockedAt      DateTime?
+  lockedById    String?
+  lockedBy      User?              @relation("ThreadLockedBy", fields: [lockedById], references: [id])
+  lockReason    EnforcementReason?
+  lockNotes     String?
   completedAt   DateTime?
   completedById String?
   completedBy   User?              @relation("ThreadCompletedBy", fields: [completedById], references: [id])
   reviews       JobReview[]
-  createdAt  DateTime           @default(now())
+  createdAt     DateTime           @default(now())
 }
 
 model JobReview {
@@ -381,6 +390,11 @@ enum ServiceType {
   REPAIR
   PARTS
   TOWING
+}
+
+enum VehicleType {
+  CAR
+  MOTORCYCLE
 }
 
 enum ServiceCategory {
