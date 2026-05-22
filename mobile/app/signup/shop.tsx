@@ -64,11 +64,17 @@ export default function ShopOfferStep(): React.ReactElement {
   }
 
   function handleContinue(): void {
+    // Moto-only path: user toggled "I service motorcycles / tuktuks" but
+    // didn't pick any of Repair/Parts/Towing. Treat them as full-service
+    // for motorcycles — default all three offer flags so they receive
+    // every motorcycle lead. The shop can narrow later from their profile.
+    const isMotoOnly = isCars && servicesMotorcycles && selected.size === 0;
+
     const data = JSON.stringify({
       category,
-      offersRepair: selected.has("repair"),
-      offersParts: selected.has("parts"),
-      offersTowing: isCars && selected.has("towing"),
+      offersRepair: selected.has("repair") || isMotoOnly,
+      offersParts: selected.has("parts") || isMotoOnly,
+      offersTowing: isCars && (selected.has("towing") || isMotoOnly),
       servicesMotorcycles: isCars ? servicesMotorcycles : false,
       // Non-CARS shops have no make/category preferences
       carMakes: isCars ? undefined : [],
@@ -135,8 +141,11 @@ export default function ShopOfferStep(): React.ReactElement {
       ) : null}
 
       <Pressable
-        style={[s.btn, selected.size === 0 && s.btnOff]}
-        disabled={selected.size === 0}
+        style={[
+          s.btn,
+          selected.size === 0 && !servicesMotorcycles && s.btnOff,
+        ]}
+        disabled={selected.size === 0 && !servicesMotorcycles}
         onPress={handleContinue}
       >
         <Text style={s.btnText}>{t("continue")}</Text>
