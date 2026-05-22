@@ -64,10 +64,10 @@ export default function ShopOfferStep(): React.ReactElement {
   }
 
   function handleContinue(): void {
-    // Moto-only path: user toggled "I service motorcycles / tuktuks" but
-    // didn't pick any of Repair/Parts/Towing. Treat them as full-service
-    // for motorcycles — default all three offer flags so they receive
-    // every motorcycle lead. The shop can narrow later from their profile.
+    // Moto-only path: user toggled "Tuktuk / Motor" but didn't pick any of
+    // Repair / Parts / Towing. Treat them as full-service for motorcycles
+    // and skip the car-specific signup steps (makes, repair-cats,
+    // parts-cats). They route straight to shop-location.
     const isMotoOnly = isCars && servicesMotorcycles && selected.size === 0;
 
     const data = JSON.stringify({
@@ -75,15 +75,22 @@ export default function ShopOfferStep(): React.ReactElement {
       offersRepair: selected.has("repair") || isMotoOnly,
       offersParts: selected.has("parts") || isMotoOnly,
       offersTowing: isCars && (selected.has("towing") || isMotoOnly),
+      // Moto-only shop explicitly does NOT service cars. Other shops keep
+      // the default true (they service cars; motorcycles is additive).
+      servicesCars: isMotoOnly ? false : true,
       servicesMotorcycles: isCars ? servicesMotorcycles : false,
-      // Non-CARS shops have no make/category preferences
-      carMakes: isCars ? undefined : [],
-      repairCategories: isCars ? undefined : [],
-      partsCategories: isCars ? undefined : [],
+      // Moto-only and non-CARS shops have no car-make/category preferences.
+      carMakes: isCars && !isMotoOnly ? undefined : [],
+      repairCategories: isCars && !isMotoOnly ? undefined : [],
+      partsCategories: isCars && !isMotoOnly ? undefined : [],
     });
 
-    // Non-CARS shops: skip makes + category steps entirely → go straight to location
-    const nextPath = isCars ? "/signup/shop-makes" : "/signup/shop-location";
+    // Routing:
+    //   non-CARS  → straight to location (no car taxonomy applies)
+    //   moto-only → straight to location (car make/category not relevant)
+    //   regular   → through car make + repair-cats + parts-cats first
+    const nextPath =
+      !isCars || isMotoOnly ? "/signup/shop-location" : "/signup/shop-makes";
 
     router.push({
       pathname: nextPath as Href,

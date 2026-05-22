@@ -197,8 +197,11 @@ export function filterPostsForShop(
     // Motorcycle posts gate on the shop's servicesMotorcycles toggle and skip
     // car-specific filters (make/year/category) — the shop opts in to ALL
     // motorcycle categories with one switch (no per-category opt-in).
+    // Car posts gate on servicesCars (default true) so a pure motorcycle /
+    // tuktuk shop never sees car requests.
     const isMotoPost = post.vehicleType === "MOTORCYCLE";
     if (isMotoPost && !shop.servicesMotorcycles) continue;
+    if (!isMotoPost && !shop.servicesCars) continue;
 
     if (!isMotoPost && post.carMake && shop.carMakes.length > 0) {
       const shopMakes = shop.carMakes.map(normTag);

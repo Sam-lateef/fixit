@@ -76,6 +76,10 @@ model Shop {
   offersRepair        Boolean @default(false)
   offersParts         Boolean @default(false)
   offersTowing        Boolean @default(false)
+  /// Whether this shop services cars. Default true (existing shops are
+  /// car-first). Set to false for pure motorcycle / tuktuk shops that
+  /// don't take car work — feed and notify skip CAR posts when false.
+  servicesCars        Boolean @default(true)
   /// Whether this shop services motorcycles. When true, the shop receives leads
   /// for posts with vehicleType=MOTORCYCLE that match its offers* booleans.
   servicesMotorcycles Boolean @default(false)

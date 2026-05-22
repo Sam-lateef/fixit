@@ -11,6 +11,10 @@ export type ShopProfilePayload = {
   offersRepair: boolean;
   offersParts: boolean;
   offersTowing: boolean;
+  /** Whether the shop services cars. Default true. Set false for pure
+   *  motorcycle / tuktuk shops that don't take car work — feed and notify
+   *  skip CAR posts when false. */
+  servicesCars: boolean;
   /** Whether the shop services motorcycles. Single toggle that opts the shop
    *  into all motorcycle leads for whichever services (offers*) they provide. */
   servicesMotorcycles: boolean;

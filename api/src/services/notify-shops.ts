@@ -33,7 +33,9 @@ async function notifyTowingShops(post: Post): Promise<void> {
     where: {
       offersTowing: true,
       user: { fcmToken: { not: null } },
-      ...(isMoto ? { servicesMotorcycles: true } : {}),
+      ...(isMoto
+        ? { servicesMotorcycles: true }
+        : { servicesCars: true }),
     },
     include: { user: { include: { district: true } } },
   });
@@ -73,7 +75,9 @@ async function notifyRepairPartsBatched(post: Post): Promise<void> {
     where: {
       user: { fcmToken: { not: null } },
       ...serviceWhere,
-      ...(isMoto ? { servicesMotorcycles: true } : {}),
+      ...(isMoto
+        ? { servicesMotorcycles: true }
+        : { servicesCars: true }),
     },
     include: { user: { include: { district: true } } },
   });
@@ -116,9 +120,10 @@ async function shopShouldSeePost(
   if (post.serviceType === "REPAIR" && !shop.offersRepair) return false;
   if (post.serviceType === "PARTS" && !shop.offersParts) return false;
 
-  // Motorcycle posts: gate on servicesMotorcycles, skip car-specific filters.
+  // Vehicle-type gates: shop opts in to cars (default) and / or motorcycles.
   const isMoto = post.vehicleType === "MOTORCYCLE";
   if (isMoto && !shop.servicesMotorcycles) return false;
+  if (!isMoto && !shop.servicesCars) return false;
 
   if (!isMoto && post.carMake && shop.carMakes.length > 0) {
     const shopMakes = shop.carMakes.map(normTag);

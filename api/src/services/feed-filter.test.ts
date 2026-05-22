@@ -17,6 +17,7 @@ function shop(over: Partial<ShopForFeed> = {}): ShopForFeed {
     offersRepair: true,
     offersParts: false,
     offersTowing: false,
+    servicesCars: true,
     servicesMotorcycles: false,
     repairRadiusKm: 10,
     partsRadiusKm: 20,

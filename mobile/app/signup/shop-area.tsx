@@ -27,6 +27,9 @@ export default function ShopAreaStep(): React.ReactElement {
   const offersRepair = Boolean(prev.offersRepair);
   const offersParts = Boolean(prev.offersParts);
   const offersTowing = Boolean(prev.offersTowing);
+  // servicesCars defaults true (existing behavior) unless explicitly set false
+  // by the moto-only signup path.
+  const servicesCars = prev.servicesCars === false ? false : true;
   const servicesMotorcycles = Boolean(prev.servicesMotorcycles);
   const cityFromPrev = (prev.city as string | undefined) ?? "";
   const homeDistrictId = (prev.districtId as string | undefined) ?? "";
@@ -109,6 +112,7 @@ export default function ShopAreaStep(): React.ReactElement {
       offersRepair,
       offersParts,
       offersTowing,
+      servicesCars,
       servicesMotorcycles,
       carMakes: (prev.makes as string[]) ?? [],
       carYearMin,
