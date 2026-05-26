@@ -4,7 +4,15 @@
 
 ## Open
 
-- (none — add when something regresses)
+### Arabic chat bubble clips last glyph/word (thread UI only) — Android 16 (2026-05)
+
+- **Symptom:** In **chat thread** only, Arabic messages lose the last character (one word) or last word (sentence). Push notification center and counterparty see full text. Android **16** / Samsung One UI (same class as S22 Ultra report).
+- **Repro:** `ar-iq` app language (or Arabic message body) → send/receive in `/chat/[threadId]` → compare to notification shade.
+- **Status:** open — padding/RTL pass did not fix on tester S22; structural bubble + diagnostics added
+- **Root cause:** React Native **0.81.x** on **Android 15+** sizes `Text` with **advance width** while the OS draws **wider glyph ink** (Arabic/RTL worst). Upstream [#53286](https://github.com/facebook/react-native/issues/53286), [#55220](https://github.com/facebook/react-native/issues/55220). Copy/API correct; only thread `Text` paint clips (last char on one word, last word on a sentence).
+- **Proper fix:** `patch-package` applies RN [#54721](https://github.com/facebook/react-native/pull/54721) to `TextLayoutManager.kt` — `patches/react-native+0.81.5.patch` (visual bounds + `setUseBoundsForWidth` on API 35+). **Requires native rebuild** (`eas build` / `expo run:android`), not JS-only OTA.
+- **App layer:** `ChatMessageBubble` + long-press **Copy** (`message-actions.ts`). Debug: `EXPO_PUBLIC_DEBUG_CHAT_BUBBLE_LAYOUT=true` → long-press → Layout debug.
+- **Not a fix:** trailing spaces, bubble padding, sibling `View` spacers (shell slack can be 48px+ while Text still clips).
 
 ## Resolved
 

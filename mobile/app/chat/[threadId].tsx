@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { io, type Socket } from "socket.io-client";
 
 import { BrandHeaderGradient } from "@/components/BrandHeaderGradient";
+import { ChatMessageBubble } from "@/components/ChatMessageBubble";
 import { apiFetch } from "@/lib/api";
 import { getApiBaseUrl } from "@/lib/api-base";
 import { getToken } from "@/lib/auth-storage";
@@ -415,6 +416,7 @@ export default function ChatThreadScreen(): React.ReactElement {
         data={messages}
         keyExtractor={(m) => m.id}
         contentContainerStyle={styles.msgList}
+        removeClippedSubviews={Platform.OS !== "android"}
         onContentSizeChange={() =>
           listRef.current?.scrollToEnd({ animated: true })
         }
@@ -500,11 +502,12 @@ export default function ChatThreadScreen(): React.ReactElement {
                 mine ? styles.bubbleWrapMine : styles.bubbleWrapThem,
               ]}
             >
-              <View style={[styles.bubble, mine && styles.bubbleMine]}>
-                <Text style={[styles.bubbleText, mine && styles.bubbleTextMine]}>
-                  {m.content}
-                </Text>
-              </View>
+              <ChatMessageBubble
+                messageId={m.id}
+                content={m.content}
+                mine={mine}
+                locale={locale}
+              />
               <Text style={[styles.timestamp, mine && styles.timestampMine]}>
                 {formatTime(m.createdAt)}
               </Text>
@@ -590,23 +593,9 @@ const styles = StyleSheet.create({
   acceptedText: { fontSize: 12, fontWeight: "700", color: theme.primary },
 
   msgList: { padding: 12, paddingBottom: 8 },
-  bubbleWrap: { marginBottom: 8, maxWidth: "88%" },
+  bubbleWrap: { marginBottom: 8, maxWidth: "88%", overflow: "visible" },
   bubbleWrapMine: { alignSelf: "flex-end" },
   bubbleWrapThem: { alignSelf: "flex-start" },
-  bubble: {
-    backgroundColor: theme.surface,
-    // Extra horizontal padding + overflow:'visible' guards Arabic last-char
-    // clipping on Samsung One UI 8 (RN underestimates Arabic text width).
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: theme.border,
-    overflow: "visible",
-  },
-  bubbleMine: { backgroundColor: theme.primaryMid, borderColor: theme.primaryMid },
-  bubbleText: { color: theme.text, fontSize: 15 },
-  bubbleTextMine: { color: "#fff" },
   timestamp: { fontSize: 11, color: theme.mutedLight, marginTop: 3, alignSelf: "flex-start" },
   timestampMine: { alignSelf: "flex-end" },
   messageReportBtn: {
