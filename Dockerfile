@@ -40,7 +40,7 @@ ENV VITE_ADMIN_LOGIN_URL=$VITE_ADMIN_LOGIN_URL
 RUN npm run build
 
 WORKDIR /repo
-RUN npm prune --omit=dev
+RUN npm prune --omit=dev --ignore-scripts
 
 WORKDIR /repo/api
 ENV NODE_ENV=production
