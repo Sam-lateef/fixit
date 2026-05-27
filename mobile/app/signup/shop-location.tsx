@@ -28,6 +28,13 @@ export default function ShopLocationStep(): React.ReactElement {
   const raw = useLocalSearchParams<{ data?: string }>();
   const prev = parseSignupWizardData(raw.data);
 
+  // Towing-only shops are mobile providers — no fixed physical address is
+  // required (city + optional district are still mandatory).
+  const isTowingOnly =
+    Boolean(prev.offersTowing) &&
+    !Boolean(prev.offersRepair) &&
+    !Boolean(prev.offersParts);
+
   const [shopName, setShopName] = useState("");
   const [city, setCity] = useState("");
   const [districtId, setDistrictId] = useState<string | null>(null);
@@ -103,7 +110,7 @@ export default function ShopLocationStep(): React.ReactElement {
       setErr(t("city"));
       return;
     }
-    if (!address.trim()) {
+    if (!isTowingOnly && !address.trim()) {
       setErr(t("addressRequired"));
       return;
     }
@@ -185,7 +192,9 @@ export default function ShopLocationStep(): React.ReactElement {
           </>
         )}
 
-        <Text style={s.label}>{t("shopAddress")}</Text>
+        <Text style={s.label}>
+          {isTowingOnly ? t("addressOptional") : t("shopAddress")}
+        </Text>
         <TextInput
           style={[
             s.input,
@@ -195,7 +204,7 @@ export default function ShopLocationStep(): React.ReactElement {
           ]}
           value={address}
           onChangeText={setAddress}
-          placeholder={t("shopAddress")}
+          placeholder={isTowingOnly ? t("addressOptional") : t("shopAddress")}
           placeholderTextColor={theme.mutedLight}
         />
 

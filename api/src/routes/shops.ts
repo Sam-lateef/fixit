@@ -54,12 +54,37 @@ const createShopBody = z.object({
   partsNationwide: z.boolean(),
   city: z.string().min(1),
   districtId: z.union([z.string().min(1), z.null()]).optional(),
-  address: z.string().min(1).max(500),
+  // Address is allowed to be empty here; the superRefine below requires it
+  // for everything EXCEPT towing-only shops (mobile providers — no fixed
+  // physical address). User.address is nullable in Prisma.
+  address: z.string().max(500),
   workshopLat: workshopLatField.optional(),
   workshopLng: workshopLngField.optional(),
 });
 
-const createShopSchema = createShopBody.superRefine(refineWorkshopCoordsTogether);
+function refineAddressUnlessTowingOnly(
+  data: {
+    offersRepair: boolean;
+    offersParts: boolean;
+    offersTowing: boolean;
+    address: string;
+  },
+  ctx: z.RefinementCtx,
+): void {
+  const isTowingOnly =
+    data.offersTowing && !data.offersRepair && !data.offersParts;
+  if (!isTowingOnly && data.address.trim().length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["address"],
+      message: "Address is required",
+    });
+  }
+}
+
+const createShopSchema = createShopBody
+  .superRefine(refineAddressUnlessTowingOnly)
+  .superRefine(refineWorkshopCoordsTogether);
 
 const coverImageUrlSchema = z
   .union([z.string().max(2048), z.null()])
@@ -106,16 +131,19 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
       if (!hasOffer) {
         return reply.status(400).send({ error: "Select at least one service" });
       }
+      // Towing-only shops may submit empty address — persist null so it
+      // round-trips cleanly through the public shop payload.
+      const trimmedAddress = body.address.trim();
       const userCreateData: {
         city: string;
         districtId: string | null;
-        address: string;
+        address: string | null;
         workshopLat?: number | null;
         workshopLng?: number | null;
       } = {
         city: body.city,
         districtId: body.districtId ?? null,
-        address: body.address,
+        address: trimmedAddress.length > 0 ? trimmedAddress : null,
       };
       if (body.workshopLat !== undefined && body.workshopLng !== undefined) {
         userCreateData.workshopLat = body.workshopLat;
@@ -291,10 +319,18 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
       const nameMerged =
         nameFromRaw !== undefined && nameFromRaw.length > 0 ? nameFromRaw : body.name;
 
+      // Address: empty string → null so towing-only shops can clear it.
+      // undefined (not in patch) → no change.
+      const addressForUpdate =
+        typeof body.address === "string"
+          ? body.address.trim().length > 0
+            ? body.address.trim()
+            : null
+          : undefined;
       const userPatch = pickDefined({
         city: body.city,
         districtId: body.districtId,
-        address: body.address,
+        address: addressForUpdate,
         workshopLat: body.workshopLat,
         workshopLng: body.workshopLng,
       });

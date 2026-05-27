@@ -26,6 +26,8 @@ export default function ShopAreaStep(): React.ReactElement {
   const offersRepair = Boolean(prev.offersRepair);
   const offersParts = Boolean(prev.offersParts);
   const offersTowing = Boolean(prev.offersTowing);
+  // Towing-only shops (mobile providers) don't require a fixed address.
+  const isTowingOnly = offersTowing && !offersRepair && !offersParts;
   // servicesCars defaults true (existing behavior) unless explicitly set false
   // by the moto-only signup path.
   const servicesCars = prev.servicesCars === false ? false : true;
@@ -92,7 +94,7 @@ export default function ShopAreaStep(): React.ReactElement {
   function handleCreate(): void {
     setErr("");
     const addr = String(prev.address ?? "").trim();
-    if (addr.length === 0) {
+    if (!isTowingOnly && addr.length === 0) {
       setErr(t("addressRequired"));
       return;
     }
