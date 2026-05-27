@@ -18,6 +18,10 @@ const deleteAccountBodySchema = z.object({
 const updateMeSchema = z
   .object({
     name: z.string().min(1).max(120).optional(),
+    // Phone MUST stay populated for shop owners (customers contact them via
+    // user.phone). The regex disallows null/empty already; the handler below
+    // adds a belt-and-suspenders check against shop owners clearing it via
+    // some future schema relaxation. Update User.phone only — never set to null.
     phone: z.string().regex(E164_WHATSAPP_OTP, e164WhatsAppOtpHint()).optional(),
     city: z.string().min(1).max(80).optional(),
     districtId: z.union([z.string().min(1).max(64), z.null()]).optional(),
@@ -66,6 +70,22 @@ export async function registerUserRoutes(fastify: FastifyInstance): Promise<void
         patch.name = data.name;
       }
       if (data.phone !== undefined) {
+        // Defense-in-depth: the schema regex already rejects empty/null, but
+        // if someone ever loosens it, this still blocks shop owners from
+        // clearing their phone. Customer-facing requirement: every shop is
+        // contactable by phone.
+        if (typeof data.phone !== "string" || data.phone.trim().length === 0) {
+          const ownsShop = await prisma.shop.findUnique({
+            where: { userId: request.userId },
+            select: { id: true },
+          });
+          if (ownsShop) {
+            return reply.status(400).send({
+              error: "Shops must have a phone number",
+              field: "phone",
+            });
+          }
+        }
         const taken = await prisma.user.findFirst({
           where: { phone: data.phone, id: { not: request.userId } },
           select: { id: true },
