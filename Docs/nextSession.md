@@ -1,6 +1,92 @@
 # Next Session — Handoff Brief
 
-> Overwritten by `/end` each session. Last updated: 2026-05-22 on Windows.
+> Overwritten by `/end` each session. Last updated: **2026-05-27 on Windows** (pre-ship audit batch + API deploy + Android preview build queued).
+
+---
+
+## 2026-05-27 — Latest Windows session → Mac handoff
+
+**Read this section first. The 2026-05-22 brief below is older and largely still valid for items not yet ticked.**
+
+### What landed today (8 new commits, all pushed — `origin/master` tip = `e2e78da`)
+
+| Commit | What |
+|--------|------|
+| `2e04ca6` | **Pre-ship audit batch (37 files)** — see `Docs/debugs.md` + `Docs/specs.md` for the full list. Headline: bootstrap retry screen (no more /auth dump on flaky network), 15s `apiFetch` timeout, double-tap race guards on OTP / acceptBid / deletePost / bid submit / withdraw, safe JSON parse on signup wizard, PII pruned from `GET /shops/by-id/:id`, `GET /posts/:id` now gated on owner-or-SHOP, `PUT /bids/:id` accepts `null` to clear date fields, all route params switched to `zod.safeParse()`, render-time `router.back/replace` moved into useEffect, chat socket no longer reconnects on me/meta changes + ack timeout + REST fallback, silent load errors surfaced, owner profile no longer overwrites mid-edit fields, `hoursLeft` uses `Math.floor` + `<1h` sentinel, shop tab bar respects safe-area inset, `+not-found` branded, dead code removed, new i18n keys in `mobile/lib/strings.ts`. |
+| `d8cee34` | Root `postinstall` now uses `scripts/postinstall-patch.js` guard — skips `patch-package` when not installed (was crashing Fly Docker builds). |
+| `67dfcde` | Dockerfile: `COPY scripts ./scripts` before `npm ci` so the guard above resolves. |
+| `2c50f05` | Dockerfile: `--ignore-scripts` on the rollup linux-x64 install (mobile postinstall is irrelevant for API image). |
+| `e2e78da` | Dockerfile: `--ignore-scripts` on `npm prune --omit=dev` (same reason). |
+
+Plus 3 commits from the prior Windows session that also went up in this push: `7c3e375`, `a2e3731`, `3ea305b` (RN Android 15 text-clip patch + EAS hoist fixes).
+
+### State of the world right now
+
+- **API:** Deployed to Fly. Image `01KSM6PPSBDD4BQEMAZYW0DGB6` (248 MB), both machines healthy, `https://fixit-api.fly.dev/health` → `{"ok":true}`. **No DB migration needed** (bid date columns were already nullable in Prisma).
+- **EAS Android preview build:** Queued from Windows ~10:56 local. ID `a8f7b904-f975-429b-8cb8-830ff926ef5e`. Profile `preview` (internal APK), version `1.0.0` versionCode `3`, commit `e2e78da`. Link: <https://expo.dev/accounts/ekkoo/projects/fixit/builds/a8f7b904-f975-429b-8cb8-830ff926ef5e>. Should be done ~11:12–11:22 Baghdad time.
+- **EAS quota (ekkoo, Free plan, billing period May 1 → Jun 1 UTC):**
+  - **iOS: 15/15 used — CAPPED until June 1.** Cannot trigger a new EAS iOS build this billing cycle. Either wait, upgrade Starter ($19) → build → cancel, or build locally with `npx expo run:ios --device` on the Mac (doesn't touch EAS quota).
+  - Android: 14/15 used. One slot left — save it for a fix-up build if the preview surfaces a real bug.
+  - Reset: **Mon Jun 1, 03:00 Baghdad time** (= 00:00 UTC).
+- **Unpushed / uncommitted:** none. Tree clean.
+
+### Mac setup (run these on first pull)
+
+```sh
+git fetch origin
+git pull origin master            # expect: Updating 3089207..e2e78da, 8 commits
+
+# .env files are gitignored — copy mobile/.env over manually from Windows if you haven't already.
+# Mobile env keys needed are listed in mobile/.env.example.
+
+cd api && npm install && npx prisma generate
+cd ../mobile && npm install        # will trigger root postinstall — should print one of:
+                                   #   "[root postinstall] patch-package not installed (API-only build); skipping"  OR
+                                   #   "[root postinstall] react-native ... skipping"  OR
+                                   #   patch-package output applying mobile/patches/react-native+0.81.5.patch
+                                   # All three are fine.
+```
+
+### iOS path on Mac (because EAS iOS is locked until Jun 1)
+
+```sh
+cd mobile
+npx expo run:ios --device          # builds locally via Xcode, installs on connected iPhone.
+                                   # Does NOT touch EAS build quota.
+                                   # Requires Xcode + an Apple Developer cert configured in Xcode.
+```
+
+If `expo run:ios` fails on the first run, the usual culprits are:
+- Cocoapods missing → `sudo gem install cocoapods` then `cd ios && pod install`.
+- Xcode signing → open `mobile/ios/FixIt.xcworkspace`, select the FixIt target, Signing & Capabilities → pick your Team.
+
+### Test plan once Android APK is in hand (priority order)
+
+1. **Auth bootstrap resilience** — turn off wifi mid-app-open. Should now show a "Couldn't reach the server / Try again / Sign out" screen instead of dumping you to `/auth`. Turn wifi back on → Try again → resumes normally.
+2. **API timeouts** — same wifi-off trick: any API call (e.g. open shop feed) should fail with "Request timed out" toast within ~15s, not hang forever.
+3. **Bid date clear** — shop creates a bid with a service date, then edits and *clears* the date → save → reload → date field is actually empty. (Previously the empty value was sent as `undefined` and ignored.)
+4. **Double-tap races** — mash the verify button on OTP screen, mash "Accept" on a bid, mash "Delete" on a post. None should produce duplicate API calls / 409s.
+5. **Public shop payload** — open any other shop's profile → network response for `GET /shops/by-id/:id` should NOT contain `fcmToken`, `preferredLocale`, `bannedAt`, or `role`.
+6. **Cross-owner post enumeration** — as an *owner* account, hit `GET /api/v1/posts/<some-other-owner's-post-id>` directly → should 403, not return the post.
+7. **Hours-left label** — find any post under 1 hour from expiry → should show `<1h`, not `0h` or `1h`.
+8. **Shop tab bar inset** — on a notched iPhone, the shop tab bar should now clear the home indicator (mirrors owner tabs that already did).
+9. **404 page** — manually navigate to `/foo` → branded "Not found" screen with "Go home" CTA in user's language.
+10. **Arabic chat bubble** — long Arabic message ending in harakat. **Note:** the persistent clipping on *one specific Android device* (the patch wasn't fully effective) is still expected; we shipped anyway. iOS should be fine.
+11. **i18n strings added today** — `requestTimedOut`, `networkErrorTitle`, `networkErrorBody`, `signOut`, `loadFailed`, `invalidShop`, `lessThanOneHourLeft`, `notFoundTitle`, `notFoundBody`, `goHome` — check Arabic translations look right (I added them but a native-Arabic eye is better than mine).
+
+### Things deliberately *not* done today (carrying forward)
+
+The 2026-05-22 todos list (APNs key upload, `servicesCars` Switch in shop profile editor, Iraqi car catalog gaps, sub-district coverage, Supabase migration, AuditLog anonymization, Apple Sign-In, Facebook auth) all still apply — **see below**. None of today's work touched them.
+
+### Don't forget
+
+- **iOS push testing still needs APNs key uploaded** (was already the top action item from 2026-05-22, still not done).
+- The `ChatMessageBubble.tsx` `textBreakStrategy` move from style → prop was a real fix (RN silently drops unknown style keys) but it did *not* resolve the device-specific Android clipping. We shipped knowing that limitation.
+- Push to `origin/master` already done. EAS build was uploaded from local working dir (not pulled from git), so the build has everything even though the push is fresh.
+
+---
+
+## (Historical) 2026-05-22 brief
 
 ## Pick up here
 
