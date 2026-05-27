@@ -14,12 +14,14 @@ import {
 
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { WizardProgressBar } from "@/components/WizardProgressBar";
+import { apiFetch } from "@/lib/api";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { useI18n } from "@/lib/i18n";
 import { openGoogleMapsAt } from "@/lib/open-google-maps";
 import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import { IRAQ_OWNER_CITIES, ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
+import { isValidWhatsappE164 } from "@/lib/whatsapp-e164";
 
 type District = { id: string; name: string; nameAr: string; city: string };
 
@@ -39,6 +41,7 @@ export default function ShopLocationStep(): React.ReactElement {
   const [city, setCity] = useState("");
   const [districtId, setDistrictId] = useState<string | null>(null);
   const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
   const [workshopLat, setWorkshopLat] = useState<number | null>(null);
   const [workshopLng, setWorkshopLng] = useState<number | null>(null);
 
@@ -47,6 +50,25 @@ export default function ShopLocationStep(): React.ReactElement {
   const [err, setErr] = useState("");
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
   const [districtPickerOpen, setDistrictPickerOpen] = useState(false);
+
+  // Pre-fill phone from existing user record. OTP-auth users already have a
+  // phone here; Google sign-in users land with phone === null and must
+  // enter one before completing shop signup (customers contact via phone).
+  useEffect(() => {
+    void (async () => {
+      try {
+        const { user } = await apiFetch<{ user: { phone: string | null } }>(
+          "/api/v1/users/me",
+        );
+        if (user.phone && user.phone.length > 0) {
+          setPhone(user.phone);
+        }
+      } catch {
+        // Network failure here is non-fatal — user can still type their
+        // phone manually. If they leave it blank, handleContinue blocks them.
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (!city) {
@@ -114,6 +136,15 @@ export default function ShopLocationStep(): React.ReactElement {
       setErr(t("addressRequired"));
       return;
     }
+    const trimmedPhone = phone.trim();
+    if (trimmedPhone.length === 0) {
+      setErr(t("phoneRequired"));
+      return;
+    }
+    if (!isValidWhatsappE164(trimmedPhone)) {
+      setErr(t("phoneInvalidFormat"));
+      return;
+    }
 
     const merged: Record<string, unknown> = {
       ...prev,
@@ -121,6 +152,7 @@ export default function ShopLocationStep(): React.ReactElement {
       city,
       districtId: districtId ?? null,
       address: address.trim(),
+      phone: trimmedPhone,
     };
     if (workshopLat != null && workshopLng != null) {
       merged.workshopLat = workshopLat;
@@ -206,6 +238,19 @@ export default function ShopLocationStep(): React.ReactElement {
           onChangeText={setAddress}
           placeholder={isTowingOnly ? t("addressOptional") : t("shopAddress")}
           placeholderTextColor={theme.mutedLight}
+        />
+
+        <Text style={s.label}>{t("phoneWhatsApp")}</Text>
+        <Text style={s.hintInline}>{t("phoneInvalidFormat")}</Text>
+        <TextInput
+          style={[s.input, { textAlign: "left", writingDirection: "ltr" }]}
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="+9647XXXXXXXXX"
+          placeholderTextColor={theme.mutedLight}
+          keyboardType="phone-pad"
+          autoCapitalize="none"
+          autoCorrect={false}
         />
 
         <Text style={s.label}>{t("workshopMapPin")}</Text>

@@ -131,6 +131,11 @@ export default function ShopAreaStep(): React.ReactElement {
       servedDistrictIds: serveAll ? [] : Array.from(selected),
       partsNationwide: offersParts ? partsNationwide : false,
     };
+    // Forward phone collected on shop-location.tsx. API requires non-null
+    // user.phone for shops so customers can contact them.
+    if (typeof prev.phone === "string" && prev.phone.trim().length > 0) {
+      body.phone = prev.phone.trim();
+    }
     const wLat = prev.workshopLat;
     const wLng = prev.workshopLng;
     if (typeof wLat === "number" && typeof wLng === "number") {

@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { ServiceCategory } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../db/prisma.js";
+import { E164_WHATSAPP_OTP } from "../lib/phone.js";
 import {
   refineWorkshopCoordsTogether,
   workshopLatField,
@@ -58,6 +59,14 @@ const createShopBody = z.object({
   // for everything EXCEPT towing-only shops (mobile providers — no fixed
   // physical address). User.address is nullable in Prisma.
   address: z.string().max(500),
+  // Phone is optional in the request body (because OTP-auth users already
+  // have user.phone populated from the OTP flow), but the POST handler
+  // requires the FINAL user.phone to be non-null and E.164-valid.
+  // Google-sign-in users land with phone === null and must supply one here.
+  phone: z
+    .string()
+    .regex(E164_WHATSAPP_OTP, "Phone must be E.164 (+9647... or +90...)")
+    .optional(),
   workshopLat: workshopLatField.optional(),
   workshopLng: workshopLngField.optional(),
 });
@@ -131,6 +140,24 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
       if (!hasOffer) {
         return reply.status(400).send({ error: "Select at least one service" });
       }
+      // Shops must be reachable by phone. OTP-auth users already have
+      // user.phone set; Google-sign-in users land with null and must
+      // include `phone` in this request. We resolve the final value here
+      // and reject if it would still be null.
+      const currentUser = await prisma.user.findUnique({
+        where: { id: request.userId },
+        select: { phone: true },
+      });
+      const phoneToSet =
+        typeof body.phone === "string" && body.phone.trim().length > 0
+          ? body.phone.trim()
+          : currentUser?.phone ?? null;
+      if (!phoneToSet) {
+        return reply.status(400).send({
+          error: "Phone number is required for shops",
+          field: "phone",
+        });
+      }
       // Towing-only shops may submit empty address — persist null so it
       // round-trips cleanly through the public shop payload.
       const trimmedAddress = body.address.trim();
@@ -138,6 +165,7 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
         city: string;
         districtId: string | null;
         address: string | null;
+        phone?: string;
         workshopLat?: number | null;
         workshopLng?: number | null;
       } = {
@@ -145,14 +173,37 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
         districtId: body.districtId ?? null,
         address: trimmedAddress.length > 0 ? trimmedAddress : null,
       };
+      // Only patch phone when the body actually contained one (to avoid
+      // re-writing the same value and tripping the unique constraint via
+      // case/whitespace differences from upstream proxies).
+      if (
+        typeof body.phone === "string" &&
+        body.phone.trim().length > 0 &&
+        body.phone.trim() !== currentUser?.phone
+      ) {
+        userCreateData.phone = body.phone.trim();
+      }
       if (body.workshopLat !== undefined && body.workshopLng !== undefined) {
         userCreateData.workshopLat = body.workshopLat;
         userCreateData.workshopLng = body.workshopLng;
       }
-      await prisma.user.update({
-        where: { id: request.userId },
-        data: userCreateData,
-      });
+      try {
+        await prisma.user.update({
+          where: { id: request.userId },
+          data: userCreateData,
+        });
+      } catch (e) {
+        // Prisma P2002 = unique constraint failure (User.phone is @unique).
+        // Surface a friendly error instead of leaking the DB-level message.
+        const code = (e as { code?: string } | null)?.code;
+        if (code === "P2002") {
+          return reply.status(409).send({
+            error: "This phone number is already linked to another account.",
+            field: "phone",
+          });
+        }
+        throw e;
+      }
       const shop = await prisma.shop.create({
         data: {
           userId: request.userId,
