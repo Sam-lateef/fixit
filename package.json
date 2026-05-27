@@ -7,7 +7,7 @@
     "mobile"
   ],
   "scripts": {
-    "postinstall": "patch-package",
+    "postinstall": "node scripts/postinstall-patch.js",
     "dev": "concurrently -n api,mobile -c cyan,magenta \"npm run dev:api\" \"npm run dev:mobile\"",
     "dev:api": "npm run dev -w api",
     "dev:app": "npm run dev -w app",
