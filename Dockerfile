@@ -10,6 +10,8 @@ COPY package.json package-lock.json ./
 COPY api/package.json ./api/
 COPY app/package.json ./app/
 COPY mobile/package.json ./mobile/
+# Root postinstall guard (skips patch-package when mobile devDeps absent).
+COPY scripts ./scripts
 
 # Install workspaces needed to build API + Vite web app; pruned after build.
 RUN --mount=type=cache,target=/root/.npm \
