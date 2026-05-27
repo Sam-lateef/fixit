@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/root/.npm \
 # binary may be missing from the lockfile, breaking `vite build` here.
 # This is a no-op when the binary is already installed.
 RUN --mount=type=cache,target=/root/.npm \
-    npm install --no-save --no-fund --no-audit \
+    npm install --no-save --no-fund --no-audit --ignore-scripts \
       @rollup/rollup-linux-x64-gnu
 
 COPY api ./api
