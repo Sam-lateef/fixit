@@ -26,15 +26,6 @@ import {
 } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
 
-// Category labels kept for future use; banner hidden for first release
-const _CATEGORY_LABEL: Record<string, string> = {
-  CARS: "🚗 Cars",
-  ELECTRICS: "⚡ Electrics",
-  PLUMBING: "🔧 Plumbing",
-  METAL: "🔩 Metal",
-  WOOD: "🪵 Wood",
-};
-
 type Post = {
   id: string;
   serviceType: string;
@@ -120,8 +111,21 @@ function serviceTagStyle(type: string): { bg: string; fg: string } {
   return { bg: theme.repairBg, fg: theme.repairText };
 }
 
-function hoursLeft(expiresAt: string): number {
-  return Math.max(0, Math.round((new Date(expiresAt).getTime() - Date.now()) / 3_600_000));
+/**
+ * Render the "time remaining" badge for a post. Using Math.round() previously
+ * displayed "1h" for posts with 30–59 min left (rounding up) and "0h" for 1–29
+ * min left, both misleading. Math.floor + a "<1h" sentinel for sub-hour
+ * lifetimes is honest in both directions.
+ */
+function hoursLeftLabel(
+  expiresAt: string,
+  t: (k: "hrsLeft" | "hoursLeftLess1") => string,
+): string {
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return `0${t("hrsLeft")}`;
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 60) return t("hoursLeftLess1");
+  return `${Math.floor(minutes / 60)}${t("hrsLeft")}`;
 }
 
 function serviceTypeLabel(
@@ -428,7 +432,7 @@ export default function ShopFeedScreen(): React.ReactElement {
           const hasBid = shopId !== null && p.bids.some((b) => b.shopId === shopId);
           const tag = serviceTagStyle(p.serviceType);
           const cat = categoryLabel(p);
-          const hrs = hoursLeft(p.expiresAt);
+          const hrsLabel = hoursLeftLabel(p.expiresAt, t);
           const isTowing = p.serviceType.toUpperCase() === "TOWING";
           const postIsNew = isNew(p.createdAt);
           const mm = inMoreSection ? computeMismatches(p, shop) : null;
@@ -596,7 +600,7 @@ export default function ShopFeedScreen(): React.ReactElement {
                     {p.bids.length} {t("bidsCount")}
                   </Text>
                   <Text style={styles.metaDot}>·</Text>
-                  <Text style={styles.metaText}>{hrs}{t("hrsLeft")}</Text>
+                  <Text style={styles.metaText}>{hrsLabel}</Text>
                 </View>
                 {!hasBid ? (
                   <View style={styles.bottomActions}>

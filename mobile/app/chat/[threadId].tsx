@@ -18,6 +18,7 @@ import { io, type Socket } from "socket.io-client";
 import { BrandHeaderGradient } from "@/components/BrandHeaderGradient";
 import { ChatMessageBubble } from "@/components/ChatMessageBubble";
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { getApiBaseUrl } from "@/lib/api-base";
 import { getToken } from "@/lib/auth-storage";
 import { useI18n } from "@/lib/i18n";
@@ -163,6 +164,20 @@ export default function ChatThreadScreen(): React.ReactElement {
   const [ratingComment, setRatingComment] = useState("");
   const listRef = useRef<FlatList<Message>>(null);
   const socketRef = useRef<Socket | null>(null);
+  // Refs mirror state for use inside the long-lived socket handler so the
+  // socket effect doesn't have to re-run (= reconnect) every time `me` or
+  // `meta?.isCompleted` change. Without this every load() previously tore
+  // down and re-opened the socket.
+  const meRef = useRef<string | null>(null);
+  const isCompletedRef = useRef(false);
+
+  useEffect(() => {
+    meRef.current = me;
+  }, [me]);
+
+  useEffect(() => {
+    isCompletedRef.current = meta?.isCompleted === true;
+  }, [meta?.isCompleted]);
 
   const postContextLine = useMemo(() => {
     if (!thread) {
@@ -222,7 +237,12 @@ export default function ChatThreadScreen(): React.ReactElement {
     }
   }, [threadId, t]);
 
-  // Connect Socket.IO on mount
+  // Connect Socket.IO on mount.
+  //
+  // IMPORTANT: dependencies are `[threadId]` only — the handler reads
+  // `me` / `meta.isCompleted` via refs so we don't tear down the socket
+  // every time those state values update (which previously caused reconnect
+  // churn after every load() and after every incoming message).
   useEffect(() => {
     if (!threadId) return;
     let socket: Socket;
@@ -245,7 +265,7 @@ export default function ChatThreadScreen(): React.ReactElement {
       });
 
       socket.on("new-message", (msg: Message) => {
-        if (msg.senderId !== me && meta?.isCompleted !== true) {
+        if (msg.senderId !== meRef.current && !isCompletedRef.current) {
           socket.emit("mark-read", { threadId });
         }
         setMessages((prev) => {
@@ -259,7 +279,7 @@ export default function ChatThreadScreen(): React.ReactElement {
       socket?.disconnect();
       socketRef.current = null;
     };
-  }, [threadId, me, meta?.isCompleted]);
+  }, [threadId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -271,10 +291,36 @@ export default function ChatThreadScreen(): React.ReactElement {
     }, [load, threadId]),
   );
 
+  // Defer the back-nav to an effect so we never trigger navigation inside render.
+  useEffect(() => {
+    if (!threadId) {
+      router.back();
+    }
+  }, [threadId]);
+
   if (!threadId) {
-    router.back();
     return <View style={styles.screen} />;
   }
+
+  const sendViaRest = useCallback(
+    async (text: string): Promise<void> => {
+      try {
+        await apiFetch(`/api/v1/threads/${threadId}/messages`, {
+          method: "POST",
+          body: JSON.stringify({ content: text }),
+        });
+        setDraft("");
+        await load();
+      } catch (e) {
+        setLoadError(friendlyApiError(e, t, "chatLoadFailed"));
+        // Restore the draft so the user doesn't lose their text.
+        setDraft(text);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [threadId, load, t],
+  );
 
   const send = (): void => {
     if (meta?.isCompleted) return;
@@ -284,38 +330,40 @@ export default function ChatThreadScreen(): React.ReactElement {
 
     const socket = socketRef.current;
     if (socket?.connected) {
-      // Send via Socket.IO for instant delivery
+      // Send via Socket.IO for instant delivery. If the server never acks
+      // (broken socket / silent stall) we fall back to REST after a short
+      // timeout so the user isn't stuck with a permanently-disabled
+      // Send button.
+      let acked = false;
+      const ackTimeout = setTimeout(() => {
+        if (acked) return;
+        acked = true;
+        void sendViaRest(text);
+      }, 6000);
       socket.emit(
         "send-message",
         { threadId, content: text },
         (ack: { ok?: boolean; message?: Message; error?: string }) => {
-          setBusy(false);
+          if (acked) return;
+          acked = true;
+          clearTimeout(ackTimeout);
           if (ack?.ok && ack.message) {
             setMessages((prev) =>
               prev.some((m) => m.id === ack.message!.id)
                 ? prev
                 : [...prev, ack.message!],
             );
+            setDraft("");
+            setBusy(false);
+            return;
           }
+          // Socket rejected the message — surface and stop the spinner.
+          setLoadError(ack?.error ?? t("chatLoadFailed"));
+          setBusy(false);
         },
       );
-      setDraft("");
     } else {
-      // Fallback to REST if socket not connected
-      void (async () => {
-        try {
-          await apiFetch(`/api/v1/threads/${threadId}/messages`, {
-            method: "POST",
-            body: JSON.stringify({ content: text }),
-          });
-          setDraft("");
-          await load();
-        } catch {
-          /* silent */
-        } finally {
-          setBusy(false);
-        }
-      })();
+      void sendViaRest(text);
     }
   };
 
@@ -594,12 +642,21 @@ const styles = StyleSheet.create({
 
   msgList: { padding: 12, paddingBottom: 8 },
   bubbleWrap: { marginBottom: 8, maxWidth: "88%", overflow: "visible" },
-  bubbleWrapMine: { alignSelf: "flex-end" },
-  bubbleWrapThem: { alignSelf: "flex-start" },
-  timestamp: { fontSize: 11, color: theme.mutedLight, marginTop: 3, alignSelf: "flex-start" },
-  timestampMine: { alignSelf: "flex-end" },
+  // Use physical sides (left/right) so RTL layout direction does not flip
+  // sender/receiver bubble placement.
+  bubbleWrapMine: { marginLeft: "auto", marginRight: 0 },
+  bubbleWrapThem: { marginRight: "auto", marginLeft: 0 },
+  timestamp: {
+    fontSize: 11,
+    color: theme.mutedLight,
+    marginTop: 3,
+    marginRight: "auto",
+    marginLeft: 0,
+  },
+  timestampMine: { marginLeft: "auto", marginRight: 0 },
   messageReportBtn: {
-    alignSelf: "flex-start",
+    marginRight: "auto",
+    marginLeft: 0,
     marginTop: 4,
   },
   messageReportText: { fontSize: 11, color: theme.danger, fontWeight: "600" },

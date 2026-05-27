@@ -30,6 +30,10 @@ type SortOption = "newest" | "oldest";
 type BidRow = {
   id: string;
   priceEstimate: number;
+  appointmentDate?: string | null;
+  appointmentTime?: string | null;
+  deliveryDate?: string | null;
+  deliveryWindow?: string | null;
   message: string;
   status: "PENDING" | "ACCEPTED" | "WITHDRAWN";
   createdAt: string;
@@ -81,6 +85,8 @@ export default function ShopBidsScreen(): React.ReactElement {
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [bids, setBids] = useState<BidRow[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [withdrawingBidId, setWithdrawingBidId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState("");
 
   const sortedBids = useMemo(() => {
     const out = [...bids];
@@ -107,15 +113,16 @@ export default function ShopBidsScreen(): React.ReactElement {
   }, [navigation, t]);
 
   const load = useCallback(async () => {
+    setLoadError("");
     try {
       const { bids: list } = await apiFetch<{ bids: BidRow[] }>(
         "/api/v1/bids/mine",
       );
       setBids(list);
-    } catch {
-      /* screen stays empty if API unreachable */
+    } catch (e) {
+      setLoadError(friendlyApiError(e, t, "loadFailed"));
     }
-  }, []);
+  }, [t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -142,12 +149,15 @@ export default function ShopBidsScreen(): React.ReactElement {
   );
 
   const withdraw = (bidId: string): void => {
+    if (withdrawingBidId !== null) return;
     Alert.alert(t("withdrawBid"), "", [
       { text: t("back"), style: "cancel" },
       {
         text: t("withdrawBid"),
         style: "destructive",
         onPress: () => {
+          if (withdrawingBidId !== null) return;
+          setWithdrawingBidId(bidId);
           void (async () => {
             try {
               await apiFetch(`/api/v1/bids/${bidId}`, { method: "DELETE" });
@@ -155,6 +165,8 @@ export default function ShopBidsScreen(): React.ReactElement {
               await load();
             } catch (e) {
               Alert.alert(t("errorTitle"), friendlyApiError(e, t));
+            } finally {
+              setWithdrawingBidId(null);
             }
           })();
         },
@@ -170,7 +182,11 @@ export default function ShopBidsScreen(): React.ReactElement {
         contentContainerStyle={styles.list}
         refreshControl={refreshControl}
         ListEmptyComponent={
-          <Text style={styles.empty}>{t("noBidsYet")}</Text>
+          loadError.length > 0 ? (
+            <Text style={[styles.empty, styles.emptyError]}>{loadError}</Text>
+          ) : (
+            <Text style={styles.empty}>{t("noBidsYet")}</Text>
+          )
         }
         renderItem={({ item: b }) => {
           const tag = statusTag(b.status, t);
@@ -208,6 +224,10 @@ export default function ShopBidsScreen(): React.ReactElement {
                       view: "1",
                       bidId: b.id,
                       initialPrice: String(b.priceEstimate),
+                      initialAppointmentDate: b.appointmentDate ?? "",
+                      initialAppointmentTime: b.appointmentTime ?? "",
+                      initialDeliveryDate: b.deliveryDate ?? "",
+                      initialDeliveryWindow: b.deliveryWindow ?? "",
                       initialMessage: b.message ?? "",
                     },
                   } as never)
@@ -283,6 +303,10 @@ export default function ShopBidsScreen(): React.ReactElement {
                           params: {
                             bidId: b.id,
                             initialPrice: String(b.priceEstimate),
+                            initialAppointmentDate: b.appointmentDate ?? "",
+                            initialAppointmentTime: b.appointmentTime ?? "",
+                            initialDeliveryDate: b.deliveryDate ?? "",
+                            initialDeliveryWindow: b.deliveryWindow ?? "",
                             initialMessage: b.message ?? "",
                           },
                         } as never)
@@ -291,8 +315,13 @@ export default function ShopBidsScreen(): React.ReactElement {
                       <Text style={styles.actionText}>{t("editBid")}</Text>
                     </Pressable>
                     <Pressable
-                      style={[styles.actionBtn, styles.withdrawBtn]}
+                      style={[
+                        styles.actionBtn,
+                        styles.withdrawBtn,
+                        withdrawingBidId === b.id && styles.actionBtnDisabled,
+                      ]}
                       onPress={() => withdraw(b.id)}
+                      disabled={withdrawingBidId !== null}
                     >
                       <Text style={[styles.actionText, styles.withdrawText]}>
                         {t("withdrawBid")}
@@ -387,6 +416,7 @@ const styles = StyleSheet.create({
   // (same fix as InboxThreadList / shop Requests).
   list: { padding: 16, paddingTop: 24, paddingBottom: 32, backgroundColor: theme.bg, flexGrow: 1 },
   empty: { color: theme.muted, marginTop: 24, textAlign: "center" },
+  emptyError: { color: theme.danger, fontWeight: "600" },
   card: {
     backgroundColor: theme.surface,
     borderRadius: theme.radiusLg,
@@ -442,6 +472,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radiusMd,
     backgroundColor: theme.primaryMid,
   },
+  actionBtnDisabled: { opacity: 0.6 },
   actionText: { color: "#fff", fontWeight: "600", fontSize: 13 },
   withdrawBtn: { backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.danger },
   withdrawText: { color: theme.danger },

@@ -71,7 +71,13 @@ export async function registerAdminChatRoutes(
     "/api/v1/admin/threads/:id/messages",
     { preHandler: [fastify.requireAdmin] },
     async (request, reply) => {
-      const id = z.object({ id: z.string().min(1) }).parse(request.params).id;
+      const parsedParams = z
+        .object({ id: z.string().min(1) })
+        .safeParse(request.params);
+      if (!parsedParams.success) {
+        return reply.status(400).send({ error: "Invalid thread id" });
+      }
+      const { id } = parsedParams.data;
       const q = z
         .object({
           page: z.coerce.number().int().min(1).optional(),

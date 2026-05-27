@@ -129,7 +129,13 @@ export function registerChatRoutes(
     "/api/v1/threads/:id/messages",
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
-      const id = z.object({ id: z.string().min(1) }).parse(request.params).id;
+      const parsedParams = z
+        .object({ id: z.string().min(1) })
+        .safeParse(request.params);
+      if (!parsedParams.success) {
+        return reply.status(400).send({ error: "Invalid thread id" });
+      }
+      const { id } = parsedParams.data;
       const q = z
         .object({
           page: z.coerce.number().int().min(1).optional(),
@@ -188,7 +194,13 @@ export function registerChatRoutes(
     "/api/v1/threads/:id/messages",
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
-      const id = z.object({ id: z.string().min(1) }).parse(request.params).id;
+      const parsedParams = z
+        .object({ id: z.string().min(1) })
+        .safeParse(request.params);
+      if (!parsedParams.success) {
+        return reply.status(400).send({ error: "Invalid thread id" });
+      }
+      const { id } = parsedParams.data;
       const body = z
         .object({ content: z.string().min(1).max(4000) })
         .safeParse(request.body);
@@ -261,7 +273,13 @@ export function registerChatRoutes(
     "/api/v1/threads/:id/complete",
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
-      const id = z.object({ id: z.string().min(1) }).parse(request.params).id;
+      const parsedParams = z
+        .object({ id: z.string().min(1) })
+        .safeParse(request.params);
+      if (!parsedParams.success) {
+        return reply.status(400).send({ error: "Invalid thread id" });
+      }
+      const { id } = parsedParams.data;
       const thread = await prisma.chatThread.findFirst({
         where: {
           id,
@@ -294,7 +312,13 @@ export function registerChatRoutes(
     "/api/v1/threads/:id/reviews",
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
-      const id = z.object({ id: z.string().min(1) }).parse(request.params).id;
+      const parsedParams = z
+        .object({ id: z.string().min(1) })
+        .safeParse(request.params);
+      if (!parsedParams.success) {
+        return reply.status(400).send({ error: "Invalid thread id" });
+      }
+      const { id } = parsedParams.data;
       const parsed = submitReviewSchema.safeParse(request.body);
       if (!parsed.success) {
         return reply.status(400).send({ error: "Invalid body", details: parsed.error.flatten() });

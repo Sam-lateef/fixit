@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { useI18n } from "@/lib/i18n";
 import type { ServiceCategory } from "@/lib/service-category";
+import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import type { StringKey } from "@/lib/strings";
 import { theme } from "@/lib/theme";
 
@@ -45,9 +46,7 @@ const SERVICES: ReadonlyArray<ServiceDef> = [
 export default function ShopOfferStep(): React.ReactElement {
   const { t } = useI18n();
   const raw = useLocalSearchParams<{ data?: string }>();
-  const prev: Record<string, unknown> = raw.data
-    ? (JSON.parse(raw.data as string) as Record<string, unknown>)
-    : {};
+  const prev = parseSignupWizardData(raw.data);
   const category = (prev.category as ServiceCategory | undefined) ?? "CARS";
   const isCars = category === "CARS";
 

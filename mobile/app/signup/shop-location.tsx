@@ -17,6 +17,7 @@ import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { useI18n } from "@/lib/i18n";
 import { openGoogleMapsAt } from "@/lib/open-google-maps";
+import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import { IRAQ_OWNER_CITIES, ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
 
@@ -25,9 +26,7 @@ type District = { id: string; name: string; nameAr: string; city: string };
 export default function ShopLocationStep(): React.ReactElement {
   const { t, locale } = useI18n();
   const raw = useLocalSearchParams<{ data?: string }>();
-  const prev: Record<string, unknown> = raw.data
-    ? (JSON.parse(raw.data as string) as Record<string, unknown>)
-    : {};
+  const prev = parseSignupWizardData(raw.data);
 
   const [shopName, setShopName] = useState("");
   const [city, setCity] = useState("");

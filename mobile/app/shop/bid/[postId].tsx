@@ -1,5 +1,5 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -12,6 +12,7 @@ import {
 } from "react-native";
 
 import { PostImageLightbox } from "@/components/PostImageLightbox";
+import { SearchablePickerModal, type SearchablePickerItem } from "@/components/SearchablePickerModal";
 import { ShopPremiumGate } from "@/components/ShopPremiumGate";
 import { apiFetch, formatIqd } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
@@ -58,13 +59,38 @@ function serviceTagStyle(type: string): { bg: string; fg: string } {
   return { bg: theme.repairBg, fg: theme.repairText };
 }
 
+function parseYmd(raw: string | undefined): string {
+  if (typeof raw !== "string") return "";
+  const v = raw.trim();
+  if (v.length === 0) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  if (/^\d{4}-\d{2}-\d{2}T/.test(v)) return v.slice(0, 10);
+  const parsed = new Date(v);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toISOString().slice(0, 10);
+}
+
 export default function ShopBidScreen(): React.ReactElement {
   const { t, locale } = useI18n();
-  const { postId, bidId, initialPrice, initialMessage, view } =
+  const {
+    postId,
+    bidId,
+    initialPrice,
+    initialAppointmentDate,
+    initialAppointmentTime,
+    initialDeliveryDate,
+    initialDeliveryWindow,
+    initialMessage,
+    view,
+  } =
     useLocalSearchParams<{
       postId: string;
       bidId?: string;
       initialPrice?: string;
+      initialAppointmentDate?: string;
+      initialAppointmentTime?: string;
+      initialDeliveryDate?: string;
+      initialDeliveryWindow?: string;
       initialMessage?: string;
       view?: string;
     }>();
@@ -74,13 +100,24 @@ export default function ShopBidScreen(): React.ReactElement {
 
   const [post, setPost] = useState<Post | null>(null);
   const [price, setPrice] = useState(initialPrice ?? "");
-  const [deliveryDate, setDeliveryDate] = useState("");
-  const [deliveryWindow, setDeliveryWindow] = useState("");
+  const [appointmentDate, setAppointmentDate] = useState(
+    parseYmd(initialAppointmentDate),
+  );
+  const [appointmentTime, setAppointmentTime] = useState(
+    typeof initialAppointmentTime === "string" ? initialAppointmentTime : "",
+  );
+  const [deliveryDate, setDeliveryDate] = useState(
+    parseYmd(initialDeliveryDate),
+  );
+  const [deliveryWindow, setDeliveryWindow] = useState(
+    typeof initialDeliveryWindow === "string" ? initialDeliveryWindow : "",
+  );
   const [message, setMessage] = useState(initialMessage ?? "");
   const [priceError, setPriceError] = useState("");
   const [messageError, setMessageError] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const submitInFlightRef = useRef(false);
 
   const loadPost = useCallback(async () => {
     if (!postId) return;
@@ -96,8 +133,13 @@ export default function ShopBidScreen(): React.ReactElement {
     void loadPost();
   }, [loadPost]);
 
+  useEffect(() => {
+    if (!postId) {
+      router.back();
+    }
+  }, [postId]);
+
   if (!postId) {
-    router.back();
     return <View style={styles.screen} />;
   }
 
@@ -122,7 +164,164 @@ export default function ShopBidScreen(): React.ReactElement {
   const hasBidInfo =
     readOnly && bidId !== undefined && Number.isFinite(bidPriceNumber);
 
+  const toIsoDateTime = (raw: string): string | null => {
+    const v = raw.trim();
+    if (v.length === 0) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+      return `${v}T00:00:00.000Z`;
+    }
+    const parsed = new Date(v);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+    return parsed.toISOString();
+  };
+
+  type PickerKey =
+    | "appointmentDate"
+    | "appointmentTime"
+    | "deliveryDate"
+    | "deliveryWindow";
+
+  const [activePicker, setActivePicker] = useState<PickerKey | null>(null);
+  const closePicker = (): void => {
+    setActivePicker(null);
+  };
+
+  const dateItems = useMemo((): SearchablePickerItem[] => {
+    // Build the 45-day window from the user's *local* "today" so the first
+    // option always matches what their device calendar shows. The previous
+    // UTC-based seed meant shops in Baghdad (UTC+3) could see "today"
+    // disappear after 9pm local — and any value stored as YYYY-MM-DD was
+    // interpreted as UTC midnight on the server, shifting it back a day.
+    const now = new Date();
+    const out: SearchablePickerItem[] = [];
+    const count = 45;
+    for (let i = 0; i < count; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+        2,
+        "0",
+      )}-${String(d.getDate()).padStart(2, "0")}`;
+      out.push({ id: ymd, label: ymd });
+    }
+    return out;
+  }, []);
+
+  const formatTime12h = (totalMinutes: number): string => {
+    const h24 = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    const ampm = h24 >= 12 ? "PM" : "AM";
+    const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+    return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+  };
+
+  const timeItemsBase = useMemo((): SearchablePickerItem[] => {
+    const out: SearchablePickerItem[] = [];
+    const start = 8 * 60;
+    const end = 18 * 60;
+    const step = 30;
+    for (let mins = start; mins <= end; mins += step) {
+      const label = formatTime12h(mins);
+      out.push({ id: label, label });
+    }
+    return out;
+  }, []);
+
+  const deliveryWindowItemsBase = useMemo((): SearchablePickerItem[] => {
+    const windows = [
+      "08:00 AM - 11:00 AM",
+      "11:00 AM - 02:00 PM",
+      "02:00 PM - 05:00 PM",
+      "05:00 PM - 08:00 PM",
+    ];
+    return windows.map((w) => ({ id: w, label: w }));
+  }, []);
+
+  const pickerItems = useMemo((): SearchablePickerItem[] => {
+    if (!activePicker) return [];
+    if (activePicker === "appointmentDate") {
+      const current = appointmentDate.trim();
+      const base = dateItems;
+      return current.length > 0 && !base.some((it) => it.id === current)
+        ? [{ id: current, label: current }, ...base]
+        : base;
+    }
+    if (activePicker === "deliveryDate") {
+      const current = deliveryDate.trim();
+      const base = dateItems;
+      return current.length > 0 && !base.some((it) => it.id === current)
+        ? [{ id: current, label: current }, ...base]
+        : base;
+    }
+    if (activePicker === "appointmentTime") {
+      const current = appointmentTime.trim();
+      const base = timeItemsBase;
+      return current.length > 0 && !base.some((it) => it.id === current)
+        ? [{ id: current, label: current }, ...base]
+        : base;
+    }
+    const current = deliveryWindow.trim();
+    const base = deliveryWindowItemsBase;
+    return current.length > 0 && !base.some((it) => it.id === current)
+      ? [{ id: current, label: current }, ...base]
+      : base;
+  }, [
+    activePicker,
+    appointmentDate,
+    appointmentTime,
+    deliveryDate,
+    deliveryWindow,
+    dateItems,
+    timeItemsBase,
+    deliveryWindowItemsBase,
+  ]);
+
+  const pickerSelectedId = useMemo((): string | undefined => {
+    if (!activePicker) return undefined;
+    if (activePicker === "appointmentDate") return appointmentDate.trim();
+    if (activePicker === "deliveryDate") return deliveryDate.trim();
+    if (activePicker === "appointmentTime") return appointmentTime.trim();
+    return deliveryWindow.trim();
+  }, [
+    activePicker,
+    appointmentDate,
+    appointmentTime,
+    deliveryDate,
+    deliveryWindow,
+  ]);
+
+  const pickerTitle = useMemo((): string => {
+    if (!activePicker) return "";
+    if (activePicker === "appointmentDate") return t("appointmentDate");
+    if (activePicker === "appointmentTime") return t("appointmentTime");
+    if (activePicker === "deliveryDate") return t("deliveryDate");
+    return t("deliveryWindow");
+  }, [activePicker, t]);
+
+  const onPick = (id: string): void => {
+    if (!activePicker) return;
+    if (activePicker === "appointmentDate") {
+      setAppointmentDate(id);
+      closePicker();
+      return;
+    }
+    if (activePicker === "appointmentTime") {
+      setAppointmentTime(id);
+      closePicker();
+      return;
+    }
+    if (activePicker === "deliveryDate") {
+      setDeliveryDate(id);
+      closePicker();
+      return;
+    }
+    setDeliveryWindow(id);
+    closePicker();
+  };
+
   const submit = (): void => {
+    if (submitInFlightRef.current) return;
     setErr("");
     setPriceError("");
     setMessageError("");
@@ -140,6 +339,7 @@ export default function ShopBidScreen(): React.ReactElement {
       invalid = true;
     }
     if (invalid) return;
+    submitInFlightRef.current = true;
     setBusy(true);
     void (async () => {
       try {
@@ -147,9 +347,33 @@ export default function ShopBidScreen(): React.ReactElement {
           priceEstimate: Math.round(n),
           message: msg,
         };
+        // On edit (PUT), explicitly send null for cleared values so the
+        // server can clear the column instead of leaving the old value in
+        // place. On create (POST), omit empty values entirely.
         if (isParts) {
-          if (deliveryDate) body.deliveryDate = deliveryDate;
-          if (deliveryWindow) body.deliveryWindow = deliveryWindow;
+          const deliveryDateIso = toIsoDateTime(deliveryDate);
+          if (deliveryDateIso) {
+            body.deliveryDate = deliveryDateIso;
+          } else if (isEditing) {
+            body.deliveryDate = null;
+          }
+          if (deliveryWindow.trim().length > 0) {
+            body.deliveryWindow = deliveryWindow;
+          } else if (isEditing) {
+            body.deliveryWindow = null;
+          }
+        } else {
+          const appointmentDateIso = toIsoDateTime(appointmentDate);
+          if (appointmentDateIso) {
+            body.appointmentDate = appointmentDateIso;
+          } else if (isEditing) {
+            body.appointmentDate = null;
+          }
+          if (appointmentTime.trim().length > 0) {
+            body.appointmentTime = appointmentTime;
+          } else if (isEditing) {
+            body.appointmentTime = null;
+          }
         }
         const url = isEditing
           ? `/api/v1/bids/${bidId}`
@@ -163,6 +387,7 @@ export default function ShopBidScreen(): React.ReactElement {
         setErr(friendlyApiError(e, t));
       } finally {
         setBusy(false);
+        submitInFlightRef.current = false;
       }
     })();
   };
@@ -287,6 +512,26 @@ export default function ShopBidScreen(): React.ReactElement {
               {initialMessage ? (
                 <Text style={styles.bidCardMessage}>{initialMessage}</Text>
               ) : null}
+              {!isParts && appointmentDate ? (
+                <Text style={styles.bidCardMeta}>
+                  {t("appointmentDate")}: {appointmentDate}
+                </Text>
+              ) : null}
+              {!isParts && appointmentTime ? (
+                <Text style={styles.bidCardMeta}>
+                  {t("appointmentTime")}: {appointmentTime}
+                </Text>
+              ) : null}
+              {isParts && deliveryDate ? (
+                <Text style={styles.bidCardMeta}>
+                  {t("deliveryDate")}: {deliveryDate}
+                </Text>
+              ) : null}
+              {isParts && deliveryWindow ? (
+                <Text style={styles.bidCardMeta}>
+                  {t("deliveryWindow")}: {deliveryWindow}
+                </Text>
+              ) : null}
             </View>
           ) : null}
 
@@ -319,23 +564,82 @@ export default function ShopBidScreen(): React.ReactElement {
           {isParts ? (
             <>
               <Text style={styles.label}>{t("deliveryDate")}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="2026-04-10"
-                placeholderTextColor={theme.mutedLight}
-                value={deliveryDate}
-                onChangeText={setDeliveryDate}
-              />
+              <Pressable
+                style={styles.fieldPickerBtn}
+                onPress={() => setActivePicker("deliveryDate")}
+              >
+                <Text
+                  style={[
+                    styles.fieldPickerValue,
+                    locale === "ar-iq"
+                      ? { textAlign: "right", writingDirection: "rtl" }
+                      : { textAlign: "left", writingDirection: "ltr" },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {deliveryDate.trim().length > 0 ? deliveryDate : "—"}
+                </Text>
+                <Text style={styles.fieldPickerChevron}>⌄</Text>
+              </Pressable>
               <Text style={styles.label}>{t("deliveryWindow")}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="10:00 AM – 2:00 PM"
-                placeholderTextColor={theme.mutedLight}
-                value={deliveryWindow}
-                onChangeText={setDeliveryWindow}
-              />
+              <Pressable
+                style={styles.fieldPickerBtn}
+                onPress={() => setActivePicker("deliveryWindow")}
+              >
+                <Text
+                  style={[
+                    styles.fieldPickerValue,
+                    locale === "ar-iq"
+                      ? { textAlign: "right", writingDirection: "rtl" }
+                      : { textAlign: "left", writingDirection: "ltr" },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {deliveryWindow.trim().length > 0 ? deliveryWindow : "—"}
+                </Text>
+                <Text style={styles.fieldPickerChevron}>⌄</Text>
+              </Pressable>
             </>
-          ) : null}
+          ) : (
+            <>
+              <Text style={styles.label}>{t("appointmentDate")}</Text>
+              <Pressable
+                style={styles.fieldPickerBtn}
+                onPress={() => setActivePicker("appointmentDate")}
+              >
+                <Text
+                  style={[
+                    styles.fieldPickerValue,
+                    locale === "ar-iq"
+                      ? { textAlign: "right", writingDirection: "rtl" }
+                      : { textAlign: "left", writingDirection: "ltr" },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {appointmentDate.trim().length > 0 ? appointmentDate : "—"}
+                </Text>
+                <Text style={styles.fieldPickerChevron}>⌄</Text>
+              </Pressable>
+              <Text style={styles.label}>{t("appointmentTime")}</Text>
+              <Pressable
+                style={styles.fieldPickerBtn}
+                onPress={() => setActivePicker("appointmentTime")}
+              >
+                <Text
+                  style={[
+                    styles.fieldPickerValue,
+                    locale === "ar-iq"
+                      ? { textAlign: "right", writingDirection: "rtl" }
+                      : { textAlign: "left", writingDirection: "ltr" },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {appointmentTime.trim().length > 0 ? appointmentTime : "—"}
+                </Text>
+                <Text style={styles.fieldPickerChevron}>⌄</Text>
+              </Pressable>
+            </>
+          )}
 
           {/* Message */}
           <Text style={styles.label}>{t("messageToCustomer")}</Text>
@@ -389,6 +693,19 @@ export default function ShopBidScreen(): React.ReactElement {
             </View>
           ) : null}
         </ScrollView>
+        <SearchablePickerModal
+          visible={activePicker !== null}
+          title={pickerTitle}
+          items={pickerItems}
+          selectedId={pickerSelectedId}
+          onSelect={onPick}
+          onRequestClose={closePicker}
+          cancelLabel={t("cancel")}
+          searchPlaceholder={t("search")}
+          showSearch={
+            activePicker === "appointmentDate" || activePicker === "deliveryDate"
+          }
+        />
       </KeyboardAvoidingView>
     </ShopPremiumGate>
   );
@@ -472,6 +789,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: "left",
   },
+  bidCardMeta: {
+    fontSize: 13,
+    color: theme.muted,
+    marginTop: 6,
+    lineHeight: 18,
+    textAlign: "left",
+  },
   detailLabel: {
     fontSize: 12,
     color: theme.mutedLight,
@@ -500,6 +824,23 @@ const styles = StyleSheet.create({
     backgroundColor: theme.surface,
     textAlign: "left",
   },
+  fieldPickerBtn: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: theme.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: theme.text,
+    backgroundColor: theme.surface,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 2,
+    marginBottom: 8,
+  },
+  fieldPickerValue: { fontSize: 16, color: theme.text, flex: 1 },
+  fieldPickerChevron: { marginLeft: 10, color: theme.mutedLight, fontSize: 18 },
   priceInput: { fontSize: 22, fontWeight: "700", writingDirection: "ltr" },
   inputError: { borderColor: theme.danger },
   inlineError: {

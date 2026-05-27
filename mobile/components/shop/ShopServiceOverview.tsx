@@ -9,8 +9,7 @@ import {
 } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
 
-/** Ratings/reviews UI is off for now; flip to `true` to show the stats row again (data stays on the API). */
-const SHOW_SHOP_RATINGS_UI = false;
+const SHOW_SHOP_RATINGS_UI = true;
 
 type ShopServiceOverviewProps = {
   shop: ShopProfilePayload;

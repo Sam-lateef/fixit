@@ -15,14 +15,13 @@ import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { fetchDistrictsForCity, type DistrictRow } from "@/lib/districts-fetch";
 import { useI18n } from "@/lib/i18n";
+import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import { theme } from "@/lib/theme";
 
 export default function ShopAreaStep(): React.ReactElement {
   const { t, locale } = useI18n();
   const raw = useLocalSearchParams<{ data?: string }>();
-  const prev: Record<string, unknown> = raw.data
-    ? (JSON.parse(raw.data as string) as Record<string, unknown>)
-    : {};
+  const prev = parseSignupWizardData(raw.data);
 
   const offersRepair = Boolean(prev.offersRepair);
   const offersParts = Boolean(prev.offersParts);

@@ -46,7 +46,14 @@ export default function OwnerViewShopScreen(): ReactElement {
   const [err, setErr] = useState("");
 
   const load = useCallback(async () => {
-    if (!shopId) return;
+    if (!shopId) {
+      // Missing param: surface a real error instead of leaving an endless
+      // spinner. This happens when the screen is opened via a malformed
+      // deep link / stale route.
+      setShop(null);
+      setErr(t("invalidShop"));
+      return;
+    }
     setErr("");
     try {
       const { shop: s } = await apiFetch<{ shop: ShopProfilePayload }>(

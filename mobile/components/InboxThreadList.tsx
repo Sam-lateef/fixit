@@ -11,6 +11,7 @@ import {
 } from "react-native";
 
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
 import {
   partsCategoryLabel,
@@ -64,8 +65,10 @@ export function InboxThreadList(props: InboxThreadListProps): React.ReactElement
   const [myUserId, setMyUserId] = useState<string | null>(null);
   const [state, setState] = useState<ThreadState>("ACTIVE");
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   const load = useCallback(async () => {
+    setLoadError("");
     try {
       const [threadsRes, meRes] = await Promise.all([
         apiFetch<{ threads: ThreadRow[] }>(`/api/v1/threads?state=${state}`),
@@ -78,10 +81,10 @@ export function InboxThreadList(props: InboxThreadListProps): React.ReactElement
       });
       setThreads(sortedThreads);
       setMyUserId(meRes.user.id);
-    } catch {
-      /* stay empty */
+    } catch (e) {
+      setLoadError(friendlyApiError(e, t, "loadFailed"));
     }
-  }, [state]);
+  }, [state, t]);
 
   useEffect(() => {
     void load();
@@ -118,9 +121,13 @@ export function InboxThreadList(props: InboxThreadListProps): React.ReactElement
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
       ListEmptyComponent={
-        <Text style={styles.empty}>
-          {state === "COMPLETED" ? t("noCompletedThreads") : t("noThreads")}
-        </Text>
+        loadError.length > 0 ? (
+          <Text style={[styles.empty, styles.emptyError]}>{loadError}</Text>
+        ) : (
+          <Text style={styles.empty}>
+            {state === "COMPLETED" ? t("noCompletedThreads") : t("noThreads")}
+          </Text>
+        )
       }
       ListHeaderComponent={
         <View style={styles.filterTabs}>
@@ -235,6 +242,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.bg,
   },
   empty: { color: theme.muted, marginTop: 24, textAlign: "center" },
+  emptyError: { color: theme.danger, fontWeight: "600" },
   filterTabs: { flexDirection: "row", gap: 8, marginBottom: 12 },
   filterTab: {
     paddingVertical: 8,

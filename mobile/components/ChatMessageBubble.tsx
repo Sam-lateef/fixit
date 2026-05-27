@@ -174,6 +174,7 @@ export function ChatMessageBubble({
     >
       <Text
         style={textStyles}
+        textBreakStrategy={Platform.OS === "android" ? "simple" : undefined}
         onLayout={(e) => {
           const { width, height } = e.nativeEvent.layout;
           onTextBoxLayout(width, height);
@@ -188,7 +189,6 @@ export function ChatMessageBubble({
 
 const styles = StyleSheet.create({
   shell: {
-    alignSelf: "flex-start",
     overflow: "visible",
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -201,8 +201,13 @@ const styles = StyleSheet.create({
   shellMine: {
     backgroundColor: theme.primaryMid,
     borderColor: theme.primaryMid,
+    marginLeft: "auto",
+    marginRight: 0,
   },
-  shellThem: {},
+  shellThem: {
+    marginRight: "auto",
+    marginLeft: 0,
+  },
   bubbleText: {
     color: theme.text,
     fontSize: 15,
@@ -212,6 +217,5 @@ const styles = StyleSheet.create({
   },
   bubbleTextAndroid: {
     includeFontPadding: false,
-    textBreakStrategy: "simple",
   },
 });

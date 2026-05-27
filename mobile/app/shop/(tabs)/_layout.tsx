@@ -2,12 +2,16 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
 
 export default function ShopTabsLayout(): React.ReactElement {
   const { t } = useI18n();
+  // Mirror the owner tab layout: grow the tab bar by the bottom safe-area
+  // inset so icons don't hug the iPhone home indicator.
+  const insets = useSafeAreaInsets();
 
   return (
     <>
@@ -21,7 +25,12 @@ export default function ShopTabsLayout(): React.ReactElement {
         headerTintColor: "#fff",
         headerTitleStyle: { color: "#fff", fontWeight: "700" },
         headerShadowVisible: false,
-        tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.border },
+        tabBarStyle: {
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
+        },
       }}
     >
       <Tabs.Screen

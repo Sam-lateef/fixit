@@ -340,6 +340,17 @@ export const en = {
   inboxActive: "Active",
   inboxCompleted: "Completed",
   noCompletedThreads: "No completed jobs yet.",
+  bootstrapNetworkErrorTitle: "Can't reach the server",
+  bootstrapNetworkErrorBody:
+    "Check your internet connection and try again. Your session is still saved.",
+  signOut: "Sign out",
+  loadFailed: "Couldn't load. Pull to refresh.",
+  requestTimedOut: "Request timed out. Check your connection.",
+  invalidShop: "This shop is not available.",
+  hoursLeftLess1: "<1h",
+  notFoundTitle: "Page not found",
+  notFoundBody: "This screen doesn't exist.",
+  goHome: "Go to home",
 } as const;
 
 export const arIq: Record<keyof typeof en, string> = {
@@ -680,6 +691,17 @@ export const arIq: Record<keyof typeof en, string> = {
   inboxActive: "النشطة",
   inboxCompleted: "المنتهية",
   noCompletedThreads: "لا توجد طلبات منتهية بعد.",
+  bootstrapNetworkErrorTitle: "ما نقدر نوصل للسيرفر",
+  bootstrapNetworkErrorBody:
+    "تأكد من الاتصال بالإنترنت وحاول مرة ثانية. جلستك محفوظة.",
+  signOut: "تسجيل الخروج",
+  loadFailed: "تعذّر التحميل. اسحب للتحديث.",
+  requestTimedOut: "انتهت مهلة الطلب. تأكّد من الاتصال.",
+  invalidShop: "هذا المحل غير متاح.",
+  hoursLeftLess1: "<١س",
+  notFoundTitle: "صفحة غير موجودة",
+  notFoundBody: "هذه الشاشة غير موجودة.",
+  goHome: "الذهاب للرئيسية",
 };
 
 export type LocaleId = "en" | "ar-iq";

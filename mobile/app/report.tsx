@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -36,8 +36,15 @@ export default function ReportScreen(): React.ReactElement {
   }, [params.targetType]);
   const targetId = typeof params.targetId === "string" ? params.targetId.trim() : "";
 
+  // Side-effects belong in effects, not in render. If we arrive without the
+  // required params, schedule a back-nav and render a placeholder this tick.
+  useEffect(() => {
+    if (!targetType || targetId.length === 0) {
+      router.back();
+    }
+  }, [targetType, targetId]);
+
   if (!targetType || targetId.length === 0) {
-    router.back();
     return <View style={styles.screen} />;
   }
 

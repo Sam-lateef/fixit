@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { useI18n } from "@/lib/i18n";
+import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import {
   REPAIR_CATEGORY_SLUGS,
   repairCategoryLabel,
@@ -13,9 +14,7 @@ import { theme } from "@/lib/theme";
 export default function ShopRepairCatsStep(): React.ReactElement {
   const { t, locale } = useI18n();
   const raw = useLocalSearchParams<{ data?: string }>();
-  const prev: Record<string, unknown> = raw.data
-    ? (JSON.parse(raw.data as string) as Record<string, unknown>)
-    : {};
+  const prev = parseSignupWizardData(raw.data);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
 

@@ -13,6 +13,7 @@ import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import { theme } from "@/lib/theme";
 
 type CatalogMake = { id: string; name: string; nameAr: string | null };
@@ -37,9 +38,7 @@ for (let y = CURRENT_YEAR + 1; y >= 1990; y--) YEAR_OPTIONS.push(y);
 export default function ShopMakesStep(): React.ReactElement {
   const { t, locale } = useI18n();
   const raw = useLocalSearchParams<{ data?: string }>();
-  const prev: Record<string, unknown> = raw.data
-    ? (JSON.parse(raw.data as string) as Record<string, unknown>)
-    : {};
+  const prev = parseSignupWizardData(raw.data);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [yearFrom, setYearFrom] = useState("");

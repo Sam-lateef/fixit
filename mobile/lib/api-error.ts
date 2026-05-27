@@ -1,3 +1,4 @@
+import { ApiTimeoutError } from "@/lib/api";
 import type { StringKey } from "@/lib/strings";
 
 /**
@@ -16,6 +17,9 @@ export function friendlyApiError(
   t: (k: StringKey) => string,
   fallbackKey: StringKey = "genericSaveFailed",
 ): string {
+  if (e instanceof ApiTimeoutError) {
+    return t("requestTimedOut");
+  }
   const raw = e instanceof Error ? e.message.trim() : "";
   const lower = raw.toLowerCase();
   // Server-side surfaces these on zod / shape failures — never useful for users.

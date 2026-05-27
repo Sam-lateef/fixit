@@ -13,6 +13,14 @@ export type ShopForFeed = Shop & {
 
 export type FeedEntry = PostForFeed & { distanceKm: number | null };
 
+function vehicleTypeAllowedForShop(shop: ShopForFeed, post: PostForFeed): boolean {
+  const isMotoPost = post.vehicleType === "MOTORCYCLE";
+  if (isMotoPost) {
+    return shop.servicesMotorcycles;
+  }
+  return shop.servicesCars;
+}
+
 export function sortFeedEntries(a: FeedEntry, b: FeedEntry): number {
   if (a.serviceType === "TOWING" && b.serviceType !== "TOWING") return -1;
   if (b.serviceType === "TOWING" && a.serviceType !== "TOWING") return 1;
@@ -127,6 +135,7 @@ export function moreFeedEntriesInShopCity(
   const out: FeedEntry[] = [];
   for (const post of allPosts) {
     if (matchedIds.has(post.id)) continue;
+    if (!vehicleTypeAllowedForShop(shop, post)) continue;
     const postCity = post.district?.city?.trim() ?? "";
     if (postCity.length === 0 || normalizeCityKey(postCity) !== shopKey) continue;
     out.push({
@@ -166,6 +175,7 @@ export function buildMoreFeedEntries(
   );
   for (const post of sorted) {
     if (used.has(post.id)) continue;
+    if (!vehicleTypeAllowedForShop(shop, post)) continue;
     if (out.length >= MORE_POOL_CAP) break;
     out.push({
       ...post,
@@ -200,8 +210,7 @@ export function filterPostsForShop(
     // Car posts gate on servicesCars (default true) so a pure motorcycle /
     // tuktuk shop never sees car requests.
     const isMotoPost = post.vehicleType === "MOTORCYCLE";
-    if (isMotoPost && !shop.servicesMotorcycles) continue;
-    if (!isMotoPost && !shop.servicesCars) continue;
+    if (!vehicleTypeAllowedForShop(shop, post)) continue;
 
     if (!isMotoPost && post.carMake && shop.carMakes.length > 0) {
       const shopMakes = shop.carMakes.map(normTag);

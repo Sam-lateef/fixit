@@ -5,20 +5,36 @@ import { notifyOwnerNewBid } from "./posts.js";
 import { sendPush } from "../services/fcm.js";
 import { pushBidAccepted, resolvePushLocale } from "../services/push-i18n.js";
 
+// All optional schedule fields accept null so the client can clear a
+// previously-set value. Without `.nullable()` Zod would reject `null` and
+// the API would 400; without sending null at all Prisma would treat the
+// missing key as "no change" and the cleared value would silently persist.
 const createBidSchema = z.object({
   priceEstimate: z.number().int().positive(),
-  appointmentDate: z.string().datetime().optional(),
-  appointmentTime: z.string().max(32).optional(),
-  estimatedQty: z.number().int().positive().optional(),
-  durationUnit: z.enum(["hours", "days"]).optional(),
-  deliveryDate: z.string().datetime().optional(),
-  deliveryWindow: z.string().max(64).optional(),
+  appointmentDate: z.string().datetime().nullable().optional(),
+  appointmentTime: z.string().max(32).nullable().optional(),
+  estimatedQty: z.number().int().positive().nullable().optional(),
+  durationUnit: z.enum(["hours", "days"]).nullable().optional(),
+  deliveryDate: z.string().datetime().nullable().optional(),
+  deliveryWindow: z.string().max(64).nullable().optional(),
   message: z.string().min(1).max(2000),
 });
 
 const updateBidSchema = createBidSchema.partial().extend({
   message: z.string().min(1).max(2000).optional(),
 });
+
+/** Pass-through helper for nullable date columns:
+ *   undefined → leave column unchanged
+ *   null      → clear column
+ *   string    → coerce to Date  */
+function toNullableDate(
+  v: string | null | undefined,
+): Date | null | undefined {
+  if (v === undefined) return undefined;
+  if (v === null) return null;
+  return new Date(v);
+}
 
 export async function registerBidRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.post(
@@ -28,8 +44,13 @@ export async function registerBidRoutes(fastify: FastifyInstance): Promise<void>
       if (request.userType !== "SHOP") {
         return reply.status(403).send({ error: "Shop account required" });
       }
-      const postId = z.object({ postId: z.string().min(1) }).parse(request.params)
-        .postId;
+      const parsedParams = z
+        .object({ postId: z.string().min(1) })
+        .safeParse(request.params);
+      if (!parsedParams.success) {
+        return reply.status(400).send({ error: "Invalid post id" });
+      }
+      const { postId } = parsedParams.data;
       const parsed = createBidSchema.safeParse(request.body);
       if (!parsed.success) {
         return reply.status(400).send({ error: "Invalid body", details: parsed.error.flatten() });
@@ -112,7 +133,13 @@ export async function registerBidRoutes(fastify: FastifyInstance): Promise<void>
       if (request.userType !== "SHOP") {
         return reply.status(403).send({ error: "Shop account required" });
       }
-      const id = z.object({ id: z.string().min(1) }).parse(request.params).id;
+      const parsedParams = z
+        .object({ id: z.string().min(1) })
+        .safeParse(request.params);
+      if (!parsedParams.success) {
+        return reply.status(400).send({ error: "Invalid bid id" });
+      }
+      const { id } = parsedParams.data;
       const parsed = updateBidSchema.safeParse(request.body);
       if (!parsed.success) {
         return reply.status(400).send({ error: "Invalid body", details: parsed.error.flatten() });
@@ -134,13 +161,11 @@ export async function registerBidRoutes(fastify: FastifyInstance): Promise<void>
         where: { id },
         data: {
           priceEstimate: d.priceEstimate,
-          appointmentDate: d.appointmentDate
-            ? new Date(d.appointmentDate)
-            : undefined,
+          appointmentDate: toNullableDate(d.appointmentDate),
           appointmentTime: d.appointmentTime,
           estimatedQty: d.estimatedQty,
           durationUnit: d.durationUnit,
-          deliveryDate: d.deliveryDate ? new Date(d.deliveryDate) : undefined,
+          deliveryDate: toNullableDate(d.deliveryDate),
           deliveryWindow: d.deliveryWindow,
           message: d.message,
         },
@@ -156,7 +181,13 @@ export async function registerBidRoutes(fastify: FastifyInstance): Promise<void>
       if (request.userType !== "SHOP") {
         return reply.status(403).send({ error: "Shop account required" });
       }
-      const id = z.object({ id: z.string().min(1) }).parse(request.params).id;
+      const parsedParams = z
+        .object({ id: z.string().min(1) })
+        .safeParse(request.params);
+      if (!parsedParams.success) {
+        return reply.status(400).send({ error: "Invalid bid id" });
+      }
+      const { id } = parsedParams.data;
       const shop = await prisma.shop.findUnique({
         where: { userId: request.userId },
       });
@@ -184,7 +215,13 @@ export async function registerBidRoutes(fastify: FastifyInstance): Promise<void>
       if (request.userType !== "OWNER") {
         return reply.status(403).send({ error: "Owner account required" });
       }
-      const id = z.object({ id: z.string().min(1) }).parse(request.params).id;
+      const parsedParams = z
+        .object({ id: z.string().min(1) })
+        .safeParse(request.params);
+      if (!parsedParams.success) {
+        return reply.status(400).send({ error: "Invalid bid id" });
+      }
+      const { id } = parsedParams.data;
 
       const txResult = await prisma.$transaction(async (tx) => {
         const bid = await tx.bid.findUnique({

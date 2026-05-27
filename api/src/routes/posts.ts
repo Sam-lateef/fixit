@@ -217,7 +217,13 @@ export async function registerPostRoutes(fastify: FastifyInstance): Promise<void
       if (request.userType !== "OWNER") {
         return reply.status(403).send({ error: "Owner account required" });
       }
-      const id = z.object({ id: z.string().min(1) }).parse(request.params).id;
+      const parsedParams = z
+        .object({ id: z.string().min(1) })
+        .safeParse(request.params);
+      if (!parsedParams.success) {
+        return reply.status(400).send({ error: "Invalid post id" });
+      }
+      const { id } = parsedParams.data;
       const parsed = updatePostSchema.safeParse(request.body);
       if (!parsed.success) {
         return reply.status(400).send({ error: "Invalid body", details: parsed.error.flatten() });
@@ -319,7 +325,13 @@ export async function registerPostRoutes(fastify: FastifyInstance): Promise<void
     "/api/v1/posts/:id",
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
-      const { id } = z.object({ id: z.string().min(1) }).parse(request.params);
+      const parsedParams = z
+        .object({ id: z.string().min(1) })
+        .safeParse(request.params);
+      if (!parsedParams.success) {
+        return reply.status(400).send({ error: "Invalid post id" });
+      }
+      const { id } = parsedParams.data;
       const post = await prisma.post.findFirst({
         where: { id, status: { not: "DELETED" } },
         include: {
@@ -329,6 +341,16 @@ export async function registerPostRoutes(fastify: FastifyInstance): Promise<void
         },
       });
       if (!post) return reply.status(404).send({ error: "Post not found" });
+
+      // Gating: authenticated user must either own the post or be a SHOP
+      // (shops legitimately need to fetch any post to bid on it from their
+      // feed). This blocks an OWNER from enumerating other owners' posts
+      // by id, which the previous "any authenticated user" check allowed.
+      const isOwner = post.userId === request.userId;
+      const isShop = request.userType === "SHOP";
+      if (!isOwner && !isShop) {
+        return reply.status(404).send({ error: "Post not found" });
+      }
       return { post };
     },
   );
@@ -337,7 +359,13 @@ export async function registerPostRoutes(fastify: FastifyInstance): Promise<void
     "/api/v1/posts/:id",
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
-      const id = z.object({ id: z.string().min(1) }).parse(request.params).id;
+      const parsedParams = z
+        .object({ id: z.string().min(1) })
+        .safeParse(request.params);
+      if (!parsedParams.success) {
+        return reply.status(400).send({ error: "Invalid post id" });
+      }
+      const { id } = parsedParams.data;
       const post = await prisma.post.findFirst({
         where: { id, userId: request.userId },
       });

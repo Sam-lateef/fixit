@@ -195,9 +195,27 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
       if (!params.success) {
         return reply.status(400).send({ error: "Invalid shop id" });
       }
+      // PUBLIC-SHOP payload: this route is consumed by other authenticated
+      // users (owners viewing a shop they bid with), so the user record must
+      // never include private/system fields like fcmToken, preferredLocale,
+      // bannedAt, role, userType, or timestamps. Whitelist only the
+      // ShopProfilePayload-required columns.
       const shop = await prisma.shop.findUnique({
         where: { id: params.data.shopId },
-        include: { user: { include: { district: true } } },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              city: true,
+              address: true,
+              workshopLat: true,
+              workshopLng: true,
+              district: true,
+            },
+          },
+        },
       });
       if (!shop) {
         return reply.status(404).send({ error: "Shop not found" });

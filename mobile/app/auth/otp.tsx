@@ -28,6 +28,10 @@ export default function AuthOtpScreen(): React.ReactElement {
   const [busy, setBusy] = useState(false);
   const [resendSec, setResendSec] = useState(60);
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  // Ref mirror of `busy` so the auto-submit path inside `handleDigit` doesn't
+  // race against a still-pending verify. State alone is stale during the same
+  // event loop tick the previous handler scheduled the request in.
+  const inFlightRef = useRef(false);
 
   useEffect(() => {
     if (resendSec <= 0) return;
@@ -35,14 +39,23 @@ export default function AuthOtpScreen(): React.ReactElement {
     return () => clearTimeout(id);
   }, [resendSec]);
 
+  // Guard against direct navigation without a phone param; do the redirect in
+  // an effect so render stays side-effect-free.
+  useEffect(() => {
+    if (!phone) {
+      router.replace(hrefAuthWelcome);
+    }
+  }, [phone]);
+
   if (!phone) {
-    router.replace(hrefAuthWelcome);
     return <View style={styles.screen} />;
   }
 
   const complete = digits.every((d) => d !== "");
 
   const doVerify = async (code: string): Promise<void> => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setErr("");
     setBusy(true);
     try {
@@ -66,10 +79,12 @@ export default function AuthOtpScreen(): React.ReactElement {
       setErr(friendlyApiError(e, t));
     } finally {
       setBusy(false);
+      inFlightRef.current = false;
     }
   };
 
   const handleDigit = (index: number, value: string): void => {
+    if (inFlightRef.current) return;
     const digit = value.replace(/[^0-9]/g, "").slice(-1);
     const next = [...digits];
     next[index] = digit;

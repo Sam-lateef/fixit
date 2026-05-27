@@ -44,8 +44,7 @@
         "EXPO_PUBLIC_FIREBASE_APP_ID": "1:925833254957:web:ec6df23ac247360ad000a4",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "925833254957-i5gu3kvnjm9gkhpcnjruv1aed5m4n6ri.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "925833254957-q88c8f43f3rstdgakil41en72dtj6afi.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "925833254957-4de1a17l3dt2u0v2dc5fc7staobvv3t3.apps.googleusercontent.com",
-        "EXPO_PUBLIC_DEBUG_CHAT_BUBBLE_LAYOUT": "true"
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "925833254957-4de1a17l3dt2u0v2dc5fc7staobvv3t3.apps.googleusercontent.com"
       }
     },
     "production": {

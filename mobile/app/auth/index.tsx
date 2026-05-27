@@ -77,9 +77,16 @@ export default function AuthWelcomeScreen(): React.ReactElement {
 
   function handleGoogleSignedIn(res: BackendAuthResponse): void {
     void (async () => {
-      await setToken(res.token);
-      void registerPushToken(); // fire-and-forget — don't block login
-      navigateAfterLogin(res);
+      try {
+        await setToken(res.token);
+        void registerPushToken(); // fire-and-forget — don't block login
+        navigateAfterLogin(res);
+      } catch (e) {
+        // If token persistence or routing throws, surface a real message
+        // instead of failing silently — previously the user was left on
+        // the auth screen with no feedback.
+        setErr(friendlyApiError(e, t, "authSignInFailed"));
+      }
     })();
   }
 

@@ -1,6 +1,6 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -66,17 +66,33 @@ export default function OwnerProfileScreen(): React.ReactElement {
   const [editAddress, setEditAddress] = useState("");
   const [savingAddress, setSavingAddress] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  // Refs track whether the user is mid-edit on the name/phone inputs so a
+  // focus refresh (useFocusEffect) doesn't overwrite what they're typing.
+  const nameFocusedRef = useRef(false);
+  const phoneFocusedRef = useRef(false);
 
   const load = useCallback(async () => {
     try {
       const { user: u } = await apiFetch<{ user: UserMe }>("/api/v1/users/me");
       setUser(u);
-      setEditName(u.name ?? "");
-      setEditPhone(u.phone ?? "");
-    } catch {
-      /* stay empty */
+      if (!nameFocusedRef.current) {
+        setEditName(u.name ?? "");
+      }
+      if (!phoneFocusedRef.current) {
+        setEditPhone(u.phone ?? "");
+      }
+      setLoadError("");
+    } catch (e) {
+      // Only surface to the user on the *first* load; later refreshes that
+      // fail (e.g. focus event while offline) leave the existing data in
+      // place silently — but log a friendly message in case they pull to
+      // refresh and want to see what's wrong.
+      if (!user) {
+        setLoadError(friendlyApiError(e, t, "loadFailed"));
+      }
     }
-  }, []);
+  }, [user, t]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -95,12 +111,10 @@ export default function OwnerProfileScreen(): React.ReactElement {
     }, [load]),
   );
 
-  useEffect(() => {
-    if (user) {
-      setEditName(user.name ?? "");
-      setEditPhone(user.phone ?? "");
-    }
-  }, [user?.id, user?.name, user?.phone]);
+  // NOTE: the previous version had a useEffect here that re-synced edit*
+  // from `user` whenever user.id/name/phone changed. That stomped on
+  // mid-edit typing (every load() rewrote the field). Sync now happens
+  // only inside load(), guarded by the *FocusedRef refs.
 
   const resolvedCity = user?.city?.trim() || "";
 
@@ -306,6 +320,13 @@ export default function OwnerProfileScreen(): React.ReactElement {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        {loadError.length > 0 ? (
+          <View style={styles.loadErrorBanner}>
+            <Text style={styles.loadErrorText} numberOfLines={2}>
+              {loadError}
+            </Text>
+          </View>
+        ) : null}
         <View style={[styles.sectionCard, styles.sectionCardFirst]}>
           <View style={styles.fieldBlock}>
             <Text style={styles.fieldLabel}>{t("name")}</Text>
@@ -318,8 +339,17 @@ export default function OwnerProfileScreen(): React.ReactElement {
               ]}
               value={editName}
               onChangeText={setEditName}
-              onEndEditing={commitNameIfChanged}
-              onBlur={commitNameIfChanged}
+              onFocus={() => {
+                nameFocusedRef.current = true;
+              }}
+              onEndEditing={() => {
+                nameFocusedRef.current = false;
+                commitNameIfChanged();
+              }}
+              onBlur={() => {
+                nameFocusedRef.current = false;
+                commitNameIfChanged();
+              }}
               placeholder={t("name")}
               placeholderTextColor={theme.mutedLight}
               returnKeyType="done"
@@ -332,8 +362,17 @@ export default function OwnerProfileScreen(): React.ReactElement {
               style={styles.fieldInput}
               value={editPhone}
               onChangeText={setEditPhone}
-              onEndEditing={commitPhoneIfChanged}
-              onBlur={commitPhoneIfChanged}
+              onFocus={() => {
+                phoneFocusedRef.current = true;
+              }}
+              onEndEditing={() => {
+                phoneFocusedRef.current = false;
+                commitPhoneIfChanged();
+              }}
+              onBlur={() => {
+                phoneFocusedRef.current = false;
+                commitPhoneIfChanged();
+              }}
               placeholder="+9647XXXXXXXXX"
               placeholderTextColor={theme.mutedLight}
               keyboardType="phone-pad"
@@ -551,6 +590,22 @@ export default function OwnerProfileScreen(): React.ReactElement {
 const styles = StyleSheet.create({
   scrollRoot: { flex: 1, backgroundColor: theme.bg },
   scroll: { paddingTop: 20, paddingBottom: 40 },
+  loadErrorBanner: {
+    backgroundColor: "#fdecec",
+    borderColor: theme.danger,
+    borderWidth: 1,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: theme.radiusMd,
+  },
+  loadErrorText: {
+    color: theme.danger,
+    fontSize: 13,
+    fontWeight: "600",
+    textAlign: "left",
+  },
 
   // Inline address editor modal (mirrors shop profile location editor)
   addressOverlay: {

@@ -24,6 +24,7 @@ type Shop = {
   id: string;
   name: string;
   rating: number;
+  reviewCount: number;
   coverImageUrl?: string | null;
   user?: {
     city: string | null;
@@ -103,6 +104,10 @@ export default function OwnerHomeScreen(): React.ReactElement {
   const [posts, setPosts] = useState<Post[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState("");
+  // Tracks the post/bid currently being mutated so the row buttons stay
+  // disabled until the request resolves (prevents double-tap races).
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const [acceptingBidId, setAcceptingBidId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoadError("");
@@ -160,18 +165,23 @@ export default function OwnerHomeScreen(): React.ReactElement {
   }, [load]);
 
   const deletePost = (id: string): void => {
+    if (deletingPostId !== null) return;
     Alert.alert(t("deletePost"), "", [
       { text: t("cancel"), style: "cancel" },
       {
         text: t("delete"),
         style: "destructive",
         onPress: () => {
+          if (deletingPostId !== null) return;
+          setDeletingPostId(id);
           void (async () => {
             try {
               await apiFetch(`/api/v1/posts/${id}`, { method: "DELETE" });
               await load();
             } catch (e) {
               Alert.alert(t("errorTitle"), friendlyApiError(e, t));
+            } finally {
+              setDeletingPostId(null);
             }
           })();
         },
@@ -180,6 +190,8 @@ export default function OwnerHomeScreen(): React.ReactElement {
   };
 
   const acceptBid = (bidId: string): void => {
+    if (acceptingBidId !== null) return;
+    setAcceptingBidId(bidId);
     void (async () => {
       try {
         const res = await apiFetch<{ chatThread: { id: string } }>(
@@ -190,6 +202,8 @@ export default function OwnerHomeScreen(): React.ReactElement {
         router.push(`/chat/${res.chatThread.id}` as Href);
       } catch (e) {
         Alert.alert(t("errorTitle"), friendlyApiError(e, t));
+      } finally {
+        setAcceptingBidId(null);
       }
     })();
   };
@@ -264,7 +278,11 @@ export default function OwnerHomeScreen(): React.ReactElement {
                 <Pressable
                   hitSlop={8}
                   onPress={() => deletePost(p.id)}
-                  style={styles.deleteBtn}
+                  disabled={deletingPostId === p.id}
+                  style={[
+                    styles.deleteBtn,
+                    deletingPostId === p.id && styles.deleteBtnDisabled,
+                  ]}
                 >
                   <FontAwesome name="times" size={16} color={theme.danger} />
                 </Pressable>
@@ -336,6 +354,12 @@ export default function OwnerHomeScreen(): React.ReactElement {
                     ]}
                   >
                     <Text style={styles.shopName}>{b.shop.name}</Text>
+                    {typeof b.shop.reviewCount === "number" &&
+                    b.shop.reviewCount > 0 ? (
+                      <Text style={styles.shopRating} numberOfLines={1}>
+                        ★ {b.shop.rating.toFixed(1)} ({b.shop.reviewCount})
+                      </Text>
+                    ) : null}
                     {(() => {
                       const shopUser = b.shop.user;
                       const cityLabel = shopUser?.city
@@ -364,8 +388,12 @@ export default function OwnerHomeScreen(): React.ReactElement {
                   {b.status === "PENDING" && p.status === "ACTIVE" ? (
                     <View style={styles.btnRow}>
                       <Pressable
-                        style={styles.acceptBtn}
+                        style={[
+                          styles.acceptBtn,
+                          acceptingBidId === b.id && styles.acceptBtnDisabled,
+                        ]}
                         onPress={() => acceptBid(b.id)}
+                        disabled={acceptingBidId !== null}
                       >
                         <Text style={styles.btnTextWhite}>{t("accept")}</Text>
                       </Pressable>
@@ -492,6 +520,7 @@ const styles = StyleSheet.create({
   muted: { color: theme.muted, fontSize: 13, textAlign: "left" },
   bidCount: { color: theme.mutedLight, fontSize: 12, textAlign: "left" },
   deleteBtn: { padding: 4 },
+  deleteBtnDisabled: { opacity: 0.5 },
   postTitle: { marginTop: 8, color: theme.text, fontSize: 15, fontWeight: "700", textAlign: "left" },
   desc: { marginTop: 4, color: theme.muted, fontSize: 14, textAlign: "left" },
   waiting: {
@@ -539,6 +568,13 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     textAlign: "left",
   },
+  shopRating: {
+    marginTop: 4,
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.text,
+    opacity: 0.9,
+  },
   shopLocation: {
     fontSize: 12,
     color: theme.muted,
@@ -559,6 +595,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radiusMd,
     alignItems: "center",
   },
+  acceptBtnDisabled: { opacity: 0.6 },
   messageBtn: {
     flex: 1,
     backgroundColor: theme.surface,

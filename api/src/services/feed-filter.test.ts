@@ -328,6 +328,34 @@ test("buildMoreFeedEntries fills with national posts after same-city rows", () =
   assert.ok(entries.some((e) => e.id === "b1"));
 });
 
+test("more feed excludes motorcycle posts when servicesMotorcycles is off", () => {
+  const s = shop({
+    servicesCars: true,
+    servicesMotorcycles: false,
+    carMakes: ["Toyota"],
+    repairRadiusKm: 50,
+  });
+  const carPost = post({
+    id: "car-1",
+    vehicleType: "CAR",
+    carMake: "Toyota",
+  });
+  const motoPost = post({
+    id: "moto-1",
+    vehicleType: "MOTORCYCLE",
+    carMake: null,
+    carYear: null,
+    motorcycleDetails: "Bajaj 2020",
+  });
+  const matched = filterPostsForShop(s, [carPost, motoPost]);
+  assert.equal(matched.length, 1);
+  assert.equal(matched[0].id, "car-1");
+  const more = moreFeedEntriesInShopCity(s, [carPost, motoPost], matched);
+  assert.equal(more.length, 0);
+  const built = buildMoreFeedEntries(s, [carPost, motoPost], matched);
+  assert.equal(built.entries.length, 0);
+});
+
 
 test("filterPostsForShop excludes post outside shop servedDistrictIds (same city)", () => {
   const s = shop({ servedDistrictIds: ["d1"] });
