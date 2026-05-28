@@ -6,6 +6,23 @@
 
 ## Resolved
 
+### Windows local Gradle release build (monorepo) — fixed 2026-05-28
+
+- **Symptom:** `cd mobile/android && ./gradlew assembleRelease` on Windows failed at `:app:createBundleReleaseJsAndAssets` with
+  `Error: Unable to resolve module ./../node_modules/expo-router/entry.js from D:\Dev\FixIt/.` (then later, after partial fixes, `./index.js` from the same `D:\Dev\FixIt/.` root, and finally `@react-native/virtualized-lists` not found).
+- **Why it happened (three combined factors):**
+  1. **Windows-only RN Gradle plugin behaviour.** `com.facebook.react.utils.Os.cliPath()` returns a *relative* path on Windows (vs absolute on Linux/macOS). With `npm workspaces` hoisting `react-native` and `expo-router` to `D:\Dev\FixIt\node_modules\…`, the `--entry-file` Gradle passes to `@expo/cli export:embed` becomes `..\node_modules\expo-router\entry.js` instead of an absolute path.
+  2. **`@expo/metro-config` auto-walks to the workspace root.** `getMetroServerRoot()` (in `@expo/config/build/paths/paths.js`) treats the npm-workspaces root `D:\Dev\FixIt` as Metro's server root, so the relative `..\…` traverses *out* of the project and the entry can't be resolved.
+  3. **Hierarchical lookup off.** A first-pass `metro.config.js` set `disableHierarchicalLookup: true`. That stopped Metro from walking into `node_modules/react-native/node_modules/`, where npm had nested `@react-native/virtualized-lists` because of a peer-dep version mismatch.
+- **EAS / Linux is unaffected.** On Linux/macOS `cliPath()` returns an absolute path, so neither (1) nor (2) bites. This is strictly a Windows × monorepo combo issue.
+- **Resolution (committed; safe for EAS):**
+  - `mobile/metro.config.js` (new): monorepo config — `projectRoot = __dirname`, `watchFolders = [workspaceRoot]`, `nodeModulesPaths = [mobile/node_modules, workspaceRoot/node_modules]`. Hierarchical lookup left **enabled** so Metro can resolve `@react-native/virtualized-lists` from `node_modules/react-native/node_modules/`.
+  - `mobile/index.js` (new) + `mobile/package.json#main = "index.js"`: thin shim that `import "expo-router/entry";`. Keeps the Gradle-passed entry path *inside* `mobile/` so the relative-path computation never leaves the workspace folder, even on Windows.
+  - **Build invocation:** must export `EXPO_NO_METRO_WORKSPACE_ROOT=1` before `./gradlew assembleRelease` so `@expo/metro-config` treats `mobile/` as the Metro server root instead of walking up to `D:\Dev\FixIt`. Linux EAS builds don't need this and ignore it.
+- **Result:** `mobile/android/app/build/outputs/apk/release/app-release.apk` (117.4 MB) builds clean on Windows. APK signs with the local `debug.keystore` (SHA1 `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`, already registered in Firebase for `com.fixitiq.app`), so native Google Sign-In works in the release variant.
+- **Caveat for sideload:** this APK's signature differs from any EAS-built APK. A device with a previous EAS install must uninstall first before installing this local APK (Android refuses cross-signature upgrades).
+
+
 ### Pre-ship audit fixes — batch (2026-05)
 
 - **Symptom:** Pre-ship audit surfaced ~20 distinct issues across mobile + API: silent error swallowing, race conditions on critical button handlers, PII leak in shop public profile, render-time navigation calls, missing API timeouts, signup-wizard JSON.parse crash risk, bid date fields not clearable, chat socket reconnect churn, etc.
