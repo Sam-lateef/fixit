@@ -4,6 +4,28 @@
 
 ## Open
 
+### Shop-type signup redesign — ready to deploy (2026-05-28)
+
+The 5-boolean shop grid (`offersRepair/Parts/Towing × servicesCars/Motorcycles`) has been collapsed into a single `ShopType` enum (`CAR | MOTORCYCLE | TOWING`) chosen at signup and immutable thereafter. The original 3-step staged rollout was collapsed into a **single deploy** after the 5 existing test shops were wiped from prod (no backfill needed — `Shop` table is empty).
+
+- **DB + API (single migration `20260528100000_shop_type_enum`):**
+  - `CREATE TYPE "ShopType"` + `ALTER TABLE "Shop" ADD COLUMN "shopType" NOT NULL` (no backfill — table empty).
+  - `DROP COLUMN servicesCars`, `servicesMotorcycles`, `deliveryAvailable` in the same migration.
+  - `api/src/routes/shops.ts` requires `shopType` on POST, forbids `shopType` / `offersTowing` changes on PUT, enforces `≥1 of repair/parts` for CAR / MOTORCYCLE shops.
+  - `api/src/services/feed-filter.ts` + `notify-shops.ts` branch on `shopType` exclusively (no null fallback, no legacy boolean reads). Prisma `where` clauses for push notifications now filter by `shopType: 'CAR' | 'MOTORCYCLE' | 'TOWING'`.
+  - Unit tests + `tsc --noEmit` clean.
+- **Mobile:**
+  - NEW `mobile/app/signup/shop-type.tsx` (3 cards Car / Motorcycle / Towing).
+  - `mobile/app/auth/account-type.tsx` TOWING fast-path deleted; SHOP always lands on `/signup/shop-type`.
+  - `mobile/app/signup/shop.tsx` → `shop-services.tsx`, narrowed to Repair / Parts multi-select with ≥1 required. Vehicle toggle, towing card, and `deliveryAvailable` switch removed.
+  - `mobile/app/signup/shop-makes.tsx` auto-skips when `shopType !== CAR` and requires ≥1 make for CAR.
+  - `mobile/app/signup/shop-parts-cats.tsx` no longer collects `deliveryAvailable` (field is gone).
+  - `mobile/app/signup/shop-area.tsx` sends `shopType` on `POST /api/v1/shops` and stops sending the legacy booleans.
+  - `mobile/lib/bootstrap.ts` + `mobile/app/shop/(tabs)/_layout.tsx` redirect missing-shop SHOP users to `/signup/shop-type`.
+  - `mobile/app/shop/(tabs)/profile.tsx` settings card shows a read-only "Shop type" row, editable `offersRepair` / `offersParts` (CAR/MOTO only) with a client-side ≥1 guard, and an editable `partsNationwide` (when `offersParts=true`). Dead `offersTowing` / `servicesMotorcycles` / `deliveryAvailable` switches removed.
+  - `mobile/components/shop/ShopServiceOverview.tsx` only renders the car-makes section for CAR shops.
+- **Deploy order:** fly-deploy the API (migration runs automatically), then build + ship the mobile APK. Old APKs cannot create shops anymore (API rejects payloads missing `shopType`), so they need to be replaced before any new shop can sign up.
+
 ## Resolved
 
 ### Windows local Gradle release build (monorepo) — fixed 2026-05-28

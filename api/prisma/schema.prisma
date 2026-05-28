@@ -70,19 +70,21 @@ model Shop {
 
   category ServiceCategory @default(CARS)
 
+  /// Discriminator chosen at signup, immutable thereafter. Drives which
+  /// services + vehicle gates the feed filter applies. Single source of
+  /// truth — there are no per-vehicle boolean toggles anymore.
+  ///
+  /// - CAR        → offersRepair|offersParts (≥1), serves CAR posts only
+  /// - MOTORCYCLE → offersRepair|offersParts (≥1), serves MOTORCYCLE posts only
+  /// - TOWING     → offersTowing=true only, vehicle-agnostic
+  shopType ShopType
+
   /// Public hero / storefront image (HTTPS URL from uploads).
   coverImageUrl String?
 
-  offersRepair        Boolean @default(false)
-  offersParts         Boolean @default(false)
-  offersTowing        Boolean @default(false)
-  /// Whether this shop services cars. Default true (existing shops are
-  /// car-first). Set to false for pure motorcycle / tuktuk shops that
-  /// don't take car work — feed and notify skip CAR posts when false.
-  servicesCars        Boolean @default(true)
-  /// Whether this shop services motorcycles. When true, the shop receives leads
-  /// for posts with vehicleType=MOTORCYCLE that match its offers* booleans.
-  servicesMotorcycles Boolean @default(false)
+  offersRepair Boolean @default(false)
+  offersParts  Boolean @default(false)
+  offersTowing Boolean @default(false)
 
   repairRadiusKm Int @default(15)
   partsRadiusKm  Int @default(20)
@@ -94,8 +96,6 @@ model Shop {
   servedDistrictIds String[]
 
   partsNationwide Boolean @default(false)
-
-  deliveryAvailable Boolean @default(false)
 
   carMakes   String[]
   carYearMin Int?
@@ -407,6 +407,13 @@ enum ServiceCategory {
   PLUMBING
   METAL
   WOOD
+}
+
+/// Top-level shop discriminator. Set once at signup, never changes.
+enum ShopType {
+  CAR
+  MOTORCYCLE
+  TOWING
 }
 
 enum PostStatus {

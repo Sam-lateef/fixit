@@ -19,7 +19,7 @@ export type BootstrapTarget =
   | { path: "/auth" }
   | { path: "/signup/owner-details" }
   | { path: "/signup/owner-location"; params: { city: string } }
-  | { path: "/signup/shop" }
+  | { path: "/signup/shop-type" }
   | { path: "/owner" }
   | { path: "/shop" };
 
@@ -54,7 +54,9 @@ export async function resolveInitialRoute(): Promise<BootstrapTarget> {
     void syncStoredLocaleToServer();
     if (user.userType === "SHOP") {
       if (!user.shop) {
-        return { path: "/signup/shop" };
+        // New entry point — the shop-type picker (Car / Motorcycle / Towing)
+        // replaces the legacy /signup/shop services step. shop.tsx is gone.
+        return { path: "/signup/shop-type" };
       }
       return { path: "/shop" };
     }

@@ -28,6 +28,10 @@ export function ShopServiceOverview(props: ShopServiceOverviewProps): ReactEleme
   const showServiceSummary = props.showServiceSummary === true;
   const yearFromShown = shop.carYearMin ?? shop.yearFrom ?? null;
   const yearToShown = shop.carYearMax ?? shop.yearTo ?? null;
+  // Car makes & years only apply when the shop is a CAR shop. Motorcycle
+  // shops have no per-make taxonomy yet, and towing shops are vehicle-agnostic
+  // — neither benefits from the makes section.
+  const isCarShop = shop.shopType === "CAR";
 
   return (
     <>
@@ -52,32 +56,34 @@ export function ShopServiceOverview(props: ShopServiceOverviewProps): ReactEleme
         ) : null}
       </View>
 
-      <View style={styles.sectionCard}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t("carMakesYears")}</Text>
-          {!readOnly && props.onEditMakes ? (
-            <Pressable onPress={props.onEditMakes}>
-              <Text style={styles.editLink}>{t("editCategories")}</Text>
-            </Pressable>
+      {isCarShop ? (
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t("carMakesYears")}</Text>
+            {!readOnly && props.onEditMakes ? (
+              <Pressable onPress={props.onEditMakes}>
+                <Text style={styles.editLink}>{t("editCategories")}</Text>
+              </Pressable>
+            ) : null}
+          </View>
+          <View style={styles.chipRow}>
+            {shop.carMakes.length > 0 ? (
+              shop.carMakes.map((m) => (
+                <View key={m} style={styles.chip}>
+                  <Text style={styles.chipText}>{m}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyHint}>—</Text>
+            )}
+          </View>
+          {yearFromShown !== null || yearToShown !== null ? (
+            <Text style={styles.yearRange}>
+              {yearFromShown ?? "?"} – {yearToShown ?? "?"}
+            </Text>
           ) : null}
         </View>
-        <View style={styles.chipRow}>
-          {shop.carMakes.length > 0 ? (
-            shop.carMakes.map((m) => (
-              <View key={m} style={styles.chip}>
-                <Text style={styles.chipText}>{m}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.emptyHint}>—</Text>
-          )}
-        </View>
-        {yearFromShown !== null || yearToShown !== null ? (
-          <Text style={styles.yearRange}>
-            {yearFromShown ?? "?"} – {yearToShown ?? "?"}
-          </Text>
-        ) : null}
-      </View>
+      ) : null}
 
       {shop.offersRepair ? (
         <View style={styles.sectionCard}>
@@ -140,13 +146,7 @@ export function ShopServiceOverview(props: ShopServiceOverviewProps): ReactEleme
             {shop.offersTowing ? (
               <Text style={styles.serviceItem}>· {t("towing_")}</Text>
             ) : null}
-            {shop.deliveryAvailable ? (
-              <Text style={styles.serviceItem}>· {t("delivery")}</Text>
-            ) : null}
-            {!shop.offersRepair &&
-            !shop.offersParts &&
-            !shop.offersTowing &&
-            !shop.deliveryAvailable ? (
+            {!shop.offersRepair && !shop.offersParts && !shop.offersTowing ? (
               <Text style={styles.emptyHint}>—</Text>
             ) : null}
           </View>

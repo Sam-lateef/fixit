@@ -23,7 +23,7 @@ export default function ShopTabsLayout(): React.ReactElement {
   // Guard: a SHOP user with no shop record (mid-signup, cancelled wizard,
   // stale back-stack) must never see /shop tabs — every tab would surface
   // "Shop not found" because /shops/me, /bids/mine, /feed all 404 without
-  // a shop. Bootstrap routes them to /signup/shop on cold start; this
+  // a shop. Bootstrap routes them to /signup/shop-type on cold start; this
   // mounted-guard catches the warm-state cases where bootstrap didn't run.
   useEffect(() => {
     let cancelled = false;
@@ -34,7 +34,7 @@ export default function ShopTabsLayout(): React.ReactElement {
         );
         if (cancelled) return;
         if (user.userType === "SHOP" && !user.shop) {
-          router.replace("/signup/shop" as Href);
+          router.replace("/signup/shop-type" as Href);
         }
       } catch {
         // apiFetch handles 401 by redirecting to /auth itself. Other

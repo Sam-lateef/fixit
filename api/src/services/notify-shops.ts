@@ -28,14 +28,13 @@ export async function notifyShopsNewPost(post: Post): Promise<void> {
 
 async function notifyTowingShops(post: Post): Promise<void> {
   if (!post.lat || !post.lng) return;
-  const isMoto = post.vehicleType === "MOTORCYCLE";
+  // TOWING shops are vehicle-agnostic by design (they answer both car and
+  // motorcycle towing). Filter only on the towing offer + push token.
   const shops = await prisma.shop.findMany({
     where: {
+      shopType: "TOWING",
       offersTowing: true,
       user: { fcmToken: { not: null } },
-      ...(isMoto
-        ? { servicesMotorcycles: true }
-        : { servicesCars: true }),
     },
     include: { user: { include: { district: true } } },
   });
@@ -75,9 +74,7 @@ async function notifyRepairPartsBatched(post: Post): Promise<void> {
     where: {
       user: { fcmToken: { not: null } },
       ...serviceWhere,
-      ...(isMoto
-        ? { servicesMotorcycles: true }
-        : { servicesCars: true }),
+      shopType: isMoto ? "MOTORCYCLE" : "CAR",
     },
     include: { user: { include: { district: true } } },
   });
@@ -120,27 +117,33 @@ async function shopShouldSeePost(
   if (post.serviceType === "REPAIR" && !shop.offersRepair) return false;
   if (post.serviceType === "PARTS" && !shop.offersParts) return false;
 
-  // Vehicle-type gates: shop opts in to cars (default) and / or motorcycles.
+  // Vehicle gate — CAR shops only see car posts, MOTORCYCLE shops only see
+  // moto posts. TOWING is vehicle-agnostic and handled by notifyTowingShops
+  // directly (and is filtered out at the `where` level above for repair/parts).
   const isMoto = post.vehicleType === "MOTORCYCLE";
-  if (isMoto && !shop.servicesMotorcycles) return false;
-  if (!isMoto && !shop.servicesCars) return false;
+  if (shop.shopType === "CAR" && isMoto) return false;
+  if (shop.shopType === "MOTORCYCLE" && !isMoto) return false;
 
-  if (!isMoto && post.carMake && shop.carMakes.length > 0) {
+  // Make / year / category chips are car-shop only — moto and towing shops
+  // opt in to all relevant posts (no per-moto-make taxonomy yet).
+  const isCarShop = shop.shopType === "CAR";
+
+  if (isCarShop && post.carMake && shop.carMakes.length > 0) {
     const shopMakes = shop.carMakes.map(normTag);
     if (!shopMakes.includes(normTag(post.carMake))) return false;
   }
-  if (!isMoto && post.carYear) {
+  if (isCarShop && post.carYear) {
     if (shop.carYearMin && post.carYear < shop.carYearMin) return false;
     if (shop.carYearMax && post.carYear > shop.carYearMax) return false;
   }
-  if (!isMoto && post.serviceType === "REPAIR" && post.repairCategory) {
+  if (isCarShop && post.serviceType === "REPAIR" && post.repairCategory) {
     const shopCats = shop.repairCategories.map(normTag);
     const matched = isCatchAllCategory(post.repairCategory, REPAIR_CATEGORY_SLUGS)
       ? shopCats.includes("other")
       : shopCats.includes(normTag(post.repairCategory));
     if (!matched) return false;
   }
-  if (!isMoto && post.serviceType === "PARTS" && post.partsCategory) {
+  if (isCarShop && post.serviceType === "PARTS" && post.partsCategory) {
     const shopCats = shop.partsCategories.map(normTag);
     const matched = isCatchAllCategory(post.partsCategory, PARTS_CATEGORY_SLUGS)
       ? shopCats.includes("other")

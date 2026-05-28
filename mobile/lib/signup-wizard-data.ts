@@ -18,7 +18,7 @@ export function parseSignupWizardData(
     }
   } catch {
     // Malformed payload — fall through to empty object so the wizard step
-    // still renders. The user can restart the flow from /signup/shop.
+    // still renders. The user can restart the flow from /signup/shop-type.
   }
   return {};
 }

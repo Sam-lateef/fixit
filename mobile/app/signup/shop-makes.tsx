@@ -13,6 +13,7 @@ import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import { asShopType } from "@/lib/shop-type";
 import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import { theme } from "@/lib/theme";
 
@@ -39,6 +40,7 @@ export default function ShopMakesStep(): React.ReactElement {
   const { t, locale } = useI18n();
   const raw = useLocalSearchParams<{ data?: string }>();
   const prev = parseSignupWizardData(raw.data);
+  const shopType = asShopType(prev.shopType);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [yearFrom, setYearFrom] = useState("");
@@ -49,6 +51,26 @@ export default function ShopMakesStep(): React.ReactElement {
   const [makesPickerOpen, setMakesPickerOpen] = useState(false);
   const [yearFromPickerOpen, setYearFromPickerOpen] = useState(false);
   const [yearToPickerOpen, setYearToPickerOpen] = useState(false);
+
+  // Car makes + years only apply to CAR shops. Motorcycle and towing shops
+  // arriving here from a stale back-stack should bounce forward to the next
+  // relevant step instead of being forced through an irrelevant chip picker.
+  useEffect(() => {
+    if (shopType != null && shopType !== "CAR") {
+      const data = JSON.stringify({ ...prev, makes: [], yearFrom: "", yearTo: "" });
+      if (Boolean(prev.offersRepair)) {
+        router.replace({ pathname: "/signup/shop-repair-cats" as Href, params: { data } } as never);
+      } else if (Boolean(prev.offersParts)) {
+        router.replace({ pathname: "/signup/shop-parts-cats" as Href, params: { data } } as never);
+      } else {
+        router.replace({ pathname: "/signup/shop-location" as Href, params: { data } } as never);
+      }
+    }
+    // prev is stable for the lifetime of this screen; the dep on shopType
+    // alone is enough to react to the discriminator. Intentional empty deps
+    // would skip a hot-reload edge case during development.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shopType]);
 
   useEffect(() => {
     void (async () => {
@@ -204,7 +226,11 @@ export default function ShopMakesStep(): React.ReactElement {
         </View>
       )}
 
-      <Pressable style={s.btn} onPress={handleContinue}>
+      <Pressable
+        style={[s.btn, selected.size === 0 && s.btnOff]}
+        disabled={selected.size === 0}
+        onPress={handleContinue}
+      >
         <Text style={s.btnText}>{t("continue")}</Text>
       </Pressable>
     </ScrollView>
@@ -279,5 +305,6 @@ const s = StyleSheet.create({
     borderRadius: theme.radiusMd,
     alignItems: "center",
   },
+  btnOff: { opacity: 0.4 },
   btnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 });

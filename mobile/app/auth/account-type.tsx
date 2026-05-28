@@ -9,14 +9,7 @@ import { syncRevenueCatUser } from "@/lib/revenuecat";
 import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
 
-type Choice = "OWNER" | "SHOP" | "TOWING";
-
-/** TOWING providers sign up as SHOP users but with towing pre-selected. */
-const CHOICE_USER_TYPE: Record<Choice, "OWNER" | "SHOP"> = {
-  OWNER: "OWNER",
-  SHOP: "SHOP",
-  TOWING: "SHOP",
-};
+type Choice = "OWNER" | "SHOP";
 
 export default function AccountTypeScreen(): React.ReactElement {
   const { t } = useI18n();
@@ -24,10 +17,17 @@ export default function AccountTypeScreen(): React.ReactElement {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
+  // Towing providers used to be their own top-level choice with a fast-path
+  // straight to /signup/shop-location. They're now a sub-type of SHOP that
+  // the user picks on /signup/shop-type — one less place to keep aligned
+  // with the offers* booleans.
   const cards: { id: Choice; title: string; sub: string }[] = [
     { id: "OWNER", title: t("carOwner"), sub: "Post repair / parts / towing requests" },
-    { id: "SHOP", title: t("shop"), sub: "Receive requests and place bids" },
-    { id: "TOWING", title: t("towingProvider"), sub: "Offer towing services and respond to tow requests" },
+    {
+      id: "SHOP",
+      title: t("shop"),
+      sub: "Receive requests and place bids (car / motorcycle / towing)",
+    },
   ];
 
   return (
@@ -55,10 +55,9 @@ export default function AccountTypeScreen(): React.ReactElement {
           setBusy(true);
           void (async () => {
             try {
-              const userType = CHOICE_USER_TYPE[choice];
               await apiFetch("/api/v1/users/me", {
                 method: "PUT",
-                body: JSON.stringify({ userType }),
+                body: JSON.stringify({ userType: choice }),
               });
               const refreshed = await apiFetch<{
                 token: string;
@@ -69,30 +68,10 @@ export default function AccountTypeScreen(): React.ReactElement {
 
               if (choice === "OWNER") {
                 router.replace("/signup/owner-details");
-              } else if (choice === "SHOP") {
-                // Skip multi-category screen — first release is CARS only
-                router.replace({
-                  pathname: "/signup/shop" as Href,
-                  params: { data: JSON.stringify({ category: "CARS" }) },
-                } as never);
               } else {
-                // Towing provider: skip service-selection + makes + category steps,
-                // jump straight to name / location.
-                router.replace({
-                  pathname: "/signup/shop-location" as Href,
-                  params: {
-                    data: JSON.stringify({
-                      category: "CARS",
-                      offersTowing: true,
-                      offersRepair: false,
-                      offersParts: false,
-                      carMakes: [],
-                      repairCategories: [],
-                      partsCategories: [],
-                      deliveryAvailable: false,
-                    }),
-                  },
-                } as never);
+                // SHOP — every sub-type (Car / Motorcycle / Towing) starts
+                // on the new shop-type picker. No more pre-baked shortcuts.
+                router.replace("/signup/shop-type" as Href);
               }
             } catch (e) {
               setErr(friendlyApiError(e, t));

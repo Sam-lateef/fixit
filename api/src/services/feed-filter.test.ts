@@ -14,17 +14,15 @@ function shop(over: Partial<ShopForFeed> = {}): ShopForFeed {
     name: "Test",
     coverImageUrl: null,
     category: "CARS",
+    shopType: "CAR",
     offersRepair: true,
     offersParts: false,
     offersTowing: false,
-    servicesCars: true,
-    servicesMotorcycles: false,
     repairRadiusKm: 10,
     partsRadiusKm: 20,
     towingRadiusKm: 8,
     servedDistrictIds: [],
     partsNationwide: false,
-    deliveryAvailable: false,
     carMakes: ["Toyota"],
     carYearMin: 1990,
     carYearMax: 2026,
@@ -328,10 +326,9 @@ test("buildMoreFeedEntries fills with national posts after same-city rows", () =
   assert.ok(entries.some((e) => e.id === "b1"));
 });
 
-test("more feed excludes motorcycle posts when servicesMotorcycles is off", () => {
+test("more feed excludes motorcycle posts for a CAR shop", () => {
   const s = shop({
-    servicesCars: true,
-    servicesMotorcycles: false,
+    shopType: "CAR",
     carMakes: ["Toyota"],
     repairRadiusKm: 50,
   });

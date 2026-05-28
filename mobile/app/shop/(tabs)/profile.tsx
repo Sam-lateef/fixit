@@ -154,9 +154,6 @@ export default function ShopProfileScreen(): React.ReactElement {
   const insets = useSafeAreaInsets();
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
-  const [servicePicker, setServicePicker] = useState<
-    null | "offersTowing" | "deliveryAvailable"
-  >(null);
   const { isSubscribed, isLoading: subLoading } = useSubscription();
   const [shop, setShop] = useState<ShopMe | null>(null);
   const [editSection, setEditSection] = useState<EditSection>(null);
@@ -695,16 +692,32 @@ export default function ShopProfileScreen(): React.ReactElement {
     })();
   };
 
-  const putServiceField = (
-    field: "offersTowing" | "deliveryAvailable" | "servicesMotorcycles",
-    value: boolean,
-  ): void => {
-    const body =
-      field === "offersTowing"
-        ? { offersTowing: value }
-        : field === "servicesMotorcycles"
-          ? { servicesMotorcycles: value }
-          : { deliveryAvailable: value };
+  // Whitelist of fields the settings card may PATCH. `offersTowing` is NOT
+  // here on purpose — shopType is immutable after signup and the API also
+  // rejects offersTowing on PUT.
+  type EditableServiceField =
+    | "offersRepair"
+    | "offersParts"
+    | "partsNationwide";
+
+  const putServiceField = (field: EditableServiceField, value: boolean): void => {
+    // CAR / MOTORCYCLE shops must keep at least one of offersRepair /
+    // offersParts on; the API enforces the same rule but checking client-side
+    // first avoids a round-trip + Alert when the user toggles too far.
+    if (
+      shop &&
+      (field === "offersRepair" || field === "offersParts") &&
+      value === false
+    ) {
+      const nextRepair = field === "offersRepair" ? false : shop.offersRepair;
+      const nextParts = field === "offersParts" ? false : shop.offersParts;
+      const isTowing = shop.shopType === "TOWING";
+      if (!isTowing && !nextRepair && !nextParts) {
+        Alert.alert(t("errorTitle"), t("atLeastOneServiceRequired"));
+        return;
+      }
+    }
+    const body: Record<string, boolean> = { [field]: value };
     void (async () => {
       try {
         await apiFetch("/api/v1/shops/me", {
@@ -717,6 +730,12 @@ export default function ShopProfileScreen(): React.ReactElement {
       }
     })();
   };
+
+  function shopTypeLabel(s: ShopMe): string {
+    if (s.shopType === "MOTORCYCLE") return t("shopTypeMotorcycle");
+    if (s.shopType === "TOWING") return t("shopTypeTowing");
+    return t("shopTypeCar");
+  }
 
   const shopCityShown = shop?.user.city
     ? ownerCityLabel(shop.user.city, locale)
@@ -885,52 +904,72 @@ export default function ShopProfileScreen(): React.ReactElement {
 
         {/* Settings */}
         <View style={styles.sectionCard}>
-          {shop?.offersTowing !== undefined ? (
+          {/* Shop type — read-only. Set at signup and immutable thereafter;
+              changing it would orphan car/repair/parts data and break active
+              bids. Rendered as a static row so the user can see what their
+              shop is registered as (and how to change it if needed). */}
+          {shop ? (
             <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>{t("towing_")}</Text>
-              <Switch
-                value={shop.offersTowing}
-                onValueChange={(v) => putServiceField("offersTowing", v)}
-                trackColor={{ false: theme.border, true: theme.primaryMid }}
-                thumbColor="#fff"
-                ios_backgroundColor={theme.border}
-              />
+              <View style={styles.settingLabelCol}>
+                <Text style={styles.settingLabel}>{t("shopTypeLabel")}</Text>
+                <Text style={styles.settingHint}>
+                  {t("shopTypeLockedHint")}
+                </Text>
+              </View>
+              <Text style={styles.settingValue}>{shopTypeLabel(shop)}</Text>
             </View>
           ) : null}
-          {shop?.deliveryAvailable !== undefined ? (
+
+          {/* Repair / Parts toggles — only for CAR / MOTORCYCLE shops. Towing
+              shops keep both off by construction (server enforces it). The
+              ≥1 constraint is checked client-side in putServiceField and
+              re-enforced by the API. */}
+          {shop && shop.shopType !== "TOWING" ? (
             <>
               <View style={styles.settingDivider} />
               <View style={styles.settingRow}>
-                <Text style={styles.settingLabel}>{t("delivery")}</Text>
+                <Text style={styles.settingLabel}>{t("repair")}</Text>
                 <Switch
-                  value={shop.deliveryAvailable}
-                  onValueChange={(v) =>
-                    putServiceField("deliveryAvailable", v)
-                  }
+                  value={shop.offersRepair}
+                  onValueChange={(v) => putServiceField("offersRepair", v)}
                   trackColor={{ false: theme.border, true: theme.primaryMid }}
                   thumbColor="#fff"
                   ios_backgroundColor={theme.border}
                 />
               </View>
-            </>
-          ) : null}
-          {shop?.servicesMotorcycles !== undefined ? (
-            <>
               <View style={styles.settingDivider} />
               <View style={styles.settingRow}>
-                <Text style={styles.settingLabel}>{t("servicesMotorcyclesToggle")}</Text>
+                <Text style={styles.settingLabel}>{t("parts")}</Text>
                 <Switch
-                  value={shop.servicesMotorcycles}
-                  onValueChange={(v) =>
-                    putServiceField("servicesMotorcycles", v)
-                  }
+                  value={shop.offersParts}
+                  onValueChange={(v) => putServiceField("offersParts", v)}
                   trackColor={{ false: theme.border, true: theme.primaryMid }}
                   thumbColor="#fff"
                   ios_backgroundColor={theme.border}
                 />
               </View>
+              {shop.offersParts ? (
+                <>
+                  <View style={styles.settingDivider} />
+                  <View style={styles.settingRow}>
+                    <Text style={styles.settingLabel}>
+                      {t("partsNationwideLabel")}
+                    </Text>
+                    <Switch
+                      value={shop.partsNationwide}
+                      onValueChange={(v) =>
+                        putServiceField("partsNationwide", v)
+                      }
+                      trackColor={{ false: theme.border, true: theme.primaryMid }}
+                      thumbColor="#fff"
+                      ios_backgroundColor={theme.border}
+                    />
+                  </View>
+                </>
+              ) : null}
             </>
           ) : null}
+
           <View style={styles.settingDivider} />
           <Pressable
             style={styles.settingRow}
@@ -1028,50 +1067,6 @@ export default function ShopProfileScreen(): React.ReactElement {
           }
         }}
         onRequestClose={() => setLanguagePickerOpen(false)}
-        cancelLabel={t("cancel")}
-        busy={false}
-      />
-
-      <SearchablePickerModal
-        visible={servicePicker !== null && shop !== null}
-        title={
-          servicePicker === "deliveryAvailable"
-            ? t("delivery")
-            : servicePicker === "offersTowing"
-              ? t("towing_")
-              : ""
-        }
-        showSearch={false}
-        searchPlaceholder={t("search")}
-        selectedId={
-          shop && servicePicker
-            ? (servicePicker === "offersTowing"
-                ? shop.offersTowing
-                : shop.deliveryAvailable)
-              ? "on"
-              : "off"
-            : undefined
-        }
-        items={[
-          { id: "on", label: t("on") },
-          { id: "off", label: t("off") },
-        ]}
-        onSelect={(id) => {
-          if (!shop || servicePicker === null) {
-            return;
-          }
-          const next = id === "on";
-          const current =
-            servicePicker === "offersTowing"
-              ? shop.offersTowing
-              : shop.deliveryAvailable;
-          setServicePicker(null);
-          if (next === current) {
-            return;
-          }
-          putServiceField(servicePicker, next);
-        }}
-        onRequestClose={() => setServicePicker(null)}
         cancelLabel={t("cancel")}
         busy={false}
       />
@@ -1813,6 +1808,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   settingLabel: { fontSize: 17, fontWeight: "600", color: theme.text },
+  settingLabelCol: { flex: 1, paddingRight: 12 },
+  settingHint: { fontSize: 12, color: theme.muted, marginTop: 2 },
   settingValue: { fontSize: 15, color: theme.mutedLight },
   settingChevron: { fontSize: 18, color: theme.mutedLight },
 

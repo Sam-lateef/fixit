@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { router, type Href, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,6 +15,7 @@ import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { fetchDistrictsForCity, type DistrictRow } from "@/lib/districts-fetch";
 import { useI18n } from "@/lib/i18n";
+import { asShopType } from "@/lib/shop-type";
 import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import { theme } from "@/lib/theme";
 
@@ -23,15 +24,12 @@ export default function ShopAreaStep(): React.ReactElement {
   const raw = useLocalSearchParams<{ data?: string }>();
   const prev = parseSignupWizardData(raw.data);
 
+  const shopType = asShopType(prev.shopType);
   const offersRepair = Boolean(prev.offersRepair);
   const offersParts = Boolean(prev.offersParts);
   const offersTowing = Boolean(prev.offersTowing);
-  // Towing-only shops (mobile providers) don't require a fixed address.
-  const isTowingOnly = offersTowing && !offersRepair && !offersParts;
-  // servicesCars defaults true (existing behavior) unless explicitly set false
-  // by the moto-only signup path.
-  const servicesCars = prev.servicesCars === false ? false : true;
-  const servicesMotorcycles = Boolean(prev.servicesMotorcycles);
+  // TOWING shops (mobile providers) don't require a fixed address.
+  const isTowingOnly = shopType === "TOWING";
   const cityFromPrev = (prev.city as string | undefined) ?? "";
   const homeDistrictId = (prev.districtId as string | undefined) ?? "";
 
@@ -93,6 +91,12 @@ export default function ShopAreaStep(): React.ReactElement {
 
   function handleCreate(): void {
     setErr("");
+    if (shopType == null) {
+      // Stale back-stack — bounce the user to the start of the wizard.
+      setErr(t("errorTitle"));
+      router.replace("/signup/shop-type" as Href);
+      return;
+    }
     const addr = String(prev.address ?? "").trim();
     if (!isTowingOnly && addr.length === 0) {
       setErr(t("addressRequired"));
@@ -109,12 +113,11 @@ export default function ShopAreaStep(): React.ReactElement {
 
     const body: Record<string, unknown> = {
       name: prev.shopName,
+      shopType,
       category: prev.category ?? "CARS",
       offersRepair,
       offersParts,
       offersTowing,
-      servicesCars,
-      servicesMotorcycles,
       carMakes: (prev.makes as string[]) ?? [],
       carYearMin,
       carYearMax,
@@ -124,7 +127,6 @@ export default function ShopAreaStep(): React.ReactElement {
       partsCategories: offersParts
         ? (prev.partsCategories as string[]) ?? []
         : [],
-      deliveryAvailable: Boolean(prev.deliveryAvailable),
       city: prev.city,
       districtId: prev.districtId ?? null,
       address: addr,

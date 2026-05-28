@@ -28,7 +28,8 @@ export default function SignupLayout(): React.ReactElement {
       <Stack.Screen name="owner-details" />
       <Stack.Screen name="owner-location" />
       <Stack.Screen name="shop-category" />
-      <Stack.Screen name="shop" />
+      <Stack.Screen name="shop-type" />
+      <Stack.Screen name="shop-services" />
       <Stack.Screen name="shop-makes" />
       <Stack.Screen name="shop-repair-cats" />
       <Stack.Screen name="shop-parts-cats" />

@@ -4,7 +4,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   View,
 } from "react-native";
@@ -24,7 +23,6 @@ export default function ShopPartsCatsStep(): React.ReactElement {
   const prev = parseSignupWizardData(raw.data);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [delivery, setDelivery] = useState(false);
 
   useEffect(() => {
     if (!Boolean(prev.offersParts)) {
@@ -48,7 +46,6 @@ export default function ShopPartsCatsStep(): React.ReactElement {
     const merged = {
       ...prev,
       partsCategories: Array.from(selected),
-      deliveryAvailable: delivery,
     };
     router.push({
       pathname: "/signup/shop-location" as Href,
@@ -83,17 +80,6 @@ export default function ShopPartsCatsStep(): React.ReactElement {
         })}
       </View>
 
-      <View style={s.toggleRow}>
-        <Text style={s.toggleLabel}>{t("deliveryAvailable")}</Text>
-        <Switch
-          value={delivery}
-          onValueChange={setDelivery}
-          trackColor={{ false: theme.border, true: theme.primaryMid }}
-          thumbColor="#fff"
-          ios_backgroundColor={theme.border}
-        />
-      </View>
-
       <Pressable style={s.btn} onPress={handleContinue}>
         <Text style={s.btnText}>{t("continue")}</Text>
       </Pressable>
@@ -117,13 +103,6 @@ const s = StyleSheet.create({
   chipOn: { backgroundColor: theme.primary },
   chipText: { fontSize: 14, color: theme.text },
   chipTextOn: { color: "#fff", fontWeight: "600" },
-  toggleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 24,
-  },
-  toggleLabel: { fontSize: 15, color: theme.text, fontWeight: "600" },
   btn: {
     marginTop: 28,
     backgroundColor: theme.primaryMid,

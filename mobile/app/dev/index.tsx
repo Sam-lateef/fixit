@@ -110,8 +110,8 @@ export default function DevNavHubScreen(): React.ReactElement {
         }),
     },
     {
-      label: "Signup — shop",
-      onPress: () => go("/signup/shop"),
+      label: "Signup — shop type",
+      onPress: () => go("/signup/shop-type" as Href),
     },
   ];
 

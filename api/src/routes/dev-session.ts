@@ -74,6 +74,25 @@ export async function registerDevSessionRoutes(
       where: { phone },
       include: { shop: true },
     });
+    // Dev fixture: CAR shop with both repair + parts on. This is the most
+    // common real-world shape and exercises the car-makes / repair-cats /
+    // parts-cats filters. To test MOTORCYCLE or TOWING flows, edit this
+    // fixture (shopType is immutable once created, so wipe the dev row
+    // first or use a different phone).
+    const devShopFixture = {
+      name: "Dev Workshop",
+      shopType: "CAR" as const,
+      offersRepair: true,
+      offersParts: true,
+      offersTowing: false,
+      repairRadiusKm: 50,
+      partsRadiusKm: 50,
+      towingRadiusKm: 50,
+      carMakes: [] as string[],
+      repairCategories: devRepairCats,
+      partsCategories: devPartsCats,
+    };
+
     if (!user) {
       user = await prisma.user.create({
         data: {
@@ -82,20 +101,7 @@ export async function registerDevSessionRoutes(
           name: "Dev Shop",
           city: "Baghdad",
           districtId: district.id,
-          shop: {
-            create: {
-              name: "Dev Workshop",
-              offersRepair: true,
-              offersParts: true,
-              offersTowing: true,
-              repairRadiusKm: 50,
-              partsRadiusKm: 50,
-              towingRadiusKm: 50,
-              carMakes: [],
-              repairCategories: devRepairCats,
-              partsCategories: devPartsCats,
-            },
-          },
+          shop: { create: devShopFixture },
         },
         include: { shop: true },
       });
@@ -103,16 +109,7 @@ export async function registerDevSessionRoutes(
       await prisma.shop.create({
         data: {
           userId: user.id,
-          name: "Dev Workshop",
-          offersRepair: true,
-          offersParts: true,
-          offersTowing: true,
-          repairRadiusKm: 50,
-          partsRadiusKm: 50,
-          towingRadiusKm: 50,
-          carMakes: [],
-          repairCategories: devRepairCats,
-          partsCategories: devPartsCats,
+          ...devShopFixture,
         },
       });
       user = await prisma.user.findUniqueOrThrow({
@@ -120,12 +117,12 @@ export async function registerDevSessionRoutes(
         include: { shop: true },
       });
     } else {
+      // shopType is immutable — only touch the mutable knobs here.
       await prisma.shop.update({
         where: { id: user.shop.id },
         data: {
           offersRepair: true,
           offersParts: true,
-          offersTowing: true,
           repairRadiusKm: 50,
           partsRadiusKm: 50,
           towingRadiusKm: 50,
@@ -145,6 +142,9 @@ export async function registerDevSessionRoutes(
       });
     }
 
+    if (!user) {
+      return reply.status(500).send({ error: "Dev session: user lookup failed" });
+    }
     const token = await reply.jwtSign({
       sub: user.id,
       userType: user.userType,

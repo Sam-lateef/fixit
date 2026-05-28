@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
-import { ServiceCategory } from "@prisma/client";
+import { ServiceCategory, ShopType } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../db/prisma.js";
 import { E164_WHATSAPP_OTP } from "../lib/phone.js";
@@ -36,18 +36,18 @@ function shopDebugLog(req: FastifyRequest, payload: Record<string, unknown>): vo
 
 const createShopBody = z.object({
   name: z.string().min(1).max(120),
+  // Discriminator chosen at signup. Drives which downstream offer/vehicle
+  // combinations are allowed — see refineShopTypeConsistency below.
+  shopType: z.nativeEnum(ShopType),
   category: z.nativeEnum(ServiceCategory),
   offersRepair: z.boolean(),
   offersParts: z.boolean(),
   offersTowing: z.boolean(),
-  servicesCars: z.boolean().optional(),
-  servicesMotorcycles: z.boolean().optional(),
   carMakes: z.array(z.string()),
   carYearMin: z.number().int().optional(),
   carYearMax: z.number().int().optional(),
   repairCategories: z.array(z.string()),
   partsCategories: z.array(z.string()),
-  deliveryAvailable: z.boolean(),
   repairRadiusKm: z.number().int().min(1).max(50).optional(),
   partsRadiusKm: z.number().int().min(1).max(50).optional(),
   towingRadiusKm: z.number().int().min(1).max(30).optional(),
@@ -56,7 +56,7 @@ const createShopBody = z.object({
   city: z.string().min(1),
   districtId: z.union([z.string().min(1), z.null()]).optional(),
   // Address is allowed to be empty here; the superRefine below requires it
-  // for everything EXCEPT towing-only shops (mobile providers — no fixed
+  // for everything EXCEPT towing shops (mobile providers — no fixed
   // physical address). User.address is nullable in Prisma.
   address: z.string().max(500),
   // Phone is optional in the request body (because OTP-auth users already
@@ -71,18 +71,65 @@ const createShopBody = z.object({
   workshopLng: workshopLngField.optional(),
 });
 
-function refineAddressUnlessTowingOnly(
+/**
+ * Cross-field validity for the new ShopType discriminator:
+ *   CAR / MOTORCYCLE  → offersRepair || offersParts ; offersTowing must be false
+ *   TOWING            → offersTowing must be true ; offersRepair / offersParts must be false
+ *
+ * This is the single source of truth that replaces the old "hasOffer" check
+ * inside the POST handler and the per-vehicle services* booleans.
+ */
+function refineShopTypeConsistency(
   data: {
+    shopType: ShopType;
     offersRepair: boolean;
     offersParts: boolean;
     offersTowing: boolean;
+  },
+  ctx: z.RefinementCtx,
+): void {
+  if (data.shopType === "TOWING") {
+    if (!data.offersTowing) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["offersTowing"],
+        message: "Towing shops must have offersTowing=true",
+      });
+    }
+    if (data.offersRepair || data.offersParts) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["shopType"],
+        message: "Towing shops cannot also offer repair or parts",
+      });
+    }
+    return;
+  }
+  // CAR / MOTORCYCLE
+  if (data.offersTowing) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["offersTowing"],
+      message: "Only TOWING-type shops can offer towing",
+    });
+  }
+  if (!data.offersRepair && !data.offersParts) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["offersRepair"],
+      message: "Select at least one of repair or parts",
+    });
+  }
+}
+
+function refineAddressUnlessTowing(
+  data: {
+    shopType: ShopType;
     address: string;
   },
   ctx: z.RefinementCtx,
 ): void {
-  const isTowingOnly =
-    data.offersTowing && !data.offersRepair && !data.offersParts;
-  if (!isTowingOnly && data.address.trim().length === 0) {
+  if (data.shopType !== "TOWING" && data.address.trim().length === 0) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["address"],
@@ -92,7 +139,8 @@ function refineAddressUnlessTowingOnly(
 }
 
 const createShopSchema = createShopBody
-  .superRefine(refineAddressUnlessTowingOnly)
+  .superRefine(refineShopTypeConsistency)
+  .superRefine(refineAddressUnlessTowing)
   .superRefine(refineWorkshopCoordsTogether);
 
 const coverImageUrlSchema = z
@@ -103,7 +151,11 @@ const yearFieldUpdate = z
   .union([z.number().int().min(1950).max(2035), z.null()])
   .optional();
 
+// shopType and offersTowing are IMMUTABLE after signup — changing them would
+// orphan car/repair/parts data and break active bids. Profile editor must not
+// even send these keys; reject them at the schema layer if they appear.
 const updateShopSchema = createShopBody
+  .omit({ shopType: true, offersTowing: true })
   .partial()
   .extend({
     name: z.string().min(1).max(120).optional(),
@@ -135,11 +187,11 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
         return reply.status(409).send({ error: "Shop already exists" });
       }
       const body = parsed.data;
-      const hasOffer =
-        body.offersRepair || body.offersParts || body.offersTowing;
-      if (!hasOffer) {
-        return reply.status(400).send({ error: "Select at least one service" });
-      }
+      // Note: refineShopTypeConsistency already enforced
+      //   - shopType=TOWING ⇒ offersTowing && !offersRepair && !offersParts
+      //   - shopType=CAR|MOTORCYCLE ⇒ (offersRepair||offersParts) && !offersTowing
+      // so a separate "at least one service" guard is no longer required.
+
       // Shops must be reachable by phone. OTP-auth users already have
       // user.phone set; Google-sign-in users land with null and must
       // include `phone` in this request. We resolve the final value here
@@ -208,18 +260,16 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
         data: {
           userId: request.userId,
           name: body.name,
+          shopType: body.shopType,
           category: body.category,
           offersRepair: body.offersRepair,
           offersParts: body.offersParts,
           offersTowing: body.offersTowing,
-          servicesCars: body.servicesCars ?? true,
-          servicesMotorcycles: body.servicesMotorcycles ?? false,
           carMakes: body.carMakes,
           carYearMin: body.carYearMin,
           carYearMax: body.carYearMax,
           repairCategories: body.repairCategories,
           partsCategories: body.partsCategories,
-          deliveryAvailable: body.deliveryAvailable,
           repairRadiusKm: body.repairRadiusKm,
           partsRadiusKm: body.partsRadiusKm,
           towingRadiusKm: body.towingRadiusKm,
@@ -343,6 +393,30 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
       }
       const body = parsed.data;
 
+      // CAR / MOTORCYCLE shops must keep at least one of repair/parts ON.
+      // Compute the post-patch state to validate before persisting.
+      // (TOWING shops have offersRepair/Parts = false by construction and we
+      // already strip offersTowing from the update body, so they're inert
+      // here unless someone hand-crafts a malicious request.)
+      const effectiveOffersRepair =
+        typeof body.offersRepair === "boolean"
+          ? body.offersRepair
+          : shop.offersRepair;
+      const effectiveOffersParts =
+        typeof body.offersParts === "boolean"
+          ? body.offersParts
+          : shop.offersParts;
+      if (
+        shop.shopType !== "TOWING" &&
+        !effectiveOffersRepair &&
+        !effectiveOffersParts
+      ) {
+        return reply.status(400).send({
+          error: "At least one of repair or parts must remain enabled",
+          field: "offersRepair",
+        });
+      }
+
       // Prefer raw JSON for coverImageUrl when present. Some clients/proxies have been observed
       // where Zod’s parsed `body` omits `coverImageUrl` but Prisma still receives a no-op `{}`
       // update (empty `data` → row unchanged → hero cover never persists).
@@ -385,20 +459,20 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
         workshopLat: body.workshopLat,
         workshopLng: body.workshopLng,
       });
+      // shopType and offersTowing are intentionally absent — both are
+      // immutable after signup (changing them would orphan car/repair/parts
+      // data and break active bids) and `updateShopSchema.omit()` already
+      // strips them at the validation layer.
       const shopPatch = pickDefined({
         name: nameMerged,
         coverImageUrl: coverMerged,
         offersRepair: body.offersRepair,
         offersParts: body.offersParts,
-        offersTowing: body.offersTowing,
-        servicesCars: body.servicesCars,
-        servicesMotorcycles: body.servicesMotorcycles,
         carMakes: body.carMakes,
         carYearMin: body.carYearMin,
         carYearMax: body.carYearMax,
         repairCategories: body.repairCategories,
         partsCategories: body.partsCategories,
-        deliveryAvailable: body.deliveryAvailable,
         repairRadiusKm: body.repairRadiusKm,
         partsRadiusKm: body.partsRadiusKm,
         towingRadiusKm: body.towingRadiusKm,

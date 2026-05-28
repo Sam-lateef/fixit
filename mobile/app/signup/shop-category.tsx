@@ -31,11 +31,10 @@ export default function ShopCategoryStep(): React.ReactElement {
 
   useLayoutEffect(() => {
     if (SERVICE_CATEGORIES_SIGNUP_VISIBLE.length === 1) {
-      const only = SERVICE_CATEGORIES_SIGNUP_VISIBLE[0];
-      router.replace({
-        pathname: "/signup/shop" as Href,
-        params: { data: JSON.stringify({ category: only }) },
-      } as never);
+      // Multi-category signup is shelved (cars-only release). Forward to the
+      // new shop-type picker so the user still picks Car / Motorcycle /
+      // Towing before hitting the services step.
+      router.replace("/signup/shop-type" as Href);
     }
   }, []);
 
@@ -49,8 +48,11 @@ export default function ShopCategoryStep(): React.ReactElement {
 
   function handleContinue(): void {
     if (!selected) return;
+    // When multi-category signup is re-enabled, this still forwards through
+    // the new shop-type picker; the chosen ServiceCategory rides along on
+    // the wizard `data` param.
     router.push({
-      pathname: "/signup/shop" as Href,
+      pathname: "/signup/shop-type" as Href,
       params: {
         data: JSON.stringify({ category: selected }),
       },

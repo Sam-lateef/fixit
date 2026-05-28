@@ -1,4 +1,5 @@
 import type { ServiceCategory } from "@/lib/service-category";
+import type { ShopType } from "@/lib/shop-type";
 
 /**
  * Shop payload used by `/api/v1/shops/me`, `/api/v1/shops/by-id/:id`, and profile UIs.
@@ -7,18 +8,14 @@ export type ShopProfilePayload = {
   id: string;
   name: string;
   category: ServiceCategory;
+  /** Top-level shop discriminator, set once at signup, non-null since the
+   *  shop-type rollout (May 2026). Drives which sections render in the
+   *  profile editor and which posts the feed filter shows on the API. */
+  shopType: ShopType;
   coverImageUrl: string | null;
   offersRepair: boolean;
   offersParts: boolean;
   offersTowing: boolean;
-  /** Whether the shop services cars. Default true. Set false for pure
-   *  motorcycle / tuktuk shops that don't take car work — feed and notify
-   *  skip CAR posts when false. */
-  servicesCars: boolean;
-  /** Whether the shop services motorcycles. Single toggle that opts the shop
-   *  into all motorcycle leads for whichever services (offers*) they provide. */
-  servicesMotorcycles: boolean;
-  deliveryAvailable: boolean;
   rating: number;
   reviewCount: number;
   bidsWon: number;
@@ -29,6 +26,7 @@ export type ShopProfilePayload = {
   carYearMax?: number | null;
   repairCategories: string[];
   partsCategories: string[];
+  partsNationwide: boolean;
   /** Districts the shop covers. Empty = whole city. */
   servedDistrictIds: string[];
   /** Resolved district details for `servedDistrictIds` (server-side lookup

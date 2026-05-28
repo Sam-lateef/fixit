@@ -13,12 +13,23 @@ export type ShopForFeed = Shop & {
 
 export type FeedEntry = PostForFeed & { distanceKm: number | null };
 
+/**
+ * Decide whether the post's vehicle scope is compatible with the shop.
+ *
+ *   CAR        → only CAR posts
+ *   MOTORCYCLE → only MOTORCYCLE posts
+ *   TOWING     → vehicle-agnostic (both)
+ */
 function vehicleTypeAllowedForShop(shop: ShopForFeed, post: PostForFeed): boolean {
+  if (shop.shopType === "TOWING") return true;
   const isMotoPost = post.vehicleType === "MOTORCYCLE";
-  if (isMotoPost) {
-    return shop.servicesMotorcycles;
-  }
-  return shop.servicesCars;
+  if (shop.shopType === "MOTORCYCLE") return isMotoPost;
+  return !isMotoPost;
+}
+
+/** Car-specific filters (make / year / repair-cat / parts-cat) only apply to CAR shops. */
+function isCarShopForFilter(shop: ShopForFeed): boolean {
+  return shop.shopType === "CAR";
 }
 
 export function sortFeedEntries(a: FeedEntry, b: FeedEntry): number {
@@ -204,26 +215,26 @@ export function filterPostsForShop(
     if (post.serviceType === "PARTS" && !shop.offersParts) continue;
     if (post.serviceType === "TOWING" && !shop.offersTowing) continue;
 
-    // Motorcycle posts gate on the shop's servicesMotorcycles toggle and skip
-    // car-specific filters (make/year/category) — the shop opts in to ALL
-    // motorcycle categories with one switch (no per-category opt-in).
-    // Car posts gate on servicesCars (default true) so a pure motorcycle /
-    // tuktuk shop never sees car requests.
-    const isMotoPost = post.vehicleType === "MOTORCYCLE";
+    // Vehicle gate — shopType=CAR sees CAR posts, MOTORCYCLE sees MOTORCYCLE
+    // posts, TOWING sees both. Car-specific chips (make / year / category)
+    // only apply to actual CAR shops; motorcycle / towing shops opt in to
+    // ALL relevant posts with no sub-filter (no per-moto-make column yet,
+    // and towing shops don't carry repair/parts taxonomies).
     if (!vehicleTypeAllowedForShop(shop, post)) continue;
+    const isCarShop = isCarShopForFilter(shop);
 
-    if (!isMotoPost && post.carMake && shop.carMakes.length > 0) {
+    if (isCarShop && post.carMake && shop.carMakes.length > 0) {
       const shopMakes = shop.carMakes.map(normTag);
       if (!shopMakes.includes(normTag(post.carMake))) continue;
     }
 
-    if (!isMotoPost && post.carYear) {
+    if (isCarShop && post.carYear) {
       if (shop.carYearMin && post.carYear < shop.carYearMin) continue;
       if (shop.carYearMax && post.carYear > shop.carYearMax) continue;
     }
 
     if (
-      !isMotoPost &&
+      isCarShop &&
       post.serviceType === "REPAIR" &&
       post.repairCategory &&
       shop.repairCategories.length > 0
@@ -237,7 +248,7 @@ export function filterPostsForShop(
       if (!matched) continue;
     }
     if (
-      !isMotoPost &&
+      isCarShop &&
       post.serviceType === "PARTS" &&
       post.partsCategory &&
       shop.partsCategories.length > 0
