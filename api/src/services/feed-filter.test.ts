@@ -13,6 +13,7 @@ function shop(over: Partial<ShopForFeed> = {}): ShopForFeed {
     userId: "u1",
     name: "Test",
     coverImageUrl: null,
+    bio: null,
     category: "CARS",
     shopType: "CAR",
     offersRepair: true,

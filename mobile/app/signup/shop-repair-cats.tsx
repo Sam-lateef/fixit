@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { useI18n } from "@/lib/i18n";
+import { asShopType } from "@/lib/shop-type";
 import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import {
   REPAIR_CATEGORY_SLUGS,
@@ -15,19 +16,24 @@ export default function ShopRepairCatsStep(): React.ReactElement {
   const { t, locale } = useI18n();
   const raw = useLocalSearchParams<{ data?: string }>();
   const prev = parseSignupWizardData(raw.data);
+  const shopType = asShopType(prev.shopType);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
+  // Skip this screen for MOTORCYCLE / TOWING shops — the repair-category
+  // taxonomy is car-only. Also skip if the user didn't opt-in to repair.
   useEffect(() => {
-    if (!Boolean(prev.offersRepair)) {
+    const skipForType = shopType != null && shopType !== "CAR";
+    if (skipForType || !Boolean(prev.offersRepair)) {
       const data = raw.data as string;
-      if (Boolean(prev.offersParts)) {
-      router.replace({ pathname: "/signup/shop-parts-cats" as Href, params: { data } } as never);
-    } else {
-      router.replace({ pathname: "/signup/shop-location" as Href, params: { data } } as never);
+      if (!skipForType && Boolean(prev.offersParts)) {
+        router.replace({ pathname: "/signup/shop-parts-cats" as Href, params: { data } } as never);
+      } else {
+        router.replace({ pathname: "/signup/shop-location" as Href, params: { data } } as never);
       }
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shopType]);
 
   function toggle(cat: string): void {
     setSelected((p) => {
@@ -49,7 +55,7 @@ export default function ShopRepairCatsStep(): React.ReactElement {
     }
   }
 
-  if (!Boolean(prev.offersRepair)) {
+  if (!Boolean(prev.offersRepair) || (shopType != null && shopType !== "CAR")) {
     return <View />;
   }
 

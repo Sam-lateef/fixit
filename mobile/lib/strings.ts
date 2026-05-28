@@ -319,8 +319,10 @@ export const en = {
   selectAtLeastOneRepairOrParts:
     "Pick at least one — Repair or Spare parts.",
   shopTypeLabel: "Shop type",
-  shopTypeLockedHint: "Set at signup — contact support to change.",
   partsNationwideLabel: "Nationwide parts",
+  bioLabel: "About",
+  bioPlaceholder: "Tell customers about your shop (optional)",
+  bioTooLong: "About is too long (max 500 characters).",
   atLeastOneServiceRequired:
     "Keep at least one of Repair or Spare parts on.",
   serviceJob: "Service",
@@ -684,8 +686,10 @@ export const arIq: Record<keyof typeof en, string> = {
   shopTypeTowingSub: "سحب سيارات، توكتوك، أو مواتير",
   selectAtLeastOneRepairOrParts: "اختر على الأقل واحد — تصليح أو قطع غيار.",
   shopTypeLabel: "نوع المحل",
-  shopTypeLockedHint: "محدّد عند التسجيل — للتغيير تواصل مع الدعم.",
   partsNationwideLabel: "توصيل قطع غيار لكل العراق",
+  bioLabel: "نبذة",
+  bioPlaceholder: "اكتب نبذة قصيرة عن محلك (اختياري)",
+  bioTooLong: "النبذة طويلة (الحد الأقصى 500 حرف).",
   atLeastOneServiceRequired: "خلّي تصليح أو قطع غيار شغّال على الأقل.",
   chooseCategorySubtitle: "لا يمكن تغييرها بعد الإعداد.",
   serviceJob: "خدمة",

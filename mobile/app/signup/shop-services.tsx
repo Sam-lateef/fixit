@@ -56,18 +56,11 @@ export default function ShopServicesStep(): React.ReactElement {
       offersTowing: false,
     });
 
-    // Motorcycle shops have no per-make taxonomy yet — they jump straight to
-    // repair / parts category pickers (or location if neither was selected,
-    // which can't happen given the ≥1 guard above, but kept symmetric with
-    // the CAR path for safety).
+    // Motorcycle shops skip the car-specific pickers entirely (no makes,
+    // no repair/parts category chips — the taxonomy is car-only today).
+    // They jump straight to location.
     if (shopType === "MOTORCYCLE") {
-      if (offersRepair) {
-        router.push({ pathname: "/signup/shop-repair-cats" as Href, params: { data } } as never);
-      } else if (offersParts) {
-        router.push({ pathname: "/signup/shop-parts-cats" as Href, params: { data } } as never);
-      } else {
-        router.push({ pathname: "/signup/shop-location" as Href, params: { data } } as never);
-      }
+      router.push({ pathname: "/signup/shop-location" as Href, params: { data } } as never);
       return;
     }
 

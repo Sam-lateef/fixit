@@ -53,18 +53,18 @@ export default function ShopMakesStep(): React.ReactElement {
   const [yearToPickerOpen, setYearToPickerOpen] = useState(false);
 
   // Car makes + years only apply to CAR shops. Motorcycle and towing shops
-  // arriving here from a stale back-stack should bounce forward to the next
-  // relevant step instead of being forced through an irrelevant chip picker.
+  // arriving here from a stale back-stack bounce straight to location —
+  // they don't get car makes, car years, or repair/parts category chips
+  // (the taxonomy is car-only today).
   useEffect(() => {
     if (shopType != null && shopType !== "CAR") {
-      const data = JSON.stringify({ ...prev, makes: [], yearFrom: "", yearTo: "" });
-      if (Boolean(prev.offersRepair)) {
-        router.replace({ pathname: "/signup/shop-repair-cats" as Href, params: { data } } as never);
-      } else if (Boolean(prev.offersParts)) {
-        router.replace({ pathname: "/signup/shop-parts-cats" as Href, params: { data } } as never);
-      } else {
-        router.replace({ pathname: "/signup/shop-location" as Href, params: { data } } as never);
-      }
+      const data = JSON.stringify({
+        ...prev,
+        makes: [],
+        yearFrom: "",
+        yearTo: "",
+      });
+      router.replace({ pathname: "/signup/shop-location" as Href, params: { data } } as never);
     }
     // prev is stable for the lifetime of this screen; the dep on shopType
     // alone is enough to react to the discriminator. Intentional empty deps

@@ -82,6 +82,10 @@ model Shop {
   /// Public hero / storefront image (HTTPS URL from uploads).
   coverImageUrl String?
 
+  /// Optional short bio shown on the shop profile (about / introduction).
+  /// Max 500 chars, enforced at the API layer. Plain text only.
+  bio String?
+
   offersRepair Boolean @default(false)
   offersParts  Boolean @default(false)
   offersTowing Boolean @default(false)

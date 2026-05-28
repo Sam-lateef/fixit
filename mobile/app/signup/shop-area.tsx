@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Switch,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
@@ -41,6 +42,7 @@ export default function ShopAreaStep(): React.ReactElement {
   // which the server treats as "serve whole city".
   const [serveAll, setServeAll] = useState(true);
   const [partsNationwide, setPartsNationwide] = useState(false);
+  const [bio, setBio] = useState("");
 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -111,6 +113,9 @@ export default function ShopAreaStep(): React.ReactElement {
     const carYearMin = parseSignupYear(prev.yearFrom);
     const carYearMax = parseSignupYear(prev.yearTo);
 
+    // MOTO and TOWING shops never get the car-only repair/parts category
+    // pickers, so any leftover values from a stale wizard state are dropped.
+    const bioTrimmed = bio.trim();
     const body: Record<string, unknown> = {
       name: prev.shopName,
       shopType,
@@ -118,21 +123,26 @@ export default function ShopAreaStep(): React.ReactElement {
       offersRepair,
       offersParts,
       offersTowing,
-      carMakes: (prev.makes as string[]) ?? [],
-      carYearMin,
-      carYearMax,
-      repairCategories: offersRepair
-        ? (prev.repairCategories as string[]) ?? []
-        : [],
-      partsCategories: offersParts
-        ? (prev.partsCategories as string[]) ?? []
-        : [],
+      carMakes: shopType === "CAR" ? (prev.makes as string[]) ?? [] : [],
+      carYearMin: shopType === "CAR" ? carYearMin : undefined,
+      carYearMax: shopType === "CAR" ? carYearMax : undefined,
+      repairCategories:
+        shopType === "CAR" && offersRepair
+          ? (prev.repairCategories as string[]) ?? []
+          : [],
+      partsCategories:
+        shopType === "CAR" && offersParts
+          ? (prev.partsCategories as string[]) ?? []
+          : [],
       city: prev.city,
       districtId: prev.districtId ?? null,
       address: addr,
       servedDistrictIds: serveAll ? [] : Array.from(selected),
       partsNationwide: offersParts ? partsNationwide : false,
     };
+    if (bioTrimmed.length > 0) {
+      body.bio = bioTrimmed;
+    }
     // Forward phone collected on shop-location.tsx. API requires non-null
     // user.phone for shops so customers can contact them.
     if (typeof prev.phone === "string" && prev.phone.trim().length > 0) {
@@ -235,6 +245,22 @@ export default function ShopAreaStep(): React.ReactElement {
         ) : null}
       </View>
 
+      <View style={s.section}>
+        <Text style={s.sectionTitle}>{t("bioLabel")}</Text>
+        <TextInput
+          style={s.bioInput}
+          value={bio}
+          onChangeText={(v) => setBio(v.slice(0, 500))}
+          placeholder={t("bioPlaceholder")}
+          placeholderTextColor={theme.mutedLight}
+          multiline
+          numberOfLines={4}
+          maxLength={500}
+          textAlignVertical="top"
+        />
+        <Text style={s.bioCounter}>{bio.length}/500</Text>
+      </View>
+
       {err !== "" && <Text style={s.err}>{err}</Text>}
 
       <Pressable
@@ -299,6 +325,24 @@ const s = StyleSheet.create({
   chipOn: { backgroundColor: theme.primaryMid, borderColor: theme.primaryMid },
   chipText: { fontSize: 14, color: theme.text, fontWeight: "600" },
   chipTextOn: { color: "#fff" },
+  bioInput: {
+    minHeight: 96,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: theme.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: theme.text,
+    backgroundColor: theme.surface,
+    textAlign: "left",
+  },
+  bioCounter: {
+    marginTop: 6,
+    fontSize: 12,
+    color: theme.muted,
+    textAlign: "right",
+  },
   err: { marginTop: 12, color: theme.danger, fontSize: 13, textAlign: "left" },
   btn: {
     marginTop: 28,

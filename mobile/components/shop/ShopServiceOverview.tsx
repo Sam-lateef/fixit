@@ -85,7 +85,7 @@ export function ShopServiceOverview(props: ShopServiceOverviewProps): ReactEleme
         </View>
       ) : null}
 
-      {shop.offersRepair ? (
+      {isCarShop && shop.offersRepair ? (
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{t("repairCategories")}</Text>
@@ -109,7 +109,7 @@ export function ShopServiceOverview(props: ShopServiceOverviewProps): ReactEleme
         </View>
       ) : null}
 
-      {shop.offersParts ? (
+      {isCarShop && shop.offersParts ? (
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{t("partsCategories")}</Text>

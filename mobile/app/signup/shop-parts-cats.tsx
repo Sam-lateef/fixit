@@ -10,6 +10,7 @@ import {
 
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { useI18n } from "@/lib/i18n";
+import { asShopType } from "@/lib/shop-type";
 import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import {
   PARTS_CATEGORY_SLUGS,
@@ -21,17 +22,21 @@ export default function ShopPartsCatsStep(): React.ReactElement {
   const { t, locale } = useI18n();
   const raw = useLocalSearchParams<{ data?: string }>();
   const prev = parseSignupWizardData(raw.data);
+  const shopType = asShopType(prev.shopType);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
+  // Skip this screen for MOTORCYCLE / TOWING shops (parts-category taxonomy
+  // is car-only) and for any shop that didn't opt-in to Parts.
   useEffect(() => {
-    if (!Boolean(prev.offersParts)) {
+    if ((shopType != null && shopType !== "CAR") || !Boolean(prev.offersParts)) {
       router.replace({
         pathname: "/signup/shop-location" as Href,
         params: { data: raw.data as string },
       } as never);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shopType]);
 
   function toggle(cat: string): void {
     setSelected((p) => {
@@ -53,7 +58,7 @@ export default function ShopPartsCatsStep(): React.ReactElement {
     } as never);
   }
 
-  if (!Boolean(prev.offersParts)) {
+  if (!Boolean(prev.offersParts) || (shopType != null && shopType !== "CAR")) {
     return <View />;
   }
 

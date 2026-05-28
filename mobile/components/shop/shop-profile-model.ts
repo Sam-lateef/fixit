@@ -13,6 +13,8 @@ export type ShopProfilePayload = {
    *  profile editor and which posts the feed filter shows on the API. */
   shopType: ShopType;
   coverImageUrl: string | null;
+  /** Optional "about your shop" blurb. Max 500 chars (API enforces). */
+  bio: string | null;
   offersRepair: boolean;
   offersParts: boolean;
   offersTowing: boolean;

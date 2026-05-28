@@ -162,6 +162,7 @@ export default function ShopProfileScreen(): React.ReactElement {
   const [shopNameDraft, setShopNameDraft] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editUserName, setEditUserName] = useState("");
+  const [editBio, setEditBio] = useState("");
   const [catalogMakes, setCatalogMakes] = useState<CatalogMake[]>([]);
   const [catalogMakesLoading, setCatalogMakesLoading] = useState(false);
   const [makeSearchQuery, setMakeSearchQuery] = useState("");
@@ -253,11 +254,13 @@ export default function ShopProfileScreen(): React.ReactElement {
     if (!shop) {
       setEditPhone("");
       setEditUserName("");
+      setEditBio("");
       return;
     }
     setEditPhone(shop.user.phone ?? "");
     setEditUserName(shop.user.name ?? "");
-  }, [shop?.id, shop?.user.phone, shop?.user.name]);
+    setEditBio(shop.bio ?? "");
+  }, [shop?.id, shop?.user.phone, shop?.user.name, shop?.bio]);
 
   useEffect(() => {
     if (editSection !== "makes") {
@@ -606,6 +609,33 @@ export default function ShopProfileScreen(): React.ReactElement {
     })();
   };
 
+  const commitBioIfChanged = (): void => {
+    if (!shop || saving) return;
+    const trimmed = editBio.trim();
+    const prev = (shop.bio ?? "").trim();
+    if (trimmed === prev) return;
+    if (trimmed.length > 500) {
+      Alert.alert(t("errorTitle"), t("bioTooLong"));
+      setEditBio(shop.bio ?? "");
+      return;
+    }
+    setSaving(true);
+    void (async () => {
+      try {
+        await apiFetch("/api/v1/shops/me", {
+          method: "PUT",
+          body: JSON.stringify({ bio: trimmed.length > 0 ? trimmed : null }),
+        });
+        await load();
+      } catch (e) {
+        Alert.alert(t("errorTitle"), friendlyApiError(e, t, "updateFailed"));
+        setEditBio(shop.bio ?? "");
+      } finally {
+        setSaving(false);
+      }
+    })();
+  };
+
   const commitCoverImageUrl = async (url: string): Promise<void> => {
     if (!shop) return;
     shopDevLog("commitCover: PUT /shops/me start", {
@@ -861,6 +891,28 @@ export default function ShopProfileScreen(): React.ReactElement {
             ) : null}
 
             <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
+              {t("bioLabel")}
+            </Text>
+            <TextInput
+              style={[
+                styles.fieldInput,
+                styles.bioInput,
+                locale === "ar-iq"
+                  ? { textAlign: "right", writingDirection: "rtl" }
+                  : { textAlign: "left", writingDirection: "ltr" },
+              ]}
+              value={editBio}
+              onChangeText={(v) => setEditBio(v.slice(0, 500))}
+              onEndEditing={commitBioIfChanged}
+              onBlur={commitBioIfChanged}
+              placeholder={t("bioPlaceholder")}
+              placeholderTextColor={theme.mutedLight}
+              multiline
+              maxLength={500}
+              textAlignVertical="top"
+            />
+
+            <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
               {t("servedDistricts")}
             </Text>
             <Pressable onPress={openServedEdit} hitSlop={8}>
@@ -904,18 +956,11 @@ export default function ShopProfileScreen(): React.ReactElement {
 
         {/* Settings */}
         <View style={styles.sectionCard}>
-          {/* Shop type — read-only. Set at signup and immutable thereafter;
-              changing it would orphan car/repair/parts data and break active
-              bids. Rendered as a static row so the user can see what their
-              shop is registered as (and how to change it if needed). */}
+          {/* Shop type — read-only. Immutable after signup (changing it would
+              orphan car/repair/parts data and break active bids). */}
           {shop ? (
             <View style={styles.settingRow}>
-              <View style={styles.settingLabelCol}>
-                <Text style={styles.settingLabel}>{t("shopTypeLabel")}</Text>
-                <Text style={styles.settingHint}>
-                  {t("shopTypeLockedHint")}
-                </Text>
-              </View>
+              <Text style={styles.settingLabel}>{t("shopTypeLabel")}</Text>
               <Text style={styles.settingValue}>{shopTypeLabel(shop)}</Text>
             </View>
           ) : null}
@@ -1764,6 +1809,10 @@ const styles = StyleSheet.create({
     color: theme.text,
     backgroundColor: theme.bg,
     textAlign: "left",
+  },
+  bioInput: {
+    minHeight: 96,
+    fontSize: 15,
   },
   fieldStatic: {
     marginTop: 6,

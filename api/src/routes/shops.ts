@@ -59,6 +59,10 @@ const createShopBody = z.object({
   // for everything EXCEPT towing shops (mobile providers — no fixed
   // physical address). User.address is nullable in Prisma.
   address: z.string().max(500),
+  // Optional "about your shop" blurb. Empty / whitespace-only strings are
+  // stored as null so the column doesn't fill with junk from over-eager
+  // clients that always include the key.
+  bio: z.union([z.string().max(500), z.null()]).optional(),
   // Phone is optional in the request body (because OTP-auth users already
   // have user.phone populated from the OTP flow), but the POST handler
   // requires the FINAL user.phone to be non-null and E.164-valid.
@@ -256,6 +260,8 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
         }
         throw e;
       }
+      const bioTrimmed =
+        typeof body.bio === "string" ? body.bio.trim() : null;
       const shop = await prisma.shop.create({
         data: {
           userId: request.userId,
@@ -265,6 +271,7 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
           offersRepair: body.offersRepair,
           offersParts: body.offersParts,
           offersTowing: body.offersTowing,
+          bio: bioTrimmed && bioTrimmed.length > 0 ? bioTrimmed : null,
           carMakes: body.carMakes,
           carYearMin: body.carYearMin,
           carYearMax: body.carYearMax,
@@ -463,9 +470,20 @@ export async function registerShopRoutes(fastify: FastifyInstance): Promise<void
       // immutable after signup (changing them would orphan car/repair/parts
       // data and break active bids) and `updateShopSchema.omit()` already
       // strips them at the validation layer.
+      // Bio: empty / whitespace-only string clears the column (null). undefined
+      // (not in patch) → no change. Same normalisation rule as the POST path.
+      const bioForUpdate =
+        typeof body.bio === "string"
+          ? body.bio.trim().length > 0
+            ? body.bio.trim()
+            : null
+          : body.bio === null
+            ? null
+            : undefined;
       const shopPatch = pickDefined({
         name: nameMerged,
         coverImageUrl: coverMerged,
+        bio: bioForUpdate,
         offersRepair: body.offersRepair,
         offersParts: body.offersParts,
         carMakes: body.carMakes,
