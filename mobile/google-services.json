@@ -58,6 +58,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "925833254957-jjq508juc2829h50jjm1ti9f6mcj985e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fixitiq.app",
+            "certificate_hash": "b9617e49e6210bf5602812f70a4b79b5dfaea049"
+          }
+        },
+        {
           "client_id": "925833254957-q88c8f43f3rstdgakil41en72dtj6afi.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
