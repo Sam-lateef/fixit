@@ -18,6 +18,7 @@ import { renderInbox } from "./pages/inbox.js";
 import { renderChat } from "./pages/chat.js";
 import { renderPlaceBid } from "./pages/place-bid.js";
 import { renderShopBids } from "./pages/shop-bids.js";
+import { renderShopDashboard } from "./pages/shop-dashboard.js";
 
 export type RouteContext = {
   root: HTMLElement;
@@ -130,6 +131,13 @@ async function route(): Promise<void> {
       return;
     }
     await renderOwnerHome(root);
+    return;
+  }
+  // Public placeholder for the shop owner's web dashboard. Linked from the
+  // mobile shop profile via /api/v1/public/config.shopDashboardUrl. Must be
+  // matched BEFORE the auth-gated `/shop` block below.
+  if (hash === "/shop/dashboard" || hash.startsWith("/shop/dashboard?")) {
+    renderShopDashboard(root);
     return;
   }
   if (hash.startsWith("/shop/bid/")) {

@@ -425,6 +425,511 @@
         { "name": "Coolray", "nameAr": "كول راي", "sortOrder": 0, "yearFrom": 2020, "yearTo": 2026 },
         { "name": "Tugella", "nameAr": "توجيلا", "sortOrder": 1, "yearFrom": 2021, "yearTo": 2026 }
       ]
+    },
+    {
+      "name": "Acura",
+      "nameAr": "أكورا",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "TLX", "nameAr": "تي إل إكس", "sortOrder": 0, "yearFrom": 2015, "yearTo": 2026 },
+        { "name": "ILX", "nameAr": "آي إل إكس", "sortOrder": 1, "yearFrom": 2013, "yearTo": 2022 },
+        { "name": "MDX", "nameAr": "إم دي إكس", "sortOrder": 2, "yearFrom": 2007, "yearTo": 2026 },
+        { "name": "RDX", "nameAr": "آر دي إكس", "sortOrder": 3, "yearFrom": 2007, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Alfa Romeo",
+      "nameAr": "ألفا روميو",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Giulia", "nameAr": "جوليا", "sortOrder": 0, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "Stelvio", "nameAr": "ستيلفيو", "sortOrder": 1, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "Tonale", "nameAr": "تونالي", "sortOrder": 2, "yearFrom": 2023, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Aston Martin",
+      "nameAr": "أستون مارتن",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Vantage", "nameAr": "فانتاج", "sortOrder": 0, "yearFrom": 2006, "yearTo": 2026 },
+        { "name": "DB11", "nameAr": "دي بي 11", "sortOrder": 1, "yearFrom": 2017, "yearTo": 2024 },
+        { "name": "DBX", "nameAr": "دي بي إكس", "sortOrder": 2, "yearFrom": 2021, "yearTo": 2026 },
+        { "name": "DBS", "nameAr": "دي بي إس", "sortOrder": 3, "yearFrom": 2008, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "BAIC",
+      "nameAr": "بايك",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "BJ40", "nameAr": "بي جيه 40", "sortOrder": 0, "yearFrom": 2014, "yearTo": 2026 },
+        { "name": "BJ80", "nameAr": "بي جيه 80", "sortOrder": 1, "yearFrom": 2015, "yearTo": 2026 },
+        { "name": "X35", "nameAr": "إكس 35", "sortOrder": 2, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "X55", "nameAr": "إكس 55", "sortOrder": 3, "yearFrom": 2019, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Bentley",
+      "nameAr": "بنتلي",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Continental GT", "nameAr": "كونتيننتال جي تي", "sortOrder": 0, "yearFrom": 2003, "yearTo": 2026 },
+        { "name": "Flying Spur", "nameAr": "فلاينج سبير", "sortOrder": 1, "yearFrom": 2005, "yearTo": 2026 },
+        { "name": "Bentayga", "nameAr": "بنتايجا", "sortOrder": 2, "yearFrom": 2016, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Buick",
+      "nameAr": "بويك",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Encore", "nameAr": "إنكور", "sortOrder": 0, "yearFrom": 2013, "yearTo": 2026 },
+        { "name": "Enclave", "nameAr": "إنكليف", "sortOrder": 1, "yearFrom": 2008, "yearTo": 2026 },
+        { "name": "Envision", "nameAr": "إنفيجن", "sortOrder": 2, "yearFrom": 2016, "yearTo": 2026 },
+        { "name": "LaCrosse", "nameAr": "لاكروس", "sortOrder": 3, "yearFrom": 2010, "yearTo": 2019 },
+        { "name": "Regal", "nameAr": "ريجال", "sortOrder": 4, "yearFrom": 2011, "yearTo": 2020 }
+      ]
+    },
+    {
+      "name": "Cadillac",
+      "nameAr": "كاديلاك",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Escalade", "nameAr": "إسكاليد", "sortOrder": 0, "yearFrom": 2007, "yearTo": 2026 },
+        { "name": "Escalade ESV", "nameAr": "إسكاليد إي إس في", "sortOrder": 1, "yearFrom": 2007, "yearTo": 2026 },
+        { "name": "XT4", "nameAr": "إكس تي 4", "sortOrder": 2, "yearFrom": 2019, "yearTo": 2026 },
+        { "name": "XT5", "nameAr": "إكس تي 5", "sortOrder": 3, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "XT6", "nameAr": "إكس تي 6", "sortOrder": 4, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "CT4", "nameAr": "سي تي 4", "sortOrder": 5, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "CT5", "nameAr": "سي تي 5", "sortOrder": 6, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "CT6", "nameAr": "سي تي 6", "sortOrder": 7, "yearFrom": 2016, "yearTo": 2020 }
+      ]
+    },
+    {
+      "name": "Chrysler",
+      "nameAr": "كرايسلر",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "300", "nameAr": "300", "sortOrder": 0, "yearFrom": 2005, "yearTo": 2023 },
+        { "name": "Pacifica", "nameAr": "باسيفيكا", "sortOrder": 1, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "Voyager", "nameAr": "فوياجر", "sortOrder": 2, "yearFrom": 2020, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Citroen",
+      "nameAr": "سيتروين",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "C-Elysee", "nameAr": "سي إيليزيه", "sortOrder": 0, "yearFrom": 2013, "yearTo": 2026 },
+        { "name": "C5", "nameAr": "سي 5", "sortOrder": 1, "yearFrom": 2008, "yearTo": 2026 },
+        { "name": "C5 Aircross", "nameAr": "سي 5 إيركروس", "sortOrder": 2, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "C3", "nameAr": "سي 3", "sortOrder": 3, "yearFrom": 2017, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Dacia",
+      "nameAr": "داتشا",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Duster", "nameAr": "داستر", "sortOrder": 0, "yearFrom": 2010, "yearTo": 2026 },
+        { "name": "Sandero", "nameAr": "ساندرو", "sortOrder": 1, "yearFrom": 2008, "yearTo": 2026 },
+        { "name": "Logan", "nameAr": "لوجان", "sortOrder": 2, "yearFrom": 2004, "yearTo": 2026 },
+        { "name": "Lodgy", "nameAr": "لودجي", "sortOrder": 3, "yearFrom": 2012, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Daihatsu",
+      "nameAr": "دايهاتسو",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Terios", "nameAr": "تيريوس", "sortOrder": 0, "yearFrom": 2006, "yearTo": 2017 },
+        { "name": "Mira", "nameAr": "ميرا", "sortOrder": 1, "yearFrom": 2007, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Dodge",
+      "nameAr": "دودج",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Charger", "nameAr": "تشارجر", "sortOrder": 0, "yearFrom": 2006, "yearTo": 2023 },
+        { "name": "Challenger", "nameAr": "تشالنجر", "sortOrder": 1, "yearFrom": 2008, "yearTo": 2023 },
+        { "name": "Durango", "nameAr": "دورانجو", "sortOrder": 2, "yearFrom": 2011, "yearTo": 2026 },
+        { "name": "Journey", "nameAr": "جورني", "sortOrder": 3, "yearFrom": 2009, "yearTo": 2020 },
+        { "name": "Nitro", "nameAr": "نيترو", "sortOrder": 4, "yearFrom": 2007, "yearTo": 2012 },
+        { "name": "Caliber", "nameAr": "كاليبر", "sortOrder": 5, "yearFrom": 2007, "yearTo": 2012 },
+        { "name": "Caravan", "nameAr": "كرفان", "sortOrder": 6, "yearFrom": 2008, "yearTo": 2020 }
+      ]
+    },
+    {
+      "name": "Dongfeng",
+      "nameAr": "دونغ فينغ",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "AX7", "nameAr": "إيه إكس 7", "sortOrder": 0, "yearFrom": 2014, "yearTo": 2026 },
+        { "name": "Glory 580", "nameAr": "جلوري 580", "sortOrder": 1, "yearFrom": 2016, "yearTo": 2026 },
+        { "name": "Rich 6", "nameAr": "ريتش 6", "sortOrder": 2, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "T5", "nameAr": "تي 5", "sortOrder": 3, "yearFrom": 2018, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "FAW",
+      "nameAr": "فاو",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Bestune T77", "nameAr": "بستون تي 77", "sortOrder": 0, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "Bestune T99", "nameAr": "بستون تي 99", "sortOrder": 1, "yearFrom": 2019, "yearTo": 2026 },
+        { "name": "Bestune B70", "nameAr": "بستون بي 70", "sortOrder": 2, "yearFrom": 2006, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Ferrari",
+      "nameAr": "فيراري",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "488", "nameAr": "488", "sortOrder": 0, "yearFrom": 2015, "yearTo": 2020 },
+        { "name": "F8 Tributo", "nameAr": "إف 8 تريبوتو", "sortOrder": 1, "yearFrom": 2019, "yearTo": 2023 },
+        { "name": "Roma", "nameAr": "روما", "sortOrder": 2, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "SF90", "nameAr": "إس إف 90", "sortOrder": 3, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "296 GTB", "nameAr": "296 جي تي بي", "sortOrder": 4, "yearFrom": 2022, "yearTo": 2026 },
+        { "name": "Purosangue", "nameAr": "بوروسانجوي", "sortOrder": 5, "yearFrom": 2023, "yearTo": 2026 },
+        { "name": "Portofino", "nameAr": "بورتوفينو", "sortOrder": 6, "yearFrom": 2018, "yearTo": 2024 }
+      ]
+    },
+    {
+      "name": "Foton",
+      "nameAr": "فوتون",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Tunland", "nameAr": "تونلاند", "sortOrder": 0, "yearFrom": 2012, "yearTo": 2026 },
+        { "name": "View", "nameAr": "فيو", "sortOrder": 1, "yearFrom": 2010, "yearTo": 2026 },
+        { "name": "Sauvana", "nameAr": "سوفانا", "sortOrder": 2, "yearFrom": 2015, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "GAC",
+      "nameAr": "جي إيه سي",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "GS3", "nameAr": "جي إس 3", "sortOrder": 0, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "GS4", "nameAr": "جي إس 4", "sortOrder": 1, "yearFrom": 2014, "yearTo": 2026 },
+        { "name": "GS8", "nameAr": "جي إس 8", "sortOrder": 2, "yearFrom": 2016, "yearTo": 2026 },
+        { "name": "GN8", "nameAr": "جي إن 8", "sortOrder": 3, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "Empow", "nameAr": "إمبو", "sortOrder": 4, "yearFrom": 2021, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Genesis",
+      "nameAr": "جينيسيس",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "G70", "nameAr": "جي 70", "sortOrder": 0, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "G80", "nameAr": "جي 80", "sortOrder": 1, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "G90", "nameAr": "جي 90", "sortOrder": 2, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "GV60", "nameAr": "جي في 60", "sortOrder": 3, "yearFrom": 2022, "yearTo": 2026 },
+        { "name": "GV70", "nameAr": "جي في 70", "sortOrder": 4, "yearFrom": 2022, "yearTo": 2026 },
+        { "name": "GV80", "nameAr": "جي في 80", "sortOrder": 5, "yearFrom": 2021, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Great Wall",
+      "nameAr": "جريت وول",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Wingle 7", "nameAr": "وينجل 7", "sortOrder": 0, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "Poer", "nameAr": "بوير", "sortOrder": 1, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "Cannon", "nameAr": "كانون", "sortOrder": 2, "yearFrom": 2020, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Hongqi",
+      "nameAr": "هونغ تشي",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "H5", "nameAr": "إتش 5", "sortOrder": 0, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "H9", "nameAr": "إتش 9", "sortOrder": 1, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "HS5", "nameAr": "إتش إس 5", "sortOrder": 2, "yearFrom": 2019, "yearTo": 2026 },
+        { "name": "HS7", "nameAr": "إتش إس 7", "sortOrder": 3, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "E-HS9", "nameAr": "إي إتش إس 9", "sortOrder": 4, "yearFrom": 2021, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Hummer",
+      "nameAr": "همر",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "H1", "nameAr": "إتش 1", "sortOrder": 0, "yearFrom": 1992, "yearTo": 2006 },
+        { "name": "H2", "nameAr": "إتش 2", "sortOrder": 1, "yearFrom": 2003, "yearTo": 2009 },
+        { "name": "H3", "nameAr": "إتش 3", "sortOrder": 2, "yearFrom": 2006, "yearTo": 2010 },
+        { "name": "EV", "nameAr": "إي في", "sortOrder": 3, "yearFrom": 2022, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Infiniti",
+      "nameAr": "إنفينيتي",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Q50", "nameAr": "كيو 50", "sortOrder": 0, "yearFrom": 2014, "yearTo": 2026 },
+        { "name": "Q60", "nameAr": "كيو 60", "sortOrder": 1, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "QX50", "nameAr": "كيو إكس 50", "sortOrder": 2, "yearFrom": 2014, "yearTo": 2026 },
+        { "name": "QX55", "nameAr": "كيو إكس 55", "sortOrder": 3, "yearFrom": 2022, "yearTo": 2026 },
+        { "name": "QX60", "nameAr": "كيو إكس 60", "sortOrder": 4, "yearFrom": 2014, "yearTo": 2026 },
+        { "name": "QX80", "nameAr": "كيو إكس 80", "sortOrder": 5, "yearFrom": 2014, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Iran Khodro",
+      "nameAr": "إيران خودرو",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Samand", "nameAr": "سمند", "sortOrder": 0, "yearFrom": 2002, "yearTo": 2024 },
+        { "name": "Dena", "nameAr": "دنا", "sortOrder": 1, "yearFrom": 2014, "yearTo": 2026 },
+        { "name": "Runna", "nameAr": "رانا", "sortOrder": 2, "yearFrom": 2010, "yearTo": 2026 },
+        { "name": "Tara", "nameAr": "تارا", "sortOrder": 3, "yearFrom": 2021, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "JAC",
+      "nameAr": "جاك",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "S2", "nameAr": "إس 2", "sortOrder": 0, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "S3", "nameAr": "إس 3", "sortOrder": 1, "yearFrom": 2014, "yearTo": 2026 },
+        { "name": "S4", "nameAr": "إس 4", "sortOrder": 2, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "S7", "nameAr": "إس 7", "sortOrder": 3, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "T6", "nameAr": "تي 6", "sortOrder": 4, "yearFrom": 2015, "yearTo": 2026 },
+        { "name": "T8", "nameAr": "تي 8", "sortOrder": 5, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "J7", "nameAr": "جيه 7", "sortOrder": 6, "yearFrom": 2020, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Jaguar",
+      "nameAr": "جاكوار",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "XE", "nameAr": "إكس إي", "sortOrder": 0, "yearFrom": 2015, "yearTo": 2024 },
+        { "name": "XF", "nameAr": "إكس إف", "sortOrder": 1, "yearFrom": 2008, "yearTo": 2026 },
+        { "name": "XJ", "nameAr": "إكس جيه", "sortOrder": 2, "yearFrom": 2010, "yearTo": 2019 },
+        { "name": "F-Pace", "nameAr": "إف بيس", "sortOrder": 3, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "E-Pace", "nameAr": "إي بيس", "sortOrder": 4, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "I-Pace", "nameAr": "آي بيس", "sortOrder": 5, "yearFrom": 2019, "yearTo": 2026 },
+        { "name": "F-Type", "nameAr": "إف تايب", "sortOrder": 6, "yearFrom": 2014, "yearTo": 2024 }
+      ]
+    },
+    {
+      "name": "Lada",
+      "nameAr": "لادا",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Niva", "nameAr": "نيفا", "sortOrder": 0, "yearFrom": 1977, "yearTo": 2026 },
+        { "name": "Vesta", "nameAr": "فيستا", "sortOrder": 1, "yearFrom": 2015, "yearTo": 2026 },
+        { "name": "Granta", "nameAr": "جرانتا", "sortOrder": 2, "yearFrom": 2011, "yearTo": 2026 },
+        { "name": "Largus", "nameAr": "لارجوس", "sortOrder": 3, "yearFrom": 2012, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Lamborghini",
+      "nameAr": "لامبورجيني",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Urus", "nameAr": "أوروس", "sortOrder": 0, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "Huracan", "nameAr": "هوراكان", "sortOrder": 1, "yearFrom": 2014, "yearTo": 2026 },
+        { "name": "Revuelto", "nameAr": "ريفويلتو", "sortOrder": 2, "yearFrom": 2024, "yearTo": 2026 },
+        { "name": "Aventador", "nameAr": "أفينتادور", "sortOrder": 3, "yearFrom": 2011, "yearTo": 2022 }
+      ]
+    },
+    {
+      "name": "Lincoln",
+      "nameAr": "لينكولن",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Navigator", "nameAr": "نافيجيتور", "sortOrder": 0, "yearFrom": 2007, "yearTo": 2026 },
+        { "name": "Aviator", "nameAr": "أفياتور", "sortOrder": 1, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "Nautilus", "nameAr": "نوتيلوس", "sortOrder": 2, "yearFrom": 2019, "yearTo": 2026 },
+        { "name": "Corsair", "nameAr": "كورسير", "sortOrder": 3, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "MKZ", "nameAr": "إم كي زد", "sortOrder": 4, "yearFrom": 2007, "yearTo": 2020 },
+        { "name": "MKX", "nameAr": "إم كي إكس", "sortOrder": 5, "yearFrom": 2007, "yearTo": 2018 }
+      ]
+    },
+    {
+      "name": "Lotus",
+      "nameAr": "لوتس",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Emira", "nameAr": "إميرا", "sortOrder": 0, "yearFrom": 2022, "yearTo": 2026 },
+        { "name": "Eletre", "nameAr": "إليتر", "sortOrder": 1, "yearFrom": 2024, "yearTo": 2026 },
+        { "name": "Evija", "nameAr": "إيفيا", "sortOrder": 2, "yearFrom": 2024, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Lynk & Co",
+      "nameAr": "لينك آند كو",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "01", "nameAr": "01", "sortOrder": 0, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "02", "nameAr": "02", "sortOrder": 1, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "03", "nameAr": "03", "sortOrder": 2, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "05", "nameAr": "05", "sortOrder": 3, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "09", "nameAr": "09", "sortOrder": 4, "yearFrom": 2021, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Mahindra",
+      "nameAr": "ماهيندرا",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "XUV500", "nameAr": "إكس يو في 500", "sortOrder": 0, "yearFrom": 2011, "yearTo": 2021 },
+        { "name": "XUV700", "nameAr": "إكس يو في 700", "sortOrder": 1, "yearFrom": 2022, "yearTo": 2026 },
+        { "name": "Scorpio", "nameAr": "سكوربيو", "sortOrder": 2, "yearFrom": 2002, "yearTo": 2026 },
+        { "name": "Thar", "nameAr": "ثار", "sortOrder": 3, "yearFrom": 2010, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Maserati",
+      "nameAr": "مازيراتي",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Ghibli", "nameAr": "جيبلي", "sortOrder": 0, "yearFrom": 2014, "yearTo": 2026 },
+        { "name": "Quattroporte", "nameAr": "كواتروبورتي", "sortOrder": 1, "yearFrom": 2014, "yearTo": 2026 },
+        { "name": "Levante", "nameAr": "ليفانتي", "sortOrder": 2, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "MC20", "nameAr": "إم سي 20", "sortOrder": 3, "yearFrom": 2021, "yearTo": 2026 },
+        { "name": "Grecale", "nameAr": "جريكالي", "sortOrder": 4, "yearFrom": 2023, "yearTo": 2026 },
+        { "name": "GranTurismo", "nameAr": "جران توريزمو", "sortOrder": 5, "yearFrom": 2008, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "McLaren",
+      "nameAr": "مكلارين",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "720S", "nameAr": "720 إس", "sortOrder": 0, "yearFrom": 2017, "yearTo": 2023 },
+        { "name": "750S", "nameAr": "750 إس", "sortOrder": 1, "yearFrom": 2024, "yearTo": 2026 },
+        { "name": "GT", "nameAr": "جي تي", "sortOrder": 2, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "Artura", "nameAr": "أرتورا", "sortOrder": 3, "yearFrom": 2022, "yearTo": 2026 },
+        { "name": "Senna", "nameAr": "سينا", "sortOrder": 4, "yearFrom": 2018, "yearTo": 2020 }
+      ]
+    },
+    {
+      "name": "Mini",
+      "nameAr": "ميني",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Cooper", "nameAr": "كوبر", "sortOrder": 0, "yearFrom": 2007, "yearTo": 2026 },
+        { "name": "Countryman", "nameAr": "كنتري مان", "sortOrder": 1, "yearFrom": 2011, "yearTo": 2026 },
+        { "name": "Clubman", "nameAr": "كلوب مان", "sortOrder": 2, "yearFrom": 2008, "yearTo": 2024 },
+        { "name": "Cooper SE", "nameAr": "كوبر إس إي", "sortOrder": 3, "yearFrom": 2020, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "NIO",
+      "nameAr": "نيو",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "ES6", "nameAr": "إي إس 6", "sortOrder": 0, "yearFrom": 2019, "yearTo": 2026 },
+        { "name": "ES7", "nameAr": "إي إس 7", "sortOrder": 1, "yearFrom": 2022, "yearTo": 2026 },
+        { "name": "ES8", "nameAr": "إي إس 8", "sortOrder": 2, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "ET5", "nameAr": "إي تي 5", "sortOrder": 3, "yearFrom": 2022, "yearTo": 2026 },
+        { "name": "ET7", "nameAr": "إي تي 7", "sortOrder": 4, "yearFrom": 2022, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Polestar",
+      "nameAr": "بولستار",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "2", "nameAr": "2", "sortOrder": 0, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "3", "nameAr": "3", "sortOrder": 1, "yearFrom": 2024, "yearTo": 2026 },
+        { "name": "4", "nameAr": "4", "sortOrder": 2, "yearFrom": 2024, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "RAM",
+      "nameAr": "رام",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "1500", "nameAr": "1500", "sortOrder": 0, "yearFrom": 2010, "yearTo": 2026 },
+        { "name": "2500", "nameAr": "2500", "sortOrder": 1, "yearFrom": 2010, "yearTo": 2026 },
+        { "name": "3500", "nameAr": "3500", "sortOrder": 2, "yearFrom": 2010, "yearTo": 2026 },
+        { "name": "ProMaster", "nameAr": "برو ماستر", "sortOrder": 3, "yearFrom": 2014, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Rolls-Royce",
+      "nameAr": "رولز رويس",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Ghost", "nameAr": "غوست", "sortOrder": 0, "yearFrom": 2010, "yearTo": 2026 },
+        { "name": "Phantom", "nameAr": "فانتوم", "sortOrder": 1, "yearFrom": 2003, "yearTo": 2026 },
+        { "name": "Cullinan", "nameAr": "كولينان", "sortOrder": 2, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "Spectre", "nameAr": "سبيكتر", "sortOrder": 3, "yearFrom": 2024, "yearTo": 2026 },
+        { "name": "Wraith", "nameAr": "ريث", "sortOrder": 4, "yearFrom": 2013, "yearTo": 2023 },
+        { "name": "Dawn", "nameAr": "دون", "sortOrder": 5, "yearFrom": 2016, "yearTo": 2023 }
+      ]
+    },
+    {
+      "name": "Saipa",
+      "nameAr": "سايبا",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Pride", "nameAr": "برايد", "sortOrder": 0, "yearFrom": 1993, "yearTo": 2020 },
+        { "name": "Tiba", "nameAr": "تيبا", "sortOrder": 1, "yearFrom": 2009, "yearTo": 2024 },
+        { "name": "Saina", "nameAr": "ساينا", "sortOrder": 2, "yearFrom": 2016, "yearTo": 2026 },
+        { "name": "Quick", "nameAr": "كويك", "sortOrder": 3, "yearFrom": 2017, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Smart",
+      "nameAr": "سمارت",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Fortwo", "nameAr": "فور تو", "sortOrder": 0, "yearFrom": 2008, "yearTo": 2024 },
+        { "name": "Forfour", "nameAr": "فور فور", "sortOrder": 1, "yearFrom": 2015, "yearTo": 2021 },
+        { "name": "#1", "nameAr": "#1", "sortOrder": 2, "yearFrom": 2023, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "SsangYong",
+      "nameAr": "سانج يونج",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Rexton", "nameAr": "ركستون", "sortOrder": 0, "yearFrom": 2003, "yearTo": 2026 },
+        { "name": "Tivoli", "nameAr": "تيفولي", "sortOrder": 1, "yearFrom": 2015, "yearTo": 2026 },
+        { "name": "Korando", "nameAr": "كوراندو", "sortOrder": 2, "yearFrom": 2011, "yearTo": 2026 },
+        { "name": "Musso", "nameAr": "موسو", "sortOrder": 3, "yearFrom": 2018, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "Tata",
+      "nameAr": "تاتا",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Nexon", "nameAr": "نيكسون", "sortOrder": 0, "yearFrom": 2018, "yearTo": 2026 },
+        { "name": "Punch", "nameAr": "بانش", "sortOrder": 1, "yearFrom": 2022, "yearTo": 2026 },
+        { "name": "Harrier", "nameAr": "هارير", "sortOrder": 2, "yearFrom": 2019, "yearTo": 2026 },
+        { "name": "Tiago", "nameAr": "تياجو", "sortOrder": 3, "yearFrom": 2017, "yearTo": 2026 },
+        { "name": "Safari", "nameAr": "سفاري", "sortOrder": 4, "yearFrom": 2021, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "UAZ",
+      "nameAr": "واز",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "Patriot", "nameAr": "باتريوت", "sortOrder": 0, "yearFrom": 2005, "yearTo": 2026 },
+        { "name": "Hunter", "nameAr": "هانتر", "sortOrder": 1, "yearFrom": 2003, "yearTo": 2026 },
+        { "name": "Pickup", "nameAr": "بيك أب", "sortOrder": 2, "yearFrom": 2008, "yearTo": 2026 }
+      ]
+    },
+    {
+      "name": "XPeng",
+      "nameAr": "إكس بنغ",
+      "sortOrder": 1000,
+      "models": [
+        { "name": "P5", "nameAr": "بي 5", "sortOrder": 0, "yearFrom": 2022, "yearTo": 2026 },
+        { "name": "P7", "nameAr": "بي 7", "sortOrder": 1, "yearFrom": 2020, "yearTo": 2026 },
+        { "name": "G6", "nameAr": "جي 6", "sortOrder": 2, "yearFrom": 2024, "yearTo": 2026 },
+        { "name": "G9", "nameAr": "جي 9", "sortOrder": 3, "yearFrom": 2023, "yearTo": 2026 }
+      ]
     }
   ]
 }

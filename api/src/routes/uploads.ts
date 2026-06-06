@@ -2,7 +2,8 @@ import type { FastifyInstance } from "fastify";
 import { uploadPhoto } from "../services/r2.js";
 import { publicUploadBaseFromRequest } from "../util/public-url.js";
 
-const MAX_BYTES = 2 * 1024 * 1024;
+const MAX_BYTES = 15 * 1024 * 1024;
+const MAX_MB = MAX_BYTES / (1024 * 1024);
 const ALLOWED = new Set([
   "image/jpeg",
   "image/png",
@@ -27,7 +28,9 @@ export async function registerUploadRoutes(
       }
       const buf = await file.toBuffer();
       if (buf.length > MAX_BYTES) {
-        return reply.status(400).send({ error: "File too large (max 2MB)" });
+        return reply
+          .status(400)
+          .send({ error: `File too large (max ${MAX_MB}MB)` });
       }
       const mime = file.mimetype;
       if (!ALLOWED.has(mime)) {

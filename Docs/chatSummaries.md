@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-06-06 — Phase-1 polish: hide subscription, web-dashboard link, 15MB uploads, comprehensive districts + vehicle catalog
+
+- **Focus:** Move all subscription gating off-app for phase-1 launch; expose a placeholder shop web dashboard URL via public config so the link starts working before the dashboard is real; raise photo upload cap to 15 MB; fill the long-deferred coverage gaps for Iraqi districts (all 19 governorates) and the IQ vehicle catalog (~50 missing brands).
+- **Outcome:**
+  - **Mobile:** Subscription row gone from shop profile, replaced with "Web dashboard" entry that resolves URL from `/api/v1/public/config` (cached + single-flight); `app/shop/subscription.tsx` redirects to profile; new `lib/shop-dashboard-url.ts`; `webDashboard` / `webDashboardOpenFailed` i18n keys; multipart limit now 15 MB end-to-end.
+  - **API:** `/api/v1/public/config` returns `shopDashboardUrl` (env override → APP_URL → Fly app convention); `/api/v1/uploads` and Fastify multipart both 15 MB; `SHOP_DASHBOARD_URL` documented in `.env.example`.
+  - **Web SPA:** New `#/shop/dashboard` route renders i18n "coming soon" placeholder (`app/src/pages/shop-dashboard.ts`) — link works today, content lands later.
+  - **Districts:** Single source of truth `api/prisma/data/districts.json` (236 rows covering every governorate + every governorate center as a selectable area). `seed.ts` collapsed to one upsert call; `routes/districts.ts` lazy-bootstraps per-city; `iraq-city.ts` `CANONICAL` map covers all 19 governorates and common aliases.
+  - **Vehicles:** `vehicles-iq.json` 33 → **79 makes** / 150 → **377 models**. **All 25 popular-tier makes (sortOrder 0–24) preserved byte-for-byte.** 44 new makes appended at sortOrder 1000 (fallback tier shows alphabetically after the popular block) — closes 2026-05-22's "Iraqi car catalog gaps" follow-up explicitly (Dodge / RAM / Infiniti / Genesis / Cadillac / Lincoln / Chrysler / Acura / Buick / BAIC / Foton / Hummer + ~30 more, all with Arabic names and Iraq-realistic year ranges).
+- **Follow-ups:** Set `SHOP_DASHBOARD_URL` Fly secret once the real dashboard ships (no app rebuild required — fetched at runtime). Optionally add missing models to existing popular makes (Toyota 4Runner/Hiace/Coaster, Ford F-250, BMW X3/X1, Mercedes GLA/GLB/GLC, Audi Q3/Q8, etc.) as a separate additive pass — left untouched here per "keep common ones as-is".
+
+---
+
 ## 2026-05-09 — `/end` session wrap-up
 
 - **Accomplished:** Per-recipient push locale (`User.preferredLocale`, `push-i18n`, mobile `sync-preferred-locale` + bootstrap); localized chat header subtitle; shop signup **optional district** + **required address** (API + mobile + profile editor); Iraqi Arabic repair/parts labels in `taxonomy-labels.ts`; shop feed **distance hidden** except **TOWING**; **`workshopLat`/`workshopLng`** on `User` with migrations, feed + towing notify preferring pin; **`open-google-maps.ts`** (coords, search, `openShopInGoogleMaps`); owner **shop profile** directions; **towing pickup** card in chat for **shop** when bid **ACCEPTED**; documentation handoff in `progress.md`, `specs.md`, and detailed block below.

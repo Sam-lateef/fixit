@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
   Switch,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { apiFetch } from "@/lib/api";
@@ -175,7 +175,14 @@ export default function ShopAreaStep(): React.ReactElement {
   }
 
   return (
-    <ScrollView contentContainerStyle={s.container}>
+    // KeyboardAwareScrollView keeps the focused field (bio multiline at
+    // the bottom of this step) above the soft keyboard on Android +
+    // iOS. Plain ScrollView leaves the bio TextInput hidden when tapped.
+    <KeyboardAwareScrollView
+      contentContainerStyle={s.container}
+      keyboardShouldPersistTaps="handled"
+      bottomOffset={24}
+    >
       <WizardProgressBar step={6} />
 
       <Text style={s.heading}>{t("serviceArea")}</Text>
@@ -270,7 +277,7 @@ export default function ShopAreaStep(): React.ReactElement {
       >
         <Text style={s.btnText}>{t("createMyShop")}</Text>
       </Pressable>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

@@ -1,21 +1,43 @@
-/** Normalize `city` query / body values to the English labels stored on `District.city`. */
+/** Normalize `city` query / body values to the English labels stored on `District.city`.
+ *
+ * Keys must be lowercase. Values match `cities.json` `nameEn` exactly (Prisma
+ * stores `District.city` and `User.city` with these casings). Add a new entry
+ * here whenever `cities.json` grows.
+ */
 
 const CANONICAL: Record<string, string> = {
   baghdad: "Baghdad",
   basra: "Basra",
   mosul: "Mosul",
   erbil: "Erbil",
-  najaf: "Najaf",
-  karbala: "Karbala",
-  kirkuk: "Kirkuk",
-  other: "Other",
   sulaymaniyah: "Sulaymaniyah",
   duhok: "Duhok",
+  kirkuk: "Kirkuk",
+  najaf: "Najaf",
+  karbala: "Karbala",
+  babylon: "Babylon",
+  anbar: "Anbar",
+  diyala: "Diyala",
+  wasit: "Wasit",
+  maysan: "Maysan",
+  "dhi qar": "Dhi Qar",
+  "dhi-qar": "Dhi Qar",
+  dhiqar: "Dhi Qar",
+  muthanna: "Muthanna",
+  qadisiyyah: "Qadisiyyah",
+  qadisiya: "Qadisiyyah",
+  qadissiyah: "Qadisiyyah",
+  saladin: "Saladin",
+  "salah al-din": "Saladin",
+  "salah ad-din": "Saladin",
+  halabja: "Halabja",
+  other: "Other",
   "sulaymaniyah center": "Sulaymaniyah",
   "duhok center": "Duhok",
   "kirkuk center": "Kirkuk",
   "karbala center": "Karbala",
   "najaf center": "Najaf",
+  "halabja center": "Halabja",
 };
 
 export function parseCityQueryParam(query: unknown): string | undefined {

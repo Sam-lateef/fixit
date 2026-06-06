@@ -110,7 +110,13 @@ export async function registerPostRoutes(fastify: FastifyInstance): Promise<void
         return reply.status(400).send({ error: "Invalid body", details: parsed.error.flatten() });
       }
       const body = parsed.data;
-      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      // Kept in sync with the user-facing copy `postCreatedBody` in
+      // `mobile/lib/strings.ts` ("Request will be removed if no shop responds
+      // in 3 days"). If you change one, change the other.
+      const POST_TTL_HOURS = 72;
+      const expiresAt = new Date(
+        Date.now() + POST_TTL_HOURS * 60 * 60 * 1000,
+      );
 
       let lat: number | undefined;
       let lng: number | undefined;

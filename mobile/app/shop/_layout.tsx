@@ -34,13 +34,11 @@ export default function ShopStackLayout(): React.ReactElement {
           presentation: "modal",
         }}
       />
-      <Stack.Screen
-        name="subscription"
-        options={{
-          ...brandHeaderOptions,
-          presentation: "modal",
-        }}
-      />
+      {/*
+       * `subscription` route is kept as a file (redirects to profile) so
+       * deep links don't 404, but no Stack.Screen entry — the redirect
+       * fires instantly and we don't want a modal-presentation flash.
+       */}
     </Stack>
   );
 }

@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { theme } from "@/lib/theme";
@@ -30,6 +29,14 @@ type Props = {
   showSearch?: boolean;
   /** Highlights the current selection in the list. */
   selectedId?: string;
+  /**
+   * When provided, a "Clear" button is rendered above Cancel — but only if
+   * `selectedId` is non-empty. Lets the user reset a previously chosen value
+   * back to "no selection" without having to pick a different one.
+   */
+  onClear?: () => void;
+  /** Label for the Clear button (i18n). Required only when onClear is set. */
+  clearLabel?: string;
 };
 
 export function SearchablePickerModal({
@@ -43,6 +50,8 @@ export function SearchablePickerModal({
   busy,
   showSearch,
   selectedId,
+  onClear,
+  clearLabel,
 }: Props): React.ReactElement {
   const [query, setQuery] = useState("");
   const searchOn = showSearch !== false;
@@ -74,7 +83,11 @@ export function SearchablePickerModal({
     >
       <KeyboardAvoidingView
         style={styles.backdrop}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        // react-native-keyboard-controller KAV — `padding` lifts the
+        // bottom-anchored modal card above the soft keyboard on both
+        // iOS and Android 15+ edge-to-edge.
+        behavior="padding"
+        keyboardVerticalOffset={0}
       >
         {/* Tap-outside-to-dismiss area */}
         <Pressable style={styles.dismissArea} onPress={onRequestClose} />
@@ -113,6 +126,19 @@ export function SearchablePickerModal({
             <View style={styles.loading}>
               <ActivityIndicator color={theme.primaryMid} />
             </View>
+          ) : null}
+          {onClear && typeof selectedId === "string" && selectedId.length > 0 ? (
+            <Pressable
+              style={styles.clearBtn}
+              onPress={() => {
+                onClear();
+                onRequestClose();
+              }}
+            >
+              <Text style={styles.clearText}>
+                {clearLabel ?? "Clear"}
+              </Text>
+            </Pressable>
           ) : null}
           <Pressable style={styles.cancelBtn} onPress={onRequestClose}>
             <Text style={styles.cancelText}>{cancelLabel}</Text>
@@ -192,4 +218,14 @@ const styles = StyleSheet.create({
     backgroundColor: theme.chip,
   },
   cancelText: { color: theme.text, fontWeight: "700" },
+  clearBtn: {
+    marginTop: 12,
+    paddingVertical: 12,
+    borderRadius: theme.radiusMd,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: theme.danger,
+    backgroundColor: theme.surface,
+  },
+  clearText: { color: theme.danger, fontWeight: "700" },
 });

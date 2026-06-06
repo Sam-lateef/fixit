@@ -2,14 +2,13 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { submitReport } from "@/lib/report-content";
@@ -88,7 +87,12 @@ export default function ReportScreen(): React.ReactElement {
           paddingRight: insets.right,
         },
       ]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      // react-native-keyboard-controller's KAV — works under Android
+      // edge-to-edge where RN's stock KAV is a no-op. Bottom padding
+      // grows to match the keyboard height so the Cancel/Report row
+      // (anchored at the bottom of the textarea container) stays
+      // visible above the IME.
+      behavior="padding"
       keyboardVerticalOffset={0}
     >
       <View style={styles.container}>

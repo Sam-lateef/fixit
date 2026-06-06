@@ -145,6 +145,14 @@ export default function OwnerViewShopScreen(): ReactElement {
                   <Text style={styles.value}>{shop.user.address.trim()}</Text>
                 </>
               ) : null}
+              {shop.bio?.trim() ? (
+                <>
+                  <Text style={[styles.label, styles.labelSpaced]}>
+                    {t("bioLabel")}
+                  </Text>
+                  <Text style={styles.bio}>{shop.bio.trim()}</Text>
+                </>
+              ) : null}
               {canOpenShopInGoogleMaps(shop.user) ? (
                 <>
                   <Text style={[styles.label, styles.labelSpaced]}>
@@ -212,6 +220,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: theme.text,
     lineHeight: 22,
+  },
+  bio: {
+    marginTop: 6,
+    fontSize: 15,
+    color: theme.text,
+    lineHeight: 22,
+    textAlign: "left",
   },
   mapsLink: {
     marginTop: 6,

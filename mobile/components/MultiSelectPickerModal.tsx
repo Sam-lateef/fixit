@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,6 +13,7 @@ import {
   GestureHandlerRootView,
   Pressable as GHPressable,
 } from "react-native-gesture-handler";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { theme } from "@/lib/theme";
@@ -110,7 +109,10 @@ export function MultiSelectPickerModal({
       <GestureHandlerRootView style={styles.root}>
         <KeyboardAvoidingView
           style={styles.backdrop}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          // react-native-keyboard-controller KAV — `padding` lifts the
+          // bottom-anchored modal card above the soft keyboard on both
+          // iOS and Android 15+ edge-to-edge.
+          behavior="padding"
           keyboardVerticalOffset={0}
         >
           <Pressable style={styles.dismissArea} onPress={onRequestClose} />

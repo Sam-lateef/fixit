@@ -13,6 +13,15 @@ type CitySeedRow = {
   sortOrder: number;
 };
 
+export type DistrictSeedRow = {
+  name: string;
+  nameAr: string;
+  city: string;
+  cityAr: string;
+  lat: number;
+  lng: number;
+};
+
 type VehicleSeedModel = {
   name: string;
   nameAr?: string;
@@ -49,6 +58,52 @@ export async function upsertCitiesFromJson(db: PrismaClient): Promise<void> {
         nameEn: c.nameEn,
         nameAr: c.nameAr,
         sortOrder: c.sortOrder,
+      },
+    });
+  }
+}
+
+/**
+ * Read the comprehensive Iraq districts file from disk (`prisma/data/districts.json`).
+ *
+ * Single source of truth — used by both `prisma/seed.ts` and the lazy runtime
+ * bootstrap in `routes/districts.ts`. Throws if the file is missing or invalid
+ * (don't silently degrade — districts are required for the marketplace flow).
+ */
+export function loadDistrictSeedRows(): DistrictSeedRow[] {
+  const raw = readFileSync(dataPath("districts.json"), "utf8");
+  const rows = JSON.parse(raw) as DistrictSeedRow[];
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error("districts.json must contain a non-empty array");
+  }
+  return rows;
+}
+
+/**
+ * Upsert every row in `districts.json` keyed on the `(city, name)` unique index.
+ * Idempotent: re-running updates Arabic names / coordinates but never deletes
+ * existing rows (so user/shop `districtId` foreign keys stay intact).
+ */
+export async function upsertDistrictsFromJson(
+  db: PrismaClient,
+): Promise<void> {
+  const rows = loadDistrictSeedRows();
+  for (const d of rows) {
+    await db.district.upsert({
+      where: { city_name: { city: d.city, name: d.name } },
+      create: {
+        name: d.name,
+        nameAr: d.nameAr,
+        city: d.city,
+        cityAr: d.cityAr,
+        lat: d.lat,
+        lng: d.lng,
+      },
+      update: {
+        nameAr: d.nameAr,
+        cityAr: d.cityAr,
+        lat: d.lat,
+        lng: d.lng,
       },
     });
   }

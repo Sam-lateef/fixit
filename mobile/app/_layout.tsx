@@ -10,6 +10,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useRef } from "react";
 import { useColorScheme, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import { I18nProvider, useI18n } from "@/lib/i18n";
 import { pushEvents, type PushEventType } from "@/lib/push-events";
@@ -67,11 +68,19 @@ const fixitDark = {
 export default function RootLayout(): React.ReactElement {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <I18nProvider>
-        <SubscriptionProvider>
-          <RootLayoutNav />
-        </SubscriptionProvider>
-      </I18nProvider>
+      {/* KeyboardProvider powers react-native-keyboard-controller's
+          edge-to-edge-aware keyboard handling. Required because Expo SDK
+          54 enables edge-to-edge by default on Android 15+, where the
+          stock `adjustResize` + KeyboardAvoidingView combination no
+          longer works reliably (composer hides under keyboard / phantom
+          gaps after show/hide cycles — chat bug 2026-05-28). */}
+      <KeyboardProvider>
+        <I18nProvider>
+          <SubscriptionProvider>
+            <RootLayoutNav />
+          </SubscriptionProvider>
+        </I18nProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

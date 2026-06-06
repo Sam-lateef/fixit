@@ -53,6 +53,23 @@ type BidRow = {
   };
 };
 
+/**
+ * Normalize whatever `appointmentDate` / `deliveryDate` shape the server
+ * returns (ISO datetime, plain YYYY-MM-DD string, or null) into a short
+ * "YYYY-MM-DD" for display on the card. Matches the same logic used in the
+ * shop bid editor — keep the two in sync.
+ */
+function shortDate(raw: string | null | undefined): string {
+  if (typeof raw !== "string") return "";
+  const v = raw.trim();
+  if (v.length === 0) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  if (/^\d{4}-\d{2}-\d{2}T/.test(v)) return v.slice(0, 10);
+  const parsed = new Date(v);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toISOString().slice(0, 10);
+}
+
 function relativeTime(iso: string, t: (k: "minAgo" | "hAgo" | "dAgo") => string): string {
   const ms = Date.now() - new Date(iso).getTime();
   const m = Math.max(1, Math.round(ms / 60_000));
@@ -285,6 +302,34 @@ export default function ShopBidsScreen(): React.ReactElement {
                     {t("placedAgo")} {placedAgo}
                   </Text>
                 </View>
+                {/* Shop's chosen schedule — surfaces what the shop quoted to
+                    the customer right on the card so it's visible without
+                    drilling into the bid. Parts bids show delivery, repair /
+                    towing bids show the appointment. Hidden when both halves
+                    are empty so we don't render dangling "—" labels. */}
+                {(() => {
+                  const isParts = svc === "PARTS";
+                  if (isParts) {
+                    const d = shortDate(b.deliveryDate);
+                    const w = (b.deliveryWindow ?? "").trim();
+                    if (d.length === 0 && w.length === 0) return null;
+                    return (
+                      <Text style={styles.scheduleText} numberOfLines={1}>
+                        {t("deliveryDate")}:{" "}
+                        {[d, w].filter((s) => s.length > 0).join(" · ")}
+                      </Text>
+                    );
+                  }
+                  const d = shortDate(b.appointmentDate);
+                  const w = (b.appointmentTime ?? "").trim();
+                  if (d.length === 0 && w.length === 0) return null;
+                  return (
+                    <Text style={styles.scheduleText} numberOfLines={1}>
+                      {t("appointmentDate")}:{" "}
+                      {[d, w].filter((s) => s.length > 0).join(" · ")}
+                    </Text>
+                  );
+                })()}
                 <Text style={styles.price}>{formatIqd(b.priceEstimate)}</Text>
                 {b.message ? (
                   <Text style={styles.msg} numberOfLines={2}>
@@ -457,6 +502,13 @@ const styles = StyleSheet.create({
     rowGap: 4,
   },
   metaText: { fontSize: 12, color: theme.mutedLight, textAlign: "left" },
+  scheduleText: {
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: "600",
+    color: theme.primaryMid,
+    textAlign: "left",
+  },
   price: { marginTop: 8, fontWeight: "700", color: theme.text, fontSize: 16, textAlign: "left" },
   msg: { marginTop: 4, color: theme.muted, fontSize: 13, textAlign: "left" },
   actions: {

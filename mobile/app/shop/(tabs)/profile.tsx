@@ -1,4 +1,4 @@
-import { router, type Href } from "expo-router";
+import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Location from "expo-location";
@@ -6,10 +6,8 @@ import {
   ActivityIndicator,
   Alert,
   Keyboard,
-  KeyboardAvoidingView,
   Linking,
   Modal,
-  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -23,13 +21,16 @@ import {
   GestureHandlerRootView,
   Pressable as GHPressable,
 } from "react-native-gesture-handler";
+import {
+  KeyboardAvoidingView,
+  KeyboardAwareScrollView,
+} from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { ShopProfileHero } from "@/components/shop/ShopProfileHero";
 import type { ShopProfilePayload } from "@/components/shop/shop-profile-model";
 import { ShopServiceOverview } from "@/components/shop/ShopServiceOverview";
-import { useSubscription } from "@/hooks/useSubscription";
 import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "@/lib/legal-public-urls";
@@ -39,6 +40,7 @@ import { openAppNotificationSettings } from "@/lib/push-notifications";
 import { promptDeleteAccount } from "@/lib/delete-account";
 import { isValidWhatsappE164 } from "@/lib/whatsapp-e164";
 import { hrefAuthWelcome } from "@/lib/routes-href";
+import { getShopDashboardUrl } from "@/lib/shop-dashboard-url";
 import { signOutFromApp } from "@/lib/sign-out";
 import { useI18n } from "@/lib/i18n";
 import type { LocaleId, StringKey } from "@/lib/strings";
@@ -154,7 +156,7 @@ export default function ShopProfileScreen(): React.ReactElement {
   const insets = useSafeAreaInsets();
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
-  const { isSubscribed, isLoading: subLoading } = useSubscription();
+  const [openingDashboard, setOpeningDashboard] = useState(false);
   const [shop, setShop] = useState<ShopMe | null>(null);
   const [editSection, setEditSection] = useState<EditSection>(null);
   const [pendingSelection, setPendingSelection] = useState<Set<string>>(new Set());
@@ -225,6 +227,30 @@ export default function ShopProfileScreen(): React.ReactElement {
     })();
   }, [load]);
 
+  // Opens the shop owner's web dashboard. URL is resolved from
+  // `/api/v1/public/config.shopDashboardUrl` (cached after first call) and
+  // falls back to a "coming soon" placeholder page in phase 1.
+  const openDashboard = useCallback(() => {
+    if (openingDashboard) {
+      return;
+    }
+    setOpeningDashboard(true);
+    void (async () => {
+      try {
+        const url = await getShopDashboardUrl();
+        if (url === null) {
+          Alert.alert(t("errorTitle"), t("webDashboardOpenFailed"));
+          return;
+        }
+        await Linking.openURL(url);
+      } catch {
+        Alert.alert(t("errorTitle"), t("webDashboardOpenFailed"));
+      } finally {
+        setOpeningDashboard(false);
+      }
+    })();
+  }, [openingDashboard, t]);
+
   useFocusEffect(
     useCallback(() => {
       void load();
@@ -233,6 +259,13 @@ export default function ShopProfileScreen(): React.ReactElement {
 
   useEffect(() => {
     shopDevLog("ShopProfile tab: screen mounted / focused render");
+  }, []);
+
+  // Warm the dashboard URL cache so the "Web dashboard" row opens instantly.
+  // Silent failures are fine — the press handler re-fetches and surfaces a
+  // visible alert if the URL still cannot be resolved.
+  useEffect(() => {
+    void getShopDashboardUrl();
   }, []);
 
   // Hero business name: only seed from the server when this shop row first loads (id set / changes).
@@ -782,11 +815,12 @@ export default function ShopProfileScreen(): React.ReactElement {
 
   return (
     <>
-      <ScrollView
+      <KeyboardAwareScrollView
         style={styles.scrollRoot}
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        bottomOffset={24}
         alwaysBounceVertical
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -1028,17 +1062,12 @@ export default function ShopProfileScreen(): React.ReactElement {
           <View style={styles.settingDivider} />
           <Pressable
             style={styles.settingRow}
-            onPress={() => {
-              if (Platform.OS === "web") {
-                return;
-              }
-              router.push("/shop/subscription" as Href);
-            }}
+            onPress={openDashboard}
+            disabled={openingDashboard}
           >
-            <Text style={styles.settingLabel}>{t("shopSubscriptionSection")}</Text>
+            <Text style={styles.settingLabel}>{t("webDashboard")}</Text>
             <Text style={styles.settingValue}>
-              {subLoading ? t("loading") : isSubscribed ? t("on") : t("openSubscriptionPlans")}{" "}
-              ›
+              {openingDashboard ? t("loading") : "↗"}
             </Text>
           </Pressable>
           <View style={styles.settingDivider} />
@@ -1094,7 +1123,7 @@ export default function ShopProfileScreen(): React.ReactElement {
             <Text style={styles.deleteAccountText}>{t("deleteAccount")}</Text>
           )}
         </Pressable>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <SearchablePickerModal
         visible={languagePickerOpen}
@@ -1136,7 +1165,11 @@ export default function ShopProfileScreen(): React.ReactElement {
       >
         <KeyboardAvoidingView
           style={styles.modalOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          // react-native-keyboard-controller's KAV (edge-to-edge aware)
+          // — `padding` lifts the modal card above the soft keyboard on
+          // both iOS + Android 15+. Stock RN KAV with adjustResize is
+          // a no-op under edge-to-edge.
+          behavior="padding"
           keyboardVerticalOffset={0}
         >
           <Pressable
@@ -1477,7 +1510,11 @@ export default function ShopProfileScreen(): React.ReactElement {
         <GestureHandlerRootView style={styles.modalRoot}>
         <KeyboardAvoidingView
           style={styles.modalOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          // react-native-keyboard-controller's KAV (edge-to-edge aware)
+          // — `padding` lifts the modal card above the soft keyboard on
+          // both iOS + Android 15+. Stock RN KAV with adjustResize is
+          // a no-op under edge-to-edge.
+          behavior="padding"
           keyboardVerticalOffset={0}
         >
           <Pressable

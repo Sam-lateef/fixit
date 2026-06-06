@@ -2,12 +2,12 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { WizardProgressBar } from "@/components/WizardProgressBar";
@@ -53,7 +53,11 @@ export default function OwnerDetailsScreen(): React.ReactElement {
 
   return (
     <>
-    <ScrollView contentContainerStyle={styles.screen}>
+    <KeyboardAwareScrollView
+      contentContainerStyle={styles.screen}
+      keyboardShouldPersistTaps="handled"
+      bottomOffset={24}
+    >
       {!fromProfile ? <WizardProgressBar step={1} totalSteps={2} /> : null}
       <Text style={styles.h1}>{t("name")}</Text>
       <TextInput
@@ -106,7 +110,7 @@ export default function OwnerDetailsScreen(): React.ReactElement {
         <Text style={styles.btnText}>{t("continue")}</Text>
       </Pressable>
       {err ? <Text style={styles.err}>{err}</Text> : null}
-    </ScrollView>
+    </KeyboardAwareScrollView>
     <SearchablePickerModal
       visible={cityPickerOpen}
       title={t("city")}

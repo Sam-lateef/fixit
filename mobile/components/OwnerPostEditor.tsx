@@ -2,19 +2,18 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { router, type Href } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { PostRemoteImage } from "@/components/PostRemoteImage";
 import { MultiSelectPickerModal } from "@/components/MultiSelectPickerModal";
@@ -202,6 +201,12 @@ export function OwnerPostEditor({
   const [locating, setLocating] = useState(false);
 
   const [pickedPhotos, setPickedPhotos] = useState<PickedPhoto[]>([]);
+  // Snapshot of the photo URLs at the time the post was loaded (or last
+  // successful photo-only save). Used to detect unsaved photo changes when
+  // the rest of the post is in read-only mode — owners are still allowed to
+  // attach images to a request that already has offers, see "Save photos"
+  // button below.
+  const [initialPhotoUrls, setInitialPhotoUrls] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [descError, setDescError] = useState("");
   const [loadEditBusy, setLoadEditBusy] = useState(() => Boolean(editPostId));
@@ -362,6 +367,7 @@ export function OwnerPostEditor({
       }
 
       setPickedPhotos(post.photoUrls.map((uri) => ({ uri })));
+      setInitialPhotoUrls(post.photoUrls);
 
       if (post.serviceType !== "TOWING") {
         setMakesBusy(true);
@@ -480,6 +486,51 @@ export function OwnerPostEditor({
         if (list.length > 0) setDistrictId(list[0].id);
       } catch {
         setDistricts([]);
+      }
+    })();
+  };
+
+  // True when the user has added or removed a photo since the post loaded.
+  // Order matters — re-ordered photos still count as a change because the
+  // owner explicitly intended it.
+  const hasPhotoChanges = useMemo(() => {
+    const current = pickedPhotos.map((p) => p.uri);
+    if (current.length !== initialPhotoUrls.length) return true;
+    for (let i = 0; i < current.length; i++) {
+      if (current[i] !== initialPhotoUrls[i]) return true;
+    }
+    return false;
+  }, [pickedPhotos, initialPhotoUrls]);
+
+  /**
+   * Photos-only save path. Reachable when the post is in read-only mode
+   * (e.g. it already has bids) but the owner has tweaked the attached
+   * pictures. We PATCH only `photoUrls`; the API leaves every other field
+   * untouched. After success we refresh the snapshot so the "Save photos"
+   * button hides again until the next edit.
+   */
+  const savePhotosOnly = (): void => {
+    if (!editPostId || busy) return;
+    setBusy(true);
+    void (async () => {
+      try {
+        const photoUrls = await resolvePickedPhotos(pickedPhotos);
+        await apiFetch(`/api/v1/posts/${editPostId}`, {
+          method: "PATCH",
+          body: JSON.stringify({ photoUrls }),
+        });
+        setInitialPhotoUrls(photoUrls);
+        setPickedPhotos(photoUrls.map((uri) => ({ uri })));
+        Alert.alert(t("postUpdated"), "", [
+          { text: "OK" },
+        ]);
+      } catch (e) {
+        Alert.alert(
+          t("errorTitle"),
+          friendlyApiError(e, t, "updateFailed"),
+        );
+      } finally {
+        setBusy(false);
       }
     })();
   };
@@ -691,7 +742,7 @@ export function OwnerPostEditor({
           setTowingTo("");
           setTowingNotes("");
           setPickedPhotos([]);
-          Alert.alert(t("postCreated"), "", [
+          Alert.alert(t("postCreated"), t("postCreatedBody"), [
             {
               text: "OK",
               onPress: () => router.replace("/owner" as Href),
@@ -715,17 +766,19 @@ export function OwnerPostEditor({
   }
 
   return (
-    <KeyboardAvoidingView
+    <>
+    <KeyboardAwareScrollView
       style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      contentContainerStyle={[
+        styles.scroll,
+        transparentHeader ? { paddingTop: 24 + headerHeight } : null,
+      ]}
+      keyboardShouldPersistTaps="handled"
+      // KeyboardProvider (root layout) drives the native keyboard frame
+      // so the focused field stays visible above the IME, including
+      // under Android 15+ edge-to-edge where RN's stock KAV is a no-op.
+      bottomOffset={24}
     >
-      <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          transparentHeader ? { paddingTop: 24 + headerHeight } : null,
-        ]}
-        keyboardShouldPersistTaps="handled"
-      >
         {readOnly ? (
           <View style={styles.readOnlyBanner}>
             <Text style={styles.readOnlyBannerText}>{t("viewOnlyBanner")}</Text>
@@ -1120,7 +1173,14 @@ export function OwnerPostEditor({
           </>
         ) : null}
 
-        {/* Photos */}
+        </>
+        </View>
+
+        {/* Photos — intentionally rendered OUTSIDE the readOnly pointerEvents
+            wrapper. Owners are allowed to add or remove attached pictures
+            even after a request has bids; the rest of the form stays locked
+            because changing description / category / car make would mislead
+            the shops that already quoted. */}
         <Text style={styles.label}>{t("addPhotos")}</Text>
         <View style={styles.photoRow}>
           {pickedPhotos.map((p) => (
@@ -1138,7 +1198,20 @@ export function OwnerPostEditor({
           ) : null}
         </View>
 
-        {readOnly ? null : (
+        {readOnly ? (
+          // In read-only mode the only thing the owner can still save is
+          // the photo set. Hide the button entirely when nothing has changed
+          // so the screen still feels read-only by default.
+          hasPhotoChanges ? (
+            <Pressable
+              style={[styles.btn, busy && styles.btnDisabled]}
+              disabled={busy}
+              onPress={savePhotosOnly}
+            >
+              <Text style={styles.btnText}>{t("savePhotos")}</Text>
+            </Pressable>
+          ) : null
+        ) : (
           <Pressable
             style={[styles.btn, busy && styles.btnDisabled]}
             disabled={busy}
@@ -1147,10 +1220,7 @@ export function OwnerPostEditor({
             <Text style={styles.btnText}>{editPostId ? t("save") : t("post")}</Text>
           </Pressable>
         )}
-
-        </>
-        </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
       <MultiSelectPickerModal
         visible={pickerMode === "make"}
         mode="single"
@@ -1225,7 +1295,7 @@ export function OwnerPostEditor({
         searchPlaceholder={t("search")}
         busy={yearsBusy}
       />
-    </KeyboardAvoidingView>
+    </>
   );
 }
 

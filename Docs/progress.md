@@ -14,6 +14,43 @@ Newest first. Use **`/checkpoint`** mid-session and **`/end`** to append.
 
 ---
 
+### 2026-06-06 — Post TTL: 48h → 72h + success-popup hint
+
+- **Backend:** `api/src/routes/posts.ts` post `expiresAt` window bumped from 48h to **72h** (3 days). Comment cross-references the user-facing copy so the two stay in sync.
+- **Mobile:** Successful "Post sent" alert now includes a body hint: **"Request will be removed if no shop responds in 3 days."** (IQ-AR: "راح ينحذف الطلب إذا ما رد عليه أي محل خلال 3 أيام."). New i18n key `postCreatedBody` (EN + IQ-AR); single call site in `mobile/components/OwnerPostEditor.tsx`. Edit-post popup unchanged (uses `postUpdated`).
+- **Behavior note:** Posts aren't row-deleted by the cron — `api/src/cron/expiry.ts` flips `status` `ACTIVE → EXPIRED` every 5 min once `expiresAt` passes, and `feed.ts` filters them out. Copy says "removed" (user-visible behavior) rather than "deleted".
+- Typecheck: API + mobile both clean.
+
+### 2026-06-06 — Phase-1 polish: hide in-app subscription, 15MB uploads, comprehensive Iraq districts + IQ vehicle catalog
+
+- **Hide subscription UI app-wide** (phase-1 = free, paywall later via web dashboard):
+  - Shop profile `Subscription` row → replaced with new **Web dashboard** row that opens `shopDashboardUrl` from `/api/v1/public/config`. URL pre-fetched + cached on mount; opens via `Linking.openURL`.
+  - `mobile/app/shop/subscription.tsx` → `<Redirect to="/shop/profile" />`; removed from `_layout.tsx` Stack.
+  - `ShopPremiumGate` already a no-op since April; left untouched.
+  - Owner profile confirmed had no subscription entry points.
+- **API `/api/v1/public/config`** now returns `shopDashboardUrl`: prefers `SHOP_DASHBOARD_URL` env var, else falls back to `${APP_URL}/#/shop/dashboard` or Fly-app naming convention. New SPA route `#/shop/dashboard` renders an i18n "coming soon" placeholder (`app/src/pages/shop-dashboard.ts`). Documented in `api/.env.example`.
+- **New mobile util:** `mobile/lib/shop-dashboard-url.ts` — module-level cache + single-flight fetch, env override via `EXPO_PUBLIC_SHOP_DASHBOARD_URL`. i18n keys `webDashboard`, `webDashboardOpenFailed` (EN + IQ-AR).
+- **Photo upload limit raised 2/3 MB → 15 MB:** `api/src/app.ts` multipart `fileSize` and `api/src/routes/uploads.ts` `MAX_BYTES`; error copy uses `MAX_MB` dynamically. Implementation guide updated.
+- **Iraq districts now comprehensive** (all 19 governorates):
+  - New single source of truth: `api/prisma/data/districts.json` (236 rows — 111 Baghdad neighborhoods with centroids merged, official qadhaa for the other 18 governorates, every governorate center explicitly listed as a selectable area).
+  - `api/src/lib/catalog-json-seed.ts` gained `loadDistrictSeedRows()` + `upsertDistrictsFromJson()` (idempotent, never deletes — keeps user/shop FKs intact).
+  - `api/prisma/seed.ts` collapsed ~280 lines of inline data → single `upsertDistrictsFromJson(prisma)` call.
+  - `api/src/routes/districts.ts` runtime fallback: full bootstrap if empty DB, per-city lazy seed when a specific city has zero districts.
+  - `api/src/lib/iraq-city.ts` `CANONICAL` map expanded to all 19 governorates + common aliases so city-name normalization is consistent across signup, posts, and feeds.
+- **IQ vehicle catalog now comprehensive** (closes 2026-05-22 deferred item):
+  - `api/prisma/data/vehicles-iq.json` grew **33 → 79 makes** and **~150 → 377 models**. The 25 popular-tier makes (sortOrder 0–24: Toyota, Hyundai, Kia, Nissan, Chevrolet, GMC, Ford, Honda, Mazda, Mitsubishi, VW, Mercedes, BMW, Lexus, Isuzu, Renault, Peugeot, Chery, Changan, MG, Haval, Jetour, Audi, Land Rover, Jeep) are **unchanged byte-for-byte** — same order, same models, same year ranges.
+  - **44 new makes appended at sortOrder 1000** (alphabetized fallback tier): Acura, Alfa Romeo, Aston Martin, BAIC, Bentley, Buick, Cadillac, Chrysler, Citroen, Dacia, Daihatsu, Dodge, Dongfeng, FAW, Ferrari, Foton, GAC, Genesis, Great Wall, Hongqi, Hummer, Infiniti, Iran Khodro, JAC, Jaguar, Lada, Lamborghini, Lincoln, Lotus, Lynk & Co, Mahindra, Maserati, McLaren, Mini, NIO, Polestar, RAM, Rolls-Royce, Saipa, Smart, SsangYong, Tata, UAZ, XPeng. Each carries Iraq-relevant models (3–8 each) with English + IQ-Arabic names and Iraq-realistic year ranges (e.g. Saipa Pride 1993–2020 still around; Hummer H1/H2/H3 historic ranges).
+  - No schema changes — the existing `upsertVehiclesIqFromJson` loader handles the new rows; idempotent upsert keyed on `VehicleMake.name` and `(makeId, name)` for models, year rows auto-capped at current year.
+- **Typecheck clean.** JSON validators (197 new vehicle rows, 236 district rows) verified shape, uniqueness, year sanity, and full nameAr coverage with 0 warnings / 0 errors.
+
+### 2026-05-28 — Chat keyboard overlap fix (Android edge-to-edge)
+
+- Added `react-native-keyboard-controller@1.18.5` (SDK 54-compatible install via `npx expo install`).
+- Wrapped root layout with `<KeyboardProvider>` (`mobile/app/_layout.tsx`).
+- Chat screen (`mobile/app/chat/[threadId].tsx`): library's `<KeyboardAvoidingView behavior="padding">` + `useKeyboardState()` replaces manual `Keyboard.addListener` / `paddingBottom: keyboardHeight` logic that was unreliable under Android 15+ edge-to-edge.
+- Windows-only build prereqs (one-time per machine, documented in `Docs/debugs.md`): `HKLM\...\LongPathsEnabled=1`, ninja v1.12.1 swapped into Android SDK `cmake/3.22.1/bin`. Committed: `mobile/android/app/build.gradle` now passes `-DCMAKE_MAKE_PROGRAM=<sdk-ninja>` + `-DCMAKE_OBJECT_PATH_MAX=1024` on Windows.
+- Verified on `P13_Blue_Max_Lite_2022`: composer pins flush above keyboard, no gap, no clipping across show/hide cycles.
+
 ### 2026-05-09 — Handoff: full day’s work + iOS / Mac verification checklist
 
 Use this block to resume on **Mac** (sync repo, then validate **iOS** alongside Android).

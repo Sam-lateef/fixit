@@ -9,6 +9,13 @@
 
 **Keep this file short:** record **deltas** only — what changed vs the implementation guide and *why* (link to `docs/decisions.md` when useful).
 
+## Recent deltas (2026-06)
+
+- **In-app subscription hidden (phase-1):** Shop profile shows a `Web dashboard` row instead of `Subscription`; URL resolved at runtime from `GET /api/v1/public/config → shopDashboardUrl` (env `SHOP_DASHBOARD_URL` → `${APP_URL}/#/shop/dashboard` → Fly app convention). Cached + single-flight in `mobile/lib/shop-dashboard-url.ts`. `/shop/subscription` redirects to profile; `ShopPremiumGate` still a no-op.
+- **Photo uploads now 15 MB** (was 2–3 MB depending on path). Synced in `api/src/app.ts` multipart `fileSize` *and* `api/src/routes/uploads.ts` `MAX_BYTES` so error copy + actual enforcement match. Implementation guide updated.
+- **Iraq districts comprehensive:** All 19 governorates covered (236 rows) with every governorate center selectable. Single source of truth `api/prisma/data/districts.json` consumed by both `prisma/seed.ts` (one-call upsert) and the runtime fallback in `routes/districts.ts` (full bootstrap if empty, per-city lazy seed if a city has none). `iraq-city.ts` `CANONICAL` map covers all governorates + common aliases.
+- **IQ vehicle catalog comprehensive:** `api/prisma/data/vehicles-iq.json` → 79 makes / 377 models. Popular tier (sortOrder 0–24, 25 makes) preserved exactly; 44 new makes added at sortOrder 1000 (alphabetized fallback after the popular block) so the dropdown UX is unchanged for the common case but search now finds Dodge, RAM, Cadillac, Lincoln, Chrysler, Infiniti, Genesis, Acura, Buick, BAIC, Foton, Hummer, JAC, GAC, Iran Khodro, Saipa, and ~30 more.
+
 ## Recent deltas (2026-05)
 
 - **User** may have `preferredLocale` (`en` \| `ar-iq`), `workshopLat`/`workshopLng` (optional). Push copy uses recipient locale; FCM strings in `api/src/services/push-i18n.ts`.

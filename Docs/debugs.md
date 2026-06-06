@@ -28,6 +28,35 @@ The 5-boolean shop grid (`offersRepair/Parts/Towing × servicesCars/Motorcycles`
 
 ## Resolved
 
+### Chat keyboard overlap on Android edge-to-edge — fixed 2026-05-28
+
+- **Symptom (Android 15+):** In `mobile/app/chat/[threadId].tsx`, when the soft keyboard opened, the composer (TextInput + Send button) was partially hidden behind the keyboard. Hide → re-show cycles also left a phantom gap between the message list and the keyboard. Reproduced repeatedly on `P13_Blue_Max_Lite_2022`.
+- **Root cause:** `mobile/app.json` enables `edgeToEdgeEnabled: true`, which on Android 15+ makes `windowSoftInputMode=adjustResize` effectively a **no-op** — the system does **not** shrink the window when the IME opens. RN's stock `KeyboardAvoidingView` cannot measure the keyboard frame correctly in this mode, and manual `Keyboard.addListener` + `paddingBottom` produced inconsistent offsets across show/hide cycles (timing of `keyboardDidShow` vs layout pass varies).
+- **Resolution:**
+  - Added **`react-native-keyboard-controller@1.18.5`** via `npx expo install react-native-keyboard-controller` (SDK 54-compatible). `react-native-reanimated` was already a dep.
+  - Wrapped the app root with `<KeyboardProvider>` in `mobile/app/_layout.tsx`. The provider mounts a native window-insets listener and exposes a synchronized keyboard frame to JS.
+  - Replaced the chat screen's outer `View` + manual `paddingBottom: keyboardHeight` with the library's `<KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={0}>`. Removed the manual `Keyboard.addListener` block. Kept a single `useKeyboardState().isVisible` bit only to drop the safe-area bottom inset from the composer while the keyboard already covers the gesture-bar area.
+- **Native rebuild required** (library ships native code). The rebuild surfaced a Windows MAX_PATH issue — see next entry.
+
+### Windows MAX_PATH on `react-native-keyboard-controller` build — fixed 2026-05-28
+
+- **Symptom:** `npx expo run:android` on Windows died at `:app:buildCMakeDebug[armeabi-v7a]` with `ninja: error: Stat(.../reactnativekeyboardcontrollerJSI-generated.cpp.o): Filename longer than 260 characters`. Generated object path was ~373 chars (172-char dir + 170-char filename).
+- **Cause (three layers, all needed):**
+  1. Windows long paths were **not** enabled — `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled = 0`.
+  2. The **ninja v1.10.2** bundled with Android SDK `cmake/3.22.1` does **not** use the `\\?\` long-path prefix when calling Win32 file APIs, so its `Stat()` still fails at 260 chars even with `LongPathsEnabled=1`.
+  3. CMake's own `CMAKE_OBJECT_PATH_MAX` defaults to **250**, so it warns + truncates before ninja even sees the path.
+- **Resolution (canonical fix per [keyboard-controller troubleshooting docs](https://kirillzyusko.github.io/react-native-keyboard-controller/docs/troubleshooting)):**
+  1. **Registry (one-time, machine-wide, requires admin):** `Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem -Name LongPathsEnabled -Value 1 -Type DWord`.
+  2. **Ninja swap (one-time, per Android SDK install):** downloaded `ninja-win.zip` v1.12.1 from `github.com/ninja-build/ninja/releases` and replaced `%LOCALAPPDATA%\Android\Sdk\cmake\3.22.1\bin\ninja.exe`. Original kept as `ninja-1.10.bak.exe`.
+  3. **`mobile/android/app/build.gradle`:** added an `externalNativeBuild.cmake.arguments` block under `defaultConfig`:
+     - `-DCMAKE_MAKE_PROGRAM=<sdk>/cmake/3.22.1/bin/ninja.exe` (pin all `:configureCMake*` calls to the long-path-aware ninja).
+     - `-DCMAKE_OBJECT_PATH_MAX=1024` (raise CMake's internal cap).
+     - Branched on `Os.isFamily(Os.FAMILY_WINDOWS)` only for the filename so Mac/Linux/EAS keep using `ninja`.
+- **Result:** `BUILD SUCCESSFUL in 2m 6s`. APK installs + launches on device.
+- **Important caveat — the `build.gradle` change is NOT in git.** The whole `mobile/android/` tree is `.gitignore`d (line 41 of `mobile/.gitignore`), so the CMake-arguments block lives only in the local working copy. It survives `npx expo run:android` (incremental prebuild does not overwrite existing files), but a `npx expo prebuild --clean` (or a fresh `mobile/android/` checkout) wipes it. If we want this persistent on Windows we'd have to express it as an Expo config plugin or a `withGradleProperties` mod. For now keep `--clean` off the menu on this machine.
+- **EAS is unaffected** — Linux runners regenerate `mobile/android/` from `app.json` + plugins, and there's no MAX_PATH issue on Linux. The `softwareKeyboardLayoutMode: "resize"` in `app.json` is the persistent half — that produces `android:windowSoftInputMode="adjustResize"` in the EAS-generated manifest, which is what the keyboard-controller library needs.
+- **If you ever upgrade Android SDK CMake:** the hard-coded `3.22.1` in `build.gradle` may need bumping; update `cmakeDir` to match.
+
 ### Windows local Gradle release build (monorepo) — fixed 2026-05-28
 
 - **Symptom:** `cd mobile/android && ./gradlew assembleRelease` on Windows failed at `:app:createBundleReleaseJsAndAssets` with

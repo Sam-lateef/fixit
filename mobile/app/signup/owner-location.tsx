@@ -2,12 +2,12 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { WizardProgressBar } from "@/components/WizardProgressBar";
@@ -116,7 +116,11 @@ export default function OwnerLocationScreen(): React.ReactElement {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
+    <KeyboardAwareScrollView
+      contentContainerStyle={styles.screen}
+      keyboardShouldPersistTaps="handled"
+      bottomOffset={24}
+    >
       {!fromProfile ? <WizardProgressBar step={2} totalSteps={2} /> : null}
       <Text style={styles.h1}>{t("district")}</Text>
       <Text style={styles.sub}>{ownerCityLabel(city, locale)}</Text>
@@ -213,7 +217,7 @@ export default function OwnerLocationScreen(): React.ReactElement {
         </Text>
       </Pressable>
       {err ? <Text style={styles.err}>{err}</Text> : null}
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

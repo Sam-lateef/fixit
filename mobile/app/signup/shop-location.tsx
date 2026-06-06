@@ -5,12 +5,12 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { WizardProgressBar } from "@/components/WizardProgressBar";
@@ -166,10 +166,19 @@ export default function ShopLocationStep(): React.ReactElement {
 
   return (
     <>
-      <ScrollView
+      {/*
+        KeyboardAwareScrollView auto-scrolls the focused TextInput above
+        the soft keyboard on both iOS + Android (edge-to-edge aware).
+        Plain RN ScrollView + `automaticallyAdjustKeyboardInsets` is
+        iOS-only, which is why the phone field (mid-screen, below address)
+        was getting covered on Android. `bottomOffset` pushes the input a
+        bit above the keyboard so the next field's label peeks under the
+        cursor for context.
+      */}
+      <KeyboardAwareScrollView
         contentContainerStyle={s.container}
         keyboardShouldPersistTaps="handled"
-        automaticallyAdjustKeyboardInsets
+        bottomOffset={24}
       >
         <WizardProgressBar step={5} />
 
@@ -288,7 +297,7 @@ export default function ShopLocationStep(): React.ReactElement {
         <Pressable style={s.btn} onPress={handleContinue}>
           <Text style={s.btnText}>{t("continue")}</Text>
         </Pressable>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <SearchablePickerModal
         visible={cityPickerOpen}

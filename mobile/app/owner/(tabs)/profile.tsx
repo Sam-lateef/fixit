@@ -4,10 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
   Linking,
   Modal,
-  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -16,6 +14,10 @@ import {
   TextInput,
   View,
 } from "react-native";
+import {
+  KeyboardAvoidingView,
+  KeyboardAwareScrollView,
+} from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { SearchablePickerModal } from "@/components/SearchablePickerModal";
@@ -312,9 +314,11 @@ export default function OwnerProfileScreen(): React.ReactElement {
 
   return (
     <>
-      <ScrollView
+      <KeyboardAwareScrollView
         style={styles.scrollRoot}
         contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={24}
         alwaysBounceVertical
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -475,7 +479,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
         >
           <Text style={styles.logoutText}>{t("logout")}</Text>
         </Pressable>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <SearchablePickerModal
         visible={languagePickerOpen}
@@ -538,7 +542,12 @@ export default function OwnerProfileScreen(): React.ReactElement {
       >
         <KeyboardAvoidingView
           style={styles.addressOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          // react-native-keyboard-controller's KAV works under
+          // Android edge-to-edge where RN's stock KAV cannot measure
+          // the keyboard frame. `padding` pushes the sheet up so the
+          // address input + Save button sit just above the keyboard.
+          behavior="padding"
+          keyboardVerticalOffset={0}
         >
           <Pressable
             style={styles.addressDismissArea}

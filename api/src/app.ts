@@ -62,7 +62,10 @@ export async function buildApp(): Promise<AppWithIo> {
     secret,
     sign: { expiresIn: process.env.JWT_EXPIRES_IN ?? "30d" },
   });
-  await fastify.register(multipart, { limits: { fileSize: 3 * 1024 * 1024 } });
+  // Per-file cap for any multipart upload. Keep aligned with the per-route check
+  // in `routes/uploads.ts` (`MAX_BYTES`). The multipart parser enforces this at
+  // the stream level so the route never sees an over-cap buffer.
+  await fastify.register(multipart, { limits: { fileSize: 15 * 1024 * 1024 } });
 
   const localUpload = process.env.LOCAL_UPLOAD_DIR;
   if (localUpload) {

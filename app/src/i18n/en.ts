@@ -82,6 +82,9 @@ export const en = {
     "Governing law: Unless mandatory local law provides otherwise, these terms are governed by the laws applicable to Fix It IQ’s place of establishment, without regard to conflict-of-law rules.\n\n" +
     "Contact: hello@fixitiq.com. This page is a general summary; a fuller agreement may be published before commercial launch.",
   backToHome: "Back to home",
+  shopDashboardTitle: "Shop dashboard",
+  shopDashboardComingSoonBody:
+    "Your web dashboard is coming soon. You will manage your shop subscription, plan, and billing here. For now, keep using the Fix It mobile app to run your shop.",
 };
 
 export type EnKeys = keyof typeof en;

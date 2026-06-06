@@ -7,6 +7,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
@@ -39,7 +40,11 @@ export default function AuthNumberScreen(): React.ReactElement {
   }
 
   return (
-    <View style={styles.screen}>
+    <KeyboardAwareScrollView
+      contentContainerStyle={styles.screen}
+      keyboardShouldPersistTaps="handled"
+      bottomOffset={24}
+    >
       {isDevMockAuthUiEnabled() ? (
         <View style={styles.devBox}>
           <Text style={styles.devHint}>{t("devOnlyNoSms")}</Text>
@@ -90,7 +95,7 @@ export default function AuthNumberScreen(): React.ReactElement {
         <Text style={styles.btnText}>{t("sendCode")}</Text>
       </Pressable>
       {err ? <Text style={styles.err}>{err}</Text> : null}
-    </View>
+    </KeyboardAwareScrollView>
   );
 }
 

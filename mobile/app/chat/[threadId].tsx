@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -12,6 +11,10 @@ import {
   TextInput,
   View,
 } from "react-native";
+import {
+  KeyboardAvoidingView,
+  useKeyboardState,
+} from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { io, type Socket } from "socket.io-client";
 
@@ -162,6 +165,14 @@ export default function ChatThreadScreen(): React.ReactElement {
   const [counterpartyId, setCounterpartyId] = useState<string | null>(null);
   const [ratingStars, setRatingStars] = useState(5);
   const [ratingComment, setRatingComment] = useState("");
+  // Edge-to-edge is on (app.json) → on Android 15+ the OS does NOT shrink
+  // the window when the keyboard opens. We hand keyboard avoidance to
+  // react-native-keyboard-controller's KeyboardAvoidingView (mounted
+  // below), which subscribes to the native keyboard frame and pads its
+  // child correctly even in edge-to-edge. `useKeyboardState` only gives
+  // us the open/closed bit so the composer can drop the safe-area inset
+  // padding while the keyboard covers the gesture-bar area.
+  const { isVisible: keyboardOpen } = useKeyboardState();
   const listRef = useRef<FlatList<Message>>(null);
   const socketRef = useRef<Socket | null>(null);
   // Refs mirror state for use inside the long-lived socket handler so the
@@ -298,10 +309,6 @@ export default function ChatThreadScreen(): React.ReactElement {
     }
   }, [threadId]);
 
-  if (!threadId) {
-    return <View style={styles.screen} />;
-  }
-
   const sendViaRest = useCallback(
     async (text: string): Promise<void> => {
       try {
@@ -418,10 +425,21 @@ export default function ChatThreadScreen(): React.ReactElement {
     confirmAndSubmitReport(t, targetType, targetId);
   };
 
+  // Placeholder render for stale back-stack (param missing); the effect above
+  // schedules a router.back(). Kept AFTER all hooks so we don't violate the
+  // Rules of Hooks by skipping later useCallback when threadId is absent.
+  if (!threadId) {
+    return <View style={styles.flex} />;
+  }
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      // `padding` makes the avoiding view grow its bottom padding to match
+      // the live keyboard height — so the composer (last child) sits
+      // exactly on top of the keyboard. Works under edge-to-edge on
+      // Android 15+ thanks to KeyboardProvider in the root layout.
+      behavior="padding"
       keyboardVerticalOffset={0}
     >
       {/* Brand green header — safe-area top padding pushes below status bar */}
@@ -463,6 +481,12 @@ export default function ChatThreadScreen(): React.ReactElement {
         ref={listRef}
         data={messages}
         keyExtractor={(m) => m.id}
+        // `flex: 1` here is critical with adjustResize — without it the
+        // FlatList renders at its content's natural height, the window
+        // shrinks when the keyboard opens, and the composer (after the
+        // list in flex-column order) ends up pushed off-screen, hidden
+        // behind the keyboard (reported 2026-05-28).
+        style={styles.listFlex}
         contentContainerStyle={styles.msgList}
         removeClippedSubviews={Platform.OS !== "android"}
         onContentSizeChange={() =>
@@ -572,7 +596,16 @@ export default function ChatThreadScreen(): React.ReactElement {
         }}
       />
 
-      <View style={[styles.composer, { paddingBottom: 10 + insets.bottom }]}>
+      <View
+        style={[
+          styles.composer,
+          // While the keyboard is up, drop the safe-area-bottom contribution
+          // — the keyboard already covers the gesture-bar area, and leaving
+          // the inset in would create an empty band between the composer
+          // and the keyboard.
+          { paddingBottom: keyboardOpen ? 10 : 10 + insets.bottom },
+        ]}
+      >
         <TextInput
           style={[
             styles.input,
@@ -640,7 +673,22 @@ const styles = StyleSheet.create({
   },
   acceptedText: { fontSize: 12, fontWeight: "700", color: theme.primary },
 
-  msgList: { padding: 12, paddingBottom: 8 },
+  // FlatList outer style — `flex: 1` makes the list claim all the space
+  // between the header and the composer, so when the window shrinks
+  // (adjustResize on keyboard open) the list shrinks too instead of
+  // pushing the composer below the visible area.
+  listFlex: { flex: 1 },
+  // `flexGrow: 1, justifyContent: "flex-end"` anchors the messages to the
+  // bottom of the FlatList's visible area — so with a short conversation
+  // (e.g. 2 messages just after thread creation) they sit right above the
+  // composer instead of pinning to the top and leaving a big empty band
+  // between the last message and the input.
+  msgList: {
+    padding: 12,
+    paddingBottom: 8,
+    flexGrow: 1,
+    justifyContent: "flex-end",
+  },
   bubbleWrap: { marginBottom: 8, maxWidth: "88%", overflow: "visible" },
   // Use physical sides (left/right) so RTL layout direction does not flip
   // sender/receiver bubble placement.

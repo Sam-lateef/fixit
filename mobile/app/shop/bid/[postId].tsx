@@ -1,15 +1,13 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { PostImageLightbox } from "@/components/PostImageLightbox";
 import { SearchablePickerModal, type SearchablePickerItem } from "@/components/SearchablePickerModal";
@@ -138,10 +136,6 @@ export default function ShopBidScreen(): React.ReactElement {
       router.back();
     }
   }, [postId]);
-
-  if (!postId) {
-    return <View style={styles.screen} />;
-  }
 
   const isParts = post?.serviceType.toUpperCase() === "PARTS";
   const tag = post ? serviceTagStyle(post.serviceType) : null;
@@ -320,6 +314,26 @@ export default function ShopBidScreen(): React.ReactElement {
     closePicker();
   };
 
+  // Clears the currently-active picker's selection back to empty. Used by
+  // SearchablePickerModal's Clear button so the shop can unset an optional
+  // date/time after having picked one.
+  const onClearActive = (): void => {
+    if (!activePicker) return;
+    if (activePicker === "appointmentDate") {
+      setAppointmentDate("");
+      return;
+    }
+    if (activePicker === "appointmentTime") {
+      setAppointmentTime("");
+      return;
+    }
+    if (activePicker === "deliveryDate") {
+      setDeliveryDate("");
+      return;
+    }
+    setDeliveryWindow("");
+  };
+
   const submit = (): void => {
     if (submitInFlightRef.current) return;
     setErr("");
@@ -392,6 +406,13 @@ export default function ShopBidScreen(): React.ReactElement {
     })();
   };
 
+  // Placeholder render for stale back-stack (param missing); the effect above
+  // schedules a router.back(). Kept AFTER all hooks so we don't violate the
+  // Rules of Hooks by skipping later useState/useMemo when postId is absent.
+  if (!postId) {
+    return <View style={styles.screen} />;
+  }
+
   return (
     <ShopPremiumGate>
       <Stack.Screen
@@ -403,12 +424,15 @@ export default function ShopBidScreen(): React.ReactElement {
               : t("placeBid"),
         }}
       />
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
         style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        // Pushes the focused field 24px above the keyboard so its label
+        // is visible. KeyboardProvider (root) drives the native frame
+        // so this works under Android edge-to-edge.
+        bottomOffset={24}
       >
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {/* Post summary card */}
           {post ? (
             <View style={styles.summaryCard}>
@@ -438,6 +462,24 @@ export default function ShopBidScreen(): React.ReactElement {
               <Text style={styles.summaryDesc} numberOfLines={readOnly ? undefined : 3}>
                 {post.description}
               </Text>
+            </View>
+          ) : null}
+
+          {/* Request photos — rendered up here (right under the summary card)
+              so the shop sees the customer's attached images regardless of
+              whether they opened this screen to place a new bid, edit one,
+              or just view an existing bid in read-only mode. Tap a thumb to
+              open the lightbox. */}
+          {post?.photoUrls && post.photoUrls.length > 0 ? (
+            <View style={styles.photosBlock}>
+              <Text style={styles.photosLabel}>{t("photos")}</Text>
+              {post.photoUrls.map((url, i) => (
+                <PostImageLightbox
+                  key={`${url}-${i}`}
+                  uri={url.trim()}
+                  thumbnailStyle={styles.photoFull}
+                />
+              ))}
             </View>
           ) : null}
 
@@ -560,10 +602,16 @@ export default function ShopBidScreen(): React.ReactElement {
             <Text style={styles.hint}>{t("canAdjust")}</Text>
           )}
 
-          {/* Date/time fields — different labels for parts vs repair/towing */}
+          {/* Date/time fields — different labels for parts vs repair/towing.
+              All four are optional: the shop can leave them empty and the
+              owner will simply see "—" on their side. Use the Clear button
+              inside the picker modal to reset a previously chosen value. */}
           {isParts ? (
             <>
-              <Text style={styles.label}>{t("deliveryDate")}</Text>
+              <Text style={styles.label}>
+                {t("deliveryDate")}{" "}
+                <Text style={styles.labelOptional}>({t("optional")})</Text>
+              </Text>
               <Pressable
                 style={styles.fieldPickerBtn}
                 onPress={() => setActivePicker("deliveryDate")}
@@ -581,7 +629,10 @@ export default function ShopBidScreen(): React.ReactElement {
                 </Text>
                 <Text style={styles.fieldPickerChevron}>⌄</Text>
               </Pressable>
-              <Text style={styles.label}>{t("deliveryWindow")}</Text>
+              <Text style={styles.label}>
+                {t("deliveryWindow")}{" "}
+                <Text style={styles.labelOptional}>({t("optional")})</Text>
+              </Text>
               <Pressable
                 style={styles.fieldPickerBtn}
                 onPress={() => setActivePicker("deliveryWindow")}
@@ -602,7 +653,10 @@ export default function ShopBidScreen(): React.ReactElement {
             </>
           ) : (
             <>
-              <Text style={styles.label}>{t("appointmentDate")}</Text>
+              <Text style={styles.label}>
+                {t("appointmentDate")}{" "}
+                <Text style={styles.labelOptional}>({t("optional")})</Text>
+              </Text>
               <Pressable
                 style={styles.fieldPickerBtn}
                 onPress={() => setActivePicker("appointmentDate")}
@@ -620,7 +674,10 @@ export default function ShopBidScreen(): React.ReactElement {
                 </Text>
                 <Text style={styles.fieldPickerChevron}>⌄</Text>
               </Pressable>
-              <Text style={styles.label}>{t("appointmentTime")}</Text>
+              <Text style={styles.label}>
+                {t("appointmentTime")}{" "}
+                <Text style={styles.labelOptional}>({t("optional")})</Text>
+              </Text>
               <Pressable
                 style={styles.fieldPickerBtn}
                 onPress={() => setActivePicker("appointmentTime")}
@@ -678,35 +735,23 @@ export default function ShopBidScreen(): React.ReactElement {
           {err ? <Text style={styles.err}>{err}</Text> : null}
           </>
           )}
-
-          {/* Photos: full-width stacked at the bottom */}
-          {post?.photoUrls && post.photoUrls.length > 0 ? (
-            <View style={styles.photosBlock}>
-              <Text style={styles.photosLabel}>{t("photos")}</Text>
-              {post.photoUrls.map((url, i) => (
-                <PostImageLightbox
-                  key={`${url}-${i}`}
-                  uri={url.trim()}
-                  thumbnailStyle={styles.photoFull}
-                />
-              ))}
-            </View>
-          ) : null}
-        </ScrollView>
-        <SearchablePickerModal
-          visible={activePicker !== null}
-          title={pickerTitle}
-          items={pickerItems}
-          selectedId={pickerSelectedId}
-          onSelect={onPick}
-          onRequestClose={closePicker}
-          cancelLabel={t("cancel")}
-          searchPlaceholder={t("search")}
-          showSearch={
-            activePicker === "appointmentDate" || activePicker === "deliveryDate"
-          }
-        />
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+      <SearchablePickerModal
+        visible={activePicker !== null}
+        title={pickerTitle}
+        items={pickerItems}
+        selectedId={pickerSelectedId}
+        onSelect={onPick}
+        onRequestClose={closePicker}
+        cancelLabel={t("cancel")}
+        searchPlaceholder={t("search")}
+        // All four pickers (date, time, deliveryDate, deliveryWindow) are
+        // short fixed lists — 45 dates, ~20 times, 4 delivery windows — so
+        // a search field just adds noise. The shop scrolls instead.
+        showSearch={false}
+        onClear={onClearActive}
+        clearLabel={t("clear")}
+      />
     </ShopPremiumGate>
   );
 }
@@ -811,6 +856,7 @@ const styles = StyleSheet.create({
   },
 
   label: { fontSize: 15, fontWeight: "600", color: theme.text, marginBottom: 6, marginTop: 16, textAlign: "left" },
+  labelOptional: { fontSize: 13, fontWeight: "500", color: theme.mutedLight },
   hint: { fontSize: 12, color: theme.mutedLight, marginTop: 4, textAlign: "left" },
 
   input: {

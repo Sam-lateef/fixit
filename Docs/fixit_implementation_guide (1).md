@@ -801,7 +801,7 @@ POST /threads/:id/messages
 POST /uploads/photo
   Body: multipart/form-data with field "photo"
   Response: { url: string }         // Cloudflare R2 CDN URL
-  Limits: max 2MB, image types only, max 3 per post (enforced client-side)
+  Limits: max 15MB, image types only, max 3 per post (enforced client-side)
 ```
 
 ### Districts
@@ -1227,7 +1227,7 @@ export async function uploadPhoto(buffer: Buffer, mimeType: string): Promise<str
 4. Server uploads to R2, returns CDN URL
 5. URL is stored in `post.photoUrls[]`
 6. Max 3 photos per post (enforced client-side — once 3 uploaded, upload buttons disappear)
-7. Max 2MB per photo after compression
+7. Max 15MB per photo after compression
 
 ---
 
