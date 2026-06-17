@@ -32,7 +32,7 @@ export function renderAuthWelcome(root: HTMLElement): void {
     '<div class="auth-welcome-card">' +
     '<div class="auth-welcome-brand">' +
     '<div class="brand-ar" dir="rtl">صلّحها</div>' +
-    '<div class="brand-en">Fix It</div>' +
+    '<div class="brand-en">Fix It Iraq</div>' +
     "</div>" +
     `<p class="auth-welcome-title">${escapeHtml(t("authWelcomeTitle"))}</p>` +
     `<p class="auth-welcome-sub">${escapeHtml(t("authWelcomeSubtitle"))}</p>` +

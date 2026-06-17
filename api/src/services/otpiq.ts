@@ -33,7 +33,7 @@ export async function sendOtpiqCode(phone: string): Promise<string> {
     },
     body: JSON.stringify({
       phone,        // E.164 format e.g. +9647XXXXXXXXX
-      sms: `Your Fix It code is: ${code}`,
+      sms: `Your Fix It Iraq code is: ${code}`,
     }),
   });
 

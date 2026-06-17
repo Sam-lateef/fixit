@@ -115,7 +115,7 @@ export default function AuthWelcomeScreen(): React.ReactElement {
           resizeMode="contain"
         />
         <Text style={styles.brandName}>صلّحها</Text>
-        <Text style={styles.brandNameEn}>FIX IT</Text>
+        <Text style={styles.brandNameEn}>FIX IT IRAQ</Text>
         <Text style={styles.brandTag}>سوق إصلاح السيارات وقطع الغيار</Text>
         <Text style={styles.brandTagEn}>Car repair and parts marketplace</Text>
       </View>

@@ -1,6 +1,6 @@
 /** i18n strings — keys match legacy web `app/src/i18n/en.ts`. */
 export const en = {
-  appName: "Fix It IQ",
+  appName: "Fix It Iraq",
   tagline: "Car repair and parts marketplace",
   welcome: "Welcome",
   authSubtitle: "Sign in with Google or Apple.",

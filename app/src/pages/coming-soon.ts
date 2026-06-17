@@ -11,7 +11,7 @@ export async function renderComingSoon(root: HTMLElement): Promise<void> {
     '<header class="coming-soon-header">' +
     '<div class="coming-soon-brand-stack">' +
     '<div class="brand-ar" dir="rtl">صلّحها</div>' +
-    '<div class="brand-en">Fix It</div>' +
+    '<div class="brand-en">Fix It Iraq</div>' +
     "</div>" +
     '<div class="coming-soon-icon-wrap">' +
     `<img class="coming-soon-icon" src="/brand-wrench.png" width="72" height="72" alt="" />` +
