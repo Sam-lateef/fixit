@@ -2,6 +2,7 @@ import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Linking, Platform } from "react-native";
 
+import { ANDROID_DEFAULT_PUSH_CHANNEL } from "@/lib/notification-navigation";
 import { apiFetch } from "@/lib/api";
 
 type LinkingWithSendIntent = typeof Linking & {
@@ -82,13 +83,15 @@ function readExpoProjectId(): string | undefined {
 async function ensureAndroidNotificationChannel(): Promise<void> {
   if (Platform.OS !== "android") return;
   try {
-    await Notifications.setNotificationChannelAsync("default", {
+    await Notifications.setNotificationChannelAsync(ANDROID_DEFAULT_PUSH_CHANNEL, {
       name: "Default",
       importance: Notifications.AndroidImportance.MAX,
       sound: "default",
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#2D6A4F",
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      enableVibrate: true,
+      showBadge: true,
     });
   } catch (e) {
     console.warn("[push] setNotificationChannelAsync failed:", e);
@@ -171,4 +174,6 @@ export function configureForegroundNotifications(): void {
       shouldSetBadge: true,
     }),
   });
+  // Channel must exist before any push arrives — not only after login.
+  void ensureAndroidNotificationChannel();
 }

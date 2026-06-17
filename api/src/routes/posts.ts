@@ -103,7 +103,7 @@ export async function notifyOwnerNewBid(
   if (!owner?.fcmToken) return;
   const loc = resolvePushLocale(owner.preferredLocale);
   const copy = pushBidForOwner(loc);
-  await sendPush(owner.fcmToken, copy.title, copy.body, { postId, type: "BID" }, false);
+  await sendPush(owner.fcmToken, copy.title, copy.body, { postId, type: "BID" }, true);
 }
 
 export async function registerPostRoutes(fastify: FastifyInstance): Promise<void> {

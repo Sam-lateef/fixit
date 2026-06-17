@@ -17,6 +17,7 @@ import { apiFetch, formatIqd } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
 import { pushEvents } from "@/lib/push-events";
+import { usePollWhileFocused } from "@/lib/use-poll-while-focused";
 import { useRefetchOnAppActive } from "@/lib/use-refetch-on-app-active";
 import { ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
@@ -121,7 +122,7 @@ export default function OwnerHomeScreen(): React.ReactElement {
       setPosts([]);
       setLoadError(friendlyApiError(e, t));
     }
-  }, []);
+  }, [t]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -150,6 +151,10 @@ export default function OwnerHomeScreen(): React.ReactElement {
   );
 
   useRefetchOnAppActive(load);
+
+  // Foreground push listeners are flaky on some Android builds — poll while
+  // this tab is open so new offers appear without pull-to-refresh.
+  usePollWhileFocused(load, 20_000);
 
   // Auto-refresh when a new bid arrives or one of ours is accepted while the
   // app is foregrounded. Push delivery already happens; this just keeps the
@@ -214,6 +219,7 @@ export default function OwnerHomeScreen(): React.ReactElement {
   return (
     <FlatList
       data={posts}
+      extraData={posts}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.list}
       // Allow pull-to-refresh even when the list is short / empty (iOS).

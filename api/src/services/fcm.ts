@@ -67,6 +67,8 @@ async function sendViaExpo(
         data,
         sound: "default",
         priority: highPriority ? "high" : "default",
+        // Route Android tray + heads-up through our MAX-importance channel.
+        channelId: "default",
       },
     ]),
   });

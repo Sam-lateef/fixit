@@ -90,7 +90,7 @@ export function initSocket(io: IOServer): ChatIoBridge {
               pushNewMessageTitle(loc),
               safePreview(content, 80),
               { threadId, type: "CHAT" },
-              false,
+              true,
             );
           } catch {
             /* ignore */

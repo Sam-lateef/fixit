@@ -281,7 +281,7 @@ export async function registerBidRoutes(fastify: FastifyInstance): Promise<void>
             copy.title,
             copy.body,
             { bidId: id, threadId: txResult.chatThread.id, type: "ACCEPT" },
-            false,
+            true,
           );
         } catch {
           /* ignore push errors */

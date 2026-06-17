@@ -84,6 +84,7 @@
         {
           "icon": "./assets/images/fixit-notification-96.png",
           "color": "#2D6A4F",
+          "defaultChannel": "default",
           "sounds": []
         }
       ]

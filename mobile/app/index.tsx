@@ -14,6 +14,7 @@ import { getToken } from "@/lib/auth-storage";
 import { isDevNavHubEnabled } from "@/lib/dev-nav-hub";
 import { hasCompletedLocaleGate, setLocaleGateCompleted } from "@/lib/locale-gate";
 import { useI18n } from "@/lib/i18n";
+import { takeNotificationRoute } from "@/lib/notification-navigation";
 import { signOutFromApp } from "@/lib/sign-out";
 import { hrefAuthWelcome } from "@/lib/routes-href";
 import { theme } from "@/lib/theme";
@@ -51,6 +52,10 @@ export default function IndexScreen(): React.ReactElement {
         return;
       }
       router.replace(target.path as Href);
+      const pending = takeNotificationRoute();
+      if (pending) {
+        router.push(pending);
+      }
     } catch (e) {
       if (e instanceof BootstrapTransientError) {
         setTransientError(friendlyApiError(e, t, "bootstrapNetworkErrorBody"));

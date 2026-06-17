@@ -258,7 +258,7 @@ export function registerChatRoutes(
             pushNewMessageTitle(loc),
             safePreview(body.data.content, 80),
             { threadId: id, type: "CHAT" },
-            false,
+            true,
           );
         } catch {
           /* ignore */
