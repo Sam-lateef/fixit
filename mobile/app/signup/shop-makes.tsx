@@ -14,6 +14,7 @@ import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { asShopType } from "@/lib/shop-type";
+import { logSignup, logSignupStep } from "@/lib/signup-log";
 import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import { theme } from "@/lib/theme";
 
@@ -73,11 +74,17 @@ export default function ShopMakesStep(): React.ReactElement {
   }, [shopType]);
 
   useEffect(() => {
+    logSignup("shopMakes.mount", { shopType });
+  }, [shopType]);
+
+  useEffect(() => {
     void (async () => {
       try {
-        const data = await apiFetch<{ makes: CatalogMake[] }>(
-          "/api/v1/catalog/makes?market=IQ",
-          { skipAuth: true },
+        const data = await logSignupStep("shopMakes.fetchCatalog", () =>
+          apiFetch<{ makes: CatalogMake[] }>(
+            "/api/v1/catalog/makes?market=IQ",
+            { skipAuth: true },
+          ),
         );
         setAllMakes(data.makes);
       } catch {
@@ -114,10 +121,22 @@ export default function ShopMakesStep(): React.ReactElement {
     const data = JSON.stringify(merged);
 
     if (Boolean(prev.offersRepair)) {
+      logSignup("shopMakes.continue", {
+        to: "/signup/shop-repair-cats",
+        makesCount: selected.size,
+      });
       router.push({ pathname: "/signup/shop-repair-cats" as Href, params: { data } } as never);
     } else if (Boolean(prev.offersParts)) {
+      logSignup("shopMakes.continue", {
+        to: "/signup/shop-parts-cats",
+        makesCount: selected.size,
+      });
       router.push({ pathname: "/signup/shop-parts-cats" as Href, params: { data } } as never);
     } else {
+      logSignup("shopMakes.continue", {
+        to: "/signup/shop-location",
+        makesCount: selected.size,
+      });
       router.push({ pathname: "/signup/shop-location" as Href, params: { data } } as never);
     }
   }

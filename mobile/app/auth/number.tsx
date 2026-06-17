@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -13,6 +13,11 @@ import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { devMockPhoneE164, isDevMockAuthUiEnabled } from "@/lib/dev-auth";
 import { useI18n } from "@/lib/i18n";
+import {
+  logSignup,
+  logSignupStep,
+  resetSignupSession,
+} from "@/lib/signup-log";
 import { theme } from "@/lib/theme";
 const PREFIX = "+964";
 
@@ -22,15 +27,28 @@ export default function AuthNumberScreen(): React.ReactElement {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    // Fresh signup session each time the user lands on the phone screen so we
+    // don't conflate two test runs from the same device.
+    resetSignupSession();
+    logSignup("number.mount");
+  }, []);
+
   async function sendOtp(full: string): Promise<void> {
     setErr("");
     setBusy(true);
     try {
-      await apiFetch<{ success: boolean }>("/api/v1/auth/send-otp", {
-        method: "POST",
-        body: JSON.stringify({ phone: full }),
-        skipAuth: true,
-      });
+      await logSignupStep(
+        "number.sendOtp",
+        () =>
+          apiFetch<{ success: boolean }>("/api/v1/auth/send-otp", {
+            method: "POST",
+            body: JSON.stringify({ phone: full }),
+            skipAuth: true,
+          }),
+        { phoneSuffixLen: full.length - PREFIX.length },
+      );
+      logSignup("number.navigate", { to: "/auth/otp" });
       router.push({ pathname: "/auth/otp", params: { phone: full } });
     } catch (e) {
       setErr(friendlyApiError(e, t));
@@ -86,7 +104,7 @@ export default function AuthNumberScreen(): React.ReactElement {
           const digits = suffix.replace(/\D/g, "");
           const full = `${PREFIX}${digits}`;
           if (!/^\+9647\d{9}$/.test(full)) {
-            setErr("Use +9647XXXXXXXXX (Iraqi mobile)");
+            setErr(t("phoneInvalidFormat"));
             return;
           }
           void sendOtp(full);

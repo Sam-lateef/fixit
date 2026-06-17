@@ -14,6 +14,62 @@ Newest first. Use **`/checkpoint`** mid-session and **`/end`** to append.
 
 ---
 
+### 2026-06-08 — Vehicle catalog expansion: +318 IQ models across 29 brands
+
+- User supplied a 481-row reference list (29 brands). Diff against prod showed 0 missing brands but **318 missing models**.
+- Generated additions with smart per-model year defaults (default 2000–2026; 2020+ for new EVs/PHEVs like BYD Han DM-i, Yangwang U8/U9, BMW iX/i4/i5/i7, Audi e-tron, Mercedes EQ series, Land Cruiser 300/250, Prado 250 etc.; capped windows on discontinued classics like Mark X 1996–2019, Tiida 2004–2018, RX-8 2002–2012, etc.). Arabic names left null for the new rows — UI falls back to English; can be added later.
+- New helper: `api/scripts/reseed-catalog.mjs` — plain-ESM runner that imports the built `dist/lib/catalog-json-seed.js` so it works in the pruned prod image (no tsx). Idempotent; safe to re-run.
+- Deploy: API release `01KTKQENAF80BPKWYSZPED9D4G`, then `fly ssh console -C 'node /repo/api/scripts/reseed-catalog.mjs'` (6.9 s). Live catalog now 79 brands / **695 models** (up from 377). Verified per-brand counts against expected via `/api/v1/catalog/models?makeId=...&market=IQ`.
+
+---
+
+### 2026-06-08 — Phone copy cleanup: drop Turkey reference, fix English-leaking error on /auth/number
+
+- Removed every user-visible Turkey reference from the phone-validation copy (mobile `phoneInvalidFormat` en + ar, API `e164WhatsAppOtpHint`, `shops` zod message). `+90` numbers still validate on the backend (testing/travel) but are no longer surfaced.
+- Fixed `mobile/app/auth/number.tsx:89` which had a hardcoded English `setErr(...)` — Arabic users were always seeing English on that one screen. Now routes through `t("phoneInvalidFormat")`.
+- Deploy: API release `01KTKNTSD2HCM08ZTJCGQ1DX1E`. Mobile ships with next APK.
+
+---
+
+### 2026-06-08 — Towing + Motorcycle post: drop spurious "make/model/year" requirement
+
+- Owner-side TOWING posts on a tuktuk/motor were blocked by a validation that asked for `motorcycleDetails` ("Enter make / model / year") even though that input is hidden for towing — mirroring the existing CAR + TOWING behaviour which collects nothing of the kind.
+- `api/src/routes/posts.ts`: `superRefine` skips the motorcycleDetails requirement when `serviceType === "TOWING"`.
+- `mobile/components/OwnerPostEditor.tsx`: client-side validation gated on `serviceType !== "TOWING"`; both create body and edit patch only set `motorcycleDetails` when the trimmed value is non-empty.
+- Deploy: API release `01KTKNFD70DC3ERBQM9WYH24KM`. Mobile change ships with next APK.
+
+---
+
+### 2026-06-08 — API hot-fix: Prisma pool starvation + zombie flycast connections
+
+- **Incident:** Users reported "app is so slow, screens time out, sign in hangs" the day after the 2026-06-06 phase-1 polish deploy. Live Fly log tail confirmed `/users/me` taking **26 s**, `/posts/mine` **4 s**, media GETs **91 s**, and a `PUT /users/me` failing with `PrismaClientKnownRequestError P2028` (interactive transaction timed out at 13.8 s of a 5 s budget). The cold-started second machine handled identical endpoints in 35–60 ms — proving the code/DB were fine, but the long-running first machine's Prisma pool was wedged on zombie flycast TCP connections.
+- **First aid:** `fly machine restart 2879095b66e758 --app fixit-api` — instant relief.
+- **Permanent fixes (API v52, deploy `01KTKHZ9D8BY981AP4HMD0SBMQ`):**
+  - `api/src/db/prisma.ts`: build `datasourceUrl` with `connection_limit=10`, `pool_timeout=20`, **`socket_timeout=30`** (kills zombies before OS-level TCP timeout), `connect_timeout=10`. Each param applied only if not already in `DATABASE_URL` so Fly secret can override.
+  - `api/src/routes/districts.ts` + `api/src/routes/catalog.ts`: removed per-request `count()` bootstrap calls; moved to one-shot `bootstrapDistrictsIfEmpty()` / `bootstrapCatalogIfEmpty()` invoked from `buildApp()`. Added `Set<string>` cache + single-flight `Map` for the per-city defensive lazy seed so concurrent first-requests for the same new city don't all upsert.
+  - `api/src/app.ts`: wires the two bootstrap calls at the end of `buildApp()` in parallel.
+  - `fly.toml`: `min_machines_running = 1 → 2` so both iad machines stay warm and one wedged pool can't choke all traffic.
+- **Verification:** post-deploy probe — `/health` 0.53 s, `/public/config` 0.41 s, `/districts?city=Baghdad` 0.50 s, `/catalog/makes` 0.49 s end-to-end from Iraq (≈160 ms TCP connect baseline; server-side ~5–30 ms). Both Fly machines `started + 1/1 passing`. Full incident write-up in `Docs/debugs.md`.
+- **Outstanding TODO:** revoke unused GCP IAM service-account key `376b7b2005b88728b6d670788e5f535850e0499c` from earlier session (still pending).
+
+### 2026-06-06 — SHA correction + rebuild (versionCode 6) after DEVELOPER_ERROR
+
+- **Bug:** the SHA-1 registered in the prior step (`b9617e49e6210bf5602812f70a4b79b5dfaea049`) was **transcription-garbled** — 6 bytes off from the real Play App Signing key. First install via Play Internal Testing opt-in link returned `DEVELOPER_ERROR` on Google Sign-In. Confirmed by reading the live SHA-1 from Play Console → Setup → App integrity → Settings, which is `b9617e49e621dbf56d2812f70a407905cfae4049`. Wrong vs right diff: positions 7/9/14/16/17/19 (`0B↔DB`, `60↔6D`, `4B↔40`, `B5↔05`, `DF↔CF`, `A0↔40`) — every error is a D/0 or C/D confusion, classic OCR/transcription pattern.
+- **Fix in Firebase:** added correct SHA `B9:61:7E:49:E6:21:DB:F5:6D:28:12:F7:0A:40:79:05:CF:AE:40:49` to `com.fixitiq.app` (Firebase auto-created OAuth client `925833254957-f1jei1u5lq951qtflg72c5gkci7ej4ur.apps.googleusercontent.com`), then deleted the phantom SHA + its OAuth client. Re-downloaded `google-services.json` via the same `GetAndroidAppConfig` RPC interception (base64 payload) and committed (`0678e90`).
+- **Rebuild + resubmit:** EAS production build `d7deb0d5-a2ea-466f-b05d-f9c534e28bcf`, versionCode auto-incremented 5 → **6**, finished in 21m05s. Submission `9da08e4a-bffe-4b0a-b7f6-b592b9717e9f` landed on the existing Internal Testing 1.0.0 draft. AAB: `https://expo.dev/artifacts/eas/...` (see EAS).
+- **Lesson:** never trust a user-pasted SHA. Always cross-check with Play Console → App integrity (Play App Signing) or `keytool -list -v -keystore <ks>` for upload keys before registering. Cheapest verification: paste the SHA into Firebase Console and immediately read it back via a JS extractor to confirm normalization matches the source.
+- **Cleanup TODO:** revoke unused SA key `376b7b2005b88728b6d670788e5f535850e0499c` (still pending from earlier).
+
+### 2026-06-06 — First AAB pushed to Play Internal Testing (versionCode 5) [SUPERSEDED — see entry above]
+
+- **Play App Signing SHA-1** `B9:61:7E:49:E6:21:0B:F5:60:28:12:F7:0A:4B:79:B5:DF:AE:A0:49` registered against the `com.fixitiq.app` Android app in Firebase project `fixit-9191d`. Without this, native Google Sign-In would throw `DEVELOPER_ERROR` on devices that install from Play (Play re-signs every AAB with the app-signing key — that SHA must be present in `google-services.json` so `@react-native-google-signin` can find a matching OAuth client at runtime).
+- **`mobile/google-services.json`** regenerated from Firebase (3 SHA-1 entries for `com.fixitiq.app` now: EAS upload keystore `544fa9…`, Windows local debug `5e8f16…`, Play app-signing `b9617e…`). New OAuth client `925833254957-jjq508juc2829h50jjm1ti9f6mcj985e.apps.googleusercontent.com` added by Firebase automatically. Commit `353723c`.
+- **EAS production AAB** queued from commit `353723c` → build `686c2f49-4c7a-4561-a889-e679360ef9eb`, versionCode auto-incremented 4 → **5**, signed with EAS-managed upload keystore `Build Credentials w6qjn9JQjh`. Build duration ~20 min. AAB: `https://expo.dev/artifacts/eas/dTTfW3s4V1zTyrBch2UQPn.aab`.
+- **`eas submit` wired** (`9c9be02`): `submit.production.android` now has `serviceAccountKeyPath: ./play-service-account.json` + `track: internal`. Reuses the existing `firebase-adminsdk-fbsvc@fixit-9191d.iam.gserviceaccount.com` service account, which already had Admin (all permissions) on the Fix It Play Console app — so no new SA or permission grants were needed. The JSON key itself lives only locally and is gitignored (`mobile/.gitignore` line 45). Each dev regenerates a key from Firebase Console → Service accounts when needed.
+- **Submission `ec5f5278-e3e0-4ad9-b0a6-b1b8916a949e`** completed cleanly via `eas submit --platform android --profile production --id 686c2f49 --non-interactive --wait`. AAB landed on the existing Internal Testing draft (release 1.0.0, versionCode 5).
+- **Manual follow-up** in Play Console UI (not blockable by EAS): (1) Internal testing → Testers → add an email list (or a Google Group), (2) Edit release → Review → Start rollout to Internal testing. Play then emails opt-in links to each tester.
+- **Cleanup TODO:** revoke unused SA key `376b7b2005b88728b6d670788e5f535850e0499c` in GCP IAM (created during a `Generate new private key` retry when the first response capture truncated). Low risk — the key was never persisted to disk.
+
 ### 2026-06-06 — Post TTL: 48h → 72h + success-popup hint
 
 - **Backend:** `api/src/routes/posts.ts` post `expiresAt` window bumped from 48h to **72h** (3 days). Comment cross-references the user-facing copy so the two stay in sync.

@@ -616,7 +616,13 @@ export function OwnerPostEditor({
       Alert.alert(t("errorTitle"), t("districtRequired"));
       return;
     }
-    if (vehicleType === "MOTORCYCLE" && motorcycleDetails.trim().length === 0) {
+    // TOWING posts capture vehicle context in the free-text notes field; the
+    // motorcycleDetails input is hidden in that mode, so don't require it.
+    if (
+      serviceType !== "TOWING" &&
+      vehicleType === "MOTORCYCLE" &&
+      motorcycleDetails.trim().length === 0
+    ) {
       Alert.alert(t("errorTitle"), t("motorcycleDetailsRequired"));
       return;
     }
@@ -629,7 +635,10 @@ export function OwnerPostEditor({
           const isMoto = vehicleType === "MOTORCYCLE";
           const patch: Record<string, unknown> = { photoUrls };
           if (title.trim()) patch.title = title.trim();
-          if (isMoto) {
+          // Only send a non-empty trimmed value — the API rejects empty
+          // strings (`min(1)`) and TOWING+MOTORCYCLE legitimately has no
+          // motorcycleDetails (input field is hidden in that mode).
+          if (isMoto && motorcycleDetails.trim().length > 0) {
             patch.motorcycleDetails = motorcycleDetails.trim();
           }
           if (serviceType === "REPAIR") {
@@ -680,7 +689,8 @@ export function OwnerPostEditor({
             photoUrls,
           };
           if (title.trim()) body.title = title.trim();
-          if (isMoto) {
+          // Only send a non-empty trimmed value (see PATCH branch above).
+          if (isMoto && motorcycleDetails.trim().length > 0) {
             body.motorcycleDetails = motorcycleDetails.trim();
           }
           if (serviceType === "REPAIR") {

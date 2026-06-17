@@ -9,9 +9,12 @@ primary_region = "iad"
   internal_port = 3000
   force_https = true
   # With min 0 + auto_stop, Fly SIGINT-stops idle machines → cold starts / "API is down" between requests.
+  # min_machines_running = 2 keeps both regional machines warm so one wedged
+  # Prisma pool (zombie flycast connection) can't choke all traffic — see
+  # Docs/debugs.md "Prisma pool starvation + zombie connections 2026-06-08".
   auto_stop_machines = true
   auto_start_machines = true
-  min_machines_running = 1
+  min_machines_running = 2
 
   # App only listens after full `buildApp()` (routes, socket, cron). Cold starts + DB can exceed a short grace.
   [[http_service.checks]]

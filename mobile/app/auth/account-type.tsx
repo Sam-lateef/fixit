@@ -1,5 +1,5 @@
 import { router, type Href } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { apiFetch } from "@/lib/api";
@@ -7,6 +7,7 @@ import { friendlyApiError } from "@/lib/api-error";
 import { setToken } from "@/lib/auth-storage";
 import { syncRevenueCatUser } from "@/lib/revenuecat";
 import { useI18n } from "@/lib/i18n";
+import { logSignup, logSignupStep } from "@/lib/signup-log";
 import { theme } from "@/lib/theme";
 
 type Choice = "OWNER" | "SHOP";
@@ -16,6 +17,10 @@ export default function AccountTypeScreen(): React.ReactElement {
   const [choice, setChoice] = useState<Choice>("OWNER");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+
+  useEffect(() => {
+    logSignup("accountType.mount");
+  }, []);
 
   // Towing providers used to be their own top-level choice with a fast-path
   // straight to /signup/shop-location. They're now a sub-type of SHOP that
@@ -55,22 +60,38 @@ export default function AccountTypeScreen(): React.ReactElement {
           setBusy(true);
           void (async () => {
             try {
-              await apiFetch("/api/v1/users/me", {
-                method: "PUT",
-                body: JSON.stringify({ userType: choice }),
-              });
-              const refreshed = await apiFetch<{
-                token: string;
-                user: { id: string; userType: "OWNER" | "SHOP" };
-              }>("/api/v1/auth/refresh", { method: "POST" });
-              await setToken(refreshed.token);
-              await syncRevenueCatUser(refreshed.user);
+              logSignup("accountType.continue", { choice });
+              await logSignupStep(
+                "accountType.putUserType",
+                () =>
+                  apiFetch("/api/v1/users/me", {
+                    method: "PUT",
+                    body: JSON.stringify({ userType: choice }),
+                  }),
+                { choice },
+              );
+              const refreshed = await logSignupStep("accountType.refresh", () =>
+                apiFetch<{
+                  token: string;
+                  user: { id: string; userType: "OWNER" | "SHOP" };
+                }>("/api/v1/auth/refresh", { method: "POST" }),
+              );
+              await logSignupStep("accountType.setToken", () =>
+                setToken(refreshed.token),
+              );
+              await logSignupStep(
+                "accountType.syncRC",
+                () => syncRevenueCatUser(refreshed.user),
+                { userType: refreshed.user.userType },
+              );
 
               if (choice === "OWNER") {
+                logSignup("accountType.navigate", { to: "/signup/owner-details" });
                 router.replace("/signup/owner-details");
               } else {
                 // SHOP — every sub-type (Car / Motorcycle / Towing) starts
                 // on the new shop-type picker. No more pre-baked shortcuts.
+                logSignup("accountType.navigate", { to: "/signup/shop-type" });
                 router.replace("/signup/shop-type" as Href);
               }
             } catch (e) {

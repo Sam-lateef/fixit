@@ -16,6 +16,7 @@ import { setToken } from "@/lib/auth-storage";
 import { useI18n } from "@/lib/i18n";
 import { registerPushToken } from "@/lib/push-notifications";
 import { syncRevenueCatUser } from "@/lib/revenuecat";
+import { logSignup, logSignupStep } from "@/lib/signup-log";
 import { theme } from "@/lib/theme";
 
 const CODE_LEN = 6;
@@ -39,6 +40,10 @@ export default function AuthOtpScreen(): React.ReactElement {
     return () => clearTimeout(id);
   }, [resendSec]);
 
+  useEffect(() => {
+    logSignup("otp.mount", { hasPhone: Boolean(phone) });
+  }, [phone]);
+
   // Guard against direct navigation without a phone param; do the redirect in
   // an effect so render stays side-effect-free.
   useEffect(() => {
@@ -59,18 +64,43 @@ export default function AuthOtpScreen(): React.ReactElement {
     setErr("");
     setBusy(true);
     try {
-      const res = await apiFetch<{
-        token: string;
-        isNewUser: boolean;
-        user: { id: string; userType: "OWNER" | "SHOP" };
-      }>("/api/v1/auth/verify-otp", {
-        method: "POST",
-        body: JSON.stringify({ phone, code }),
-        skipAuth: true,
+      const res = await logSignupStep("otp.verify", () =>
+        apiFetch<{
+          token: string;
+          isNewUser: boolean;
+          user: { id: string; userType: "OWNER" | "SHOP" };
+        }>("/api/v1/auth/verify-otp", {
+          method: "POST",
+          body: JSON.stringify({ phone, code }),
+          skipAuth: true,
+        }),
+      );
+      logSignup("otp.verify.result", {
+        isNewUser: res.isNewUser,
+        userType: res.user.userType,
       });
-      await setToken(res.token);
-      await syncRevenueCatUser({ id: res.user.id, userType: res.user.userType });
-      void registerPushToken(); // fire-and-forget — don't block login
+      await logSignupStep("otp.setToken", () => setToken(res.token));
+      await logSignupStep(
+        "otp.syncRC",
+        () =>
+          syncRevenueCatUser({
+            id: res.user.id,
+            userType: res.user.userType,
+          }),
+        { userType: res.user.userType },
+      );
+      // Fire-and-forget — don't block login. Wrap in a step so we still see
+      // when (and how slowly) the push registration completes.
+      logSignup("otp.registerPush.kickoff");
+      void logSignupStep("otp.registerPush", () => registerPushToken()).catch(
+        () => {
+          /* logSignupStep already logged it */
+        },
+      );
+      logSignup("otp.navigate", {
+        isNewUser: res.isNewUser,
+        userType: res.user.userType,
+      });
       navigateAfterLogin({
         isNewUser: res.isNewUser,
         user: { userType: res.user.userType },
@@ -110,11 +140,13 @@ export default function AuthOtpScreen(): React.ReactElement {
   const handleResend = (): void => {
     void (async () => {
       try {
-        await apiFetch("/api/v1/auth/send-otp", {
-          method: "POST",
-          body: JSON.stringify({ phone }),
-          skipAuth: true,
-        });
+        await logSignupStep("otp.resend", () =>
+          apiFetch("/api/v1/auth/send-otp", {
+            method: "POST",
+            body: JSON.stringify({ phone }),
+            skipAuth: true,
+          }),
+        );
         setResendSec(60);
         setDigits(Array(CODE_LEN).fill(""));
         setErr("");

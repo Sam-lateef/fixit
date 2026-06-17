@@ -15,6 +15,7 @@ import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { fetchDistrictsForCity, routeCityParam } from "@/lib/districts-fetch";
 import { useI18n } from "@/lib/i18n";
+import { logSignup, logSignupStep } from "@/lib/signup-log";
 import { ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
 
@@ -37,6 +38,10 @@ export default function OwnerLocationScreen(): React.ReactElement {
   const [districtPickerOpen, setDistrictPickerOpen] = useState(false);
 
   useEffect(() => {
+    logSignup("ownerLocation.mount", { city, fromProfile });
+  }, [city, fromProfile]);
+
+  useEffect(() => {
     setSelected(null);
   }, [city]);
 
@@ -46,12 +51,14 @@ export default function OwnerLocationScreen(): React.ReactElement {
     }
     void (async () => {
       try {
-        const { user } = await apiFetch<{
-          user: {
-            districtId: string | null;
-            address: string | null;
-          };
-        }>("/api/v1/users/me");
+        const { user } = await logSignupStep("ownerLocation.prefill", () =>
+          apiFetch<{
+            user: {
+              districtId: string | null;
+              address: string | null;
+            };
+          }>("/api/v1/users/me"),
+        );
         if (user.address) {
           setAddress(user.address);
         }
@@ -69,14 +76,22 @@ export default function OwnerLocationScreen(): React.ReactElement {
     setDistricts([]);
     void (async () => {
       try {
-        let list = await fetchDistrictsForCity(city);
+        let list = await logSignupStep(
+          "ownerLocation.fetchDistricts",
+          () => fetchDistrictsForCity(city),
+          { city },
+        );
         if (fromProfile) {
           try {
-            const { user } = await apiFetch<{
-              user: {
-                district: { id: string; name: string; nameAr: string; city: string } | null;
-              };
-            }>("/api/v1/users/me");
+            const { user } = await logSignupStep(
+              "ownerLocation.prefillDistrict",
+              () =>
+                apiFetch<{
+                  user: {
+                    district: { id: string; name: string; nameAr: string; city: string } | null;
+                  };
+                }>("/api/v1/users/me"),
+            );
             if (user.district && !list.some((d) => d.id === user.district!.id)) {
               list = [user.district, ...list];
             }
@@ -191,17 +206,24 @@ export default function OwnerLocationScreen(): React.ReactElement {
           setBusy(true);
           void (async () => {
             try {
-              await apiFetch("/api/v1/users/me", {
-                method: "PUT",
-                body: JSON.stringify({
-                  districtId: selected,
-                  address:
-                    address.trim().length > 0 ? address.trim() : undefined,
-                }),
-              });
+              await logSignupStep(
+                "ownerLocation.save",
+                () =>
+                  apiFetch("/api/v1/users/me", {
+                    method: "PUT",
+                    body: JSON.stringify({
+                      districtId: selected,
+                      address:
+                        address.trim().length > 0 ? address.trim() : undefined,
+                    }),
+                  }),
+                { hasAddress: address.trim().length > 0 },
+              );
               if (fromProfile) {
+                logSignup("ownerLocation.navigate", { to: "/owner/profile" });
                 router.replace("/owner/profile");
               } else {
+                logSignup("ownerLocation.navigate", { to: "/owner" });
                 router.replace("/owner");
               }
             } catch (e) {

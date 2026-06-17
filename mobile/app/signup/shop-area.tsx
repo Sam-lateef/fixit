@@ -17,6 +17,7 @@ import { friendlyApiError } from "@/lib/api-error";
 import { fetchDistrictsForCity, type DistrictRow } from "@/lib/districts-fetch";
 import { useI18n } from "@/lib/i18n";
 import { asShopType } from "@/lib/shop-type";
+import { logSignup, logSignupStep } from "@/lib/signup-log";
 import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import { theme } from "@/lib/theme";
 
@@ -48,6 +49,16 @@ export default function ShopAreaStep(): React.ReactElement {
   const [err, setErr] = useState("");
 
   useEffect(() => {
+    logSignup("shopArea.mount", {
+      shopType,
+      offersRepair,
+      offersParts,
+      offersTowing,
+      city: cityFromPrev,
+    });
+  }, [shopType, offersRepair, offersParts, offersTowing, cityFromPrev]);
+
+  useEffect(() => {
     if (!cityFromPrev) {
       setDistricts([]);
       setDistrictsLoading(false);
@@ -58,7 +69,11 @@ export default function ShopAreaStep(): React.ReactElement {
     setDistrictsError("");
     void (async () => {
       try {
-        const list = await fetchDistrictsForCity(cityFromPrev);
+        const list = await logSignupStep(
+          "shopArea.fetchDistricts",
+          () => fetchDistrictsForCity(cityFromPrev),
+          { city: cityFromPrev },
+        );
         setDistricts(list);
         // Default-select the shop's own district (from previous step) so the
         // user starts with a sane scope and can extend.
@@ -155,12 +170,25 @@ export default function ShopAreaStep(): React.ReactElement {
       body.workshopLng = wLng;
     }
 
+    logSignup("shopArea.create", {
+      shopType,
+      offersRepair,
+      offersParts,
+      offersTowing,
+      serveAll,
+      servedDistrictCount: serveAll ? 0 : selected.size,
+      partsNationwide: offersParts ? partsNationwide : false,
+      hasBio: bioTrimmed.length > 0,
+    });
     void (async () => {
       try {
-        await apiFetch("/api/v1/shops", {
-          method: "POST",
-          body: JSON.stringify(body),
-        });
+        await logSignupStep("shopArea.postShop", () =>
+          apiFetch("/api/v1/shops", {
+            method: "POST",
+            body: JSON.stringify(body),
+          }),
+        );
+        logSignup("shopArea.navigate", { to: "/shop" });
         router.replace("/shop");
       } catch (e) {
         setErr(friendlyApiError(e, t));

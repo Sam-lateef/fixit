@@ -14,6 +14,7 @@ import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
+import { logSignup, logSignupStep } from "@/lib/signup-log";
 import { IRAQ_OWNER_CITIES, ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
 
@@ -28,14 +29,20 @@ export default function OwnerDetailsScreen(): React.ReactElement {
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
 
   useEffect(() => {
+    logSignup("ownerDetails.mount", { fromProfile });
+  }, [fromProfile]);
+
+  useEffect(() => {
     if (!fromProfile) {
       return;
     }
     void (async () => {
       try {
-        const { user } = await apiFetch<{
-          user: { name: string | null; city: string | null };
-        }>("/api/v1/users/me");
+        const { user } = await logSignupStep("ownerDetails.prefill", () =>
+          apiFetch<{
+            user: { name: string | null; city: string | null };
+          }>("/api/v1/users/me"),
+        );
         if (user.name) {
           setName(user.name);
         }
@@ -89,9 +96,18 @@ export default function OwnerDetailsScreen(): React.ReactElement {
           setBusy(true);
           void (async () => {
             try {
-              await apiFetch("/api/v1/users/me", {
-                method: "PUT",
-                body: JSON.stringify({ name: trimmed, city }),
+              await logSignupStep(
+                "ownerDetails.save",
+                () =>
+                  apiFetch("/api/v1/users/me", {
+                    method: "PUT",
+                    body: JSON.stringify({ name: trimmed, city }),
+                  }),
+                { city },
+              );
+              logSignup("ownerDetails.navigate", {
+                to: "/signup/owner-location",
+                fromProfile,
               });
               router.push({
                 pathname: "/signup/owner-location",

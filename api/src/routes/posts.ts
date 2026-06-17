@@ -47,12 +47,21 @@ const createPostSchema = z
         message: "districtId required for REPAIR and PARTS",
       });
     }
-    if (data.vehicleType === "MOTORCYCLE") {
+    // TOWING posts collect pickup location + free-text notes instead of
+    // vehicle make/model. Mirror the CAR + TOWING behaviour (carMake/Model
+    // not required) so MOTORCYCLE + TOWING doesn't ask for a field the
+    // editor doesn't even render — see OwnerPostEditor.tsx visibility gate
+    // at the motorcycleDetails input.
+    if (
+      data.vehicleType === "MOTORCYCLE" &&
+      data.serviceType !== "TOWING"
+    ) {
       if (!data.motorcycleDetails || data.motorcycleDetails.trim().length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["motorcycleDetails"],
-          message: "motorcycleDetails required when vehicleType=MOTORCYCLE",
+          message:
+            "motorcycleDetails required when vehicleType=MOTORCYCLE and serviceType is REPAIR or PARTS",
         });
       }
     }

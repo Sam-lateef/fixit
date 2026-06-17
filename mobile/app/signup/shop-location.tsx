@@ -18,6 +18,7 @@ import { apiFetch } from "@/lib/api";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { useI18n } from "@/lib/i18n";
 import { openGoogleMapsAt } from "@/lib/open-google-maps";
+import { logSignup, logSignupStep } from "@/lib/signup-log";
 import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import { IRAQ_OWNER_CITIES, ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
@@ -51,14 +52,18 @@ export default function ShopLocationStep(): React.ReactElement {
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
   const [districtPickerOpen, setDistrictPickerOpen] = useState(false);
 
+  useEffect(() => {
+    logSignup("shopLocation.mount", { isTowingOnly });
+  }, [isTowingOnly]);
+
   // Pre-fill phone from existing user record. OTP-auth users already have a
   // phone here; Google sign-in users land with phone === null and must
   // enter one before completing shop signup (customers contact via phone).
   useEffect(() => {
     void (async () => {
       try {
-        const { user } = await apiFetch<{ user: { phone: string | null } }>(
-          "/api/v1/users/me",
+        const { user } = await logSignupStep("shopLocation.prefillPhone", () =>
+          apiFetch<{ user: { phone: string | null } }>("/api/v1/users/me"),
         );
         if (user.phone && user.phone.length > 0) {
           setPhone(user.phone);
@@ -80,7 +85,11 @@ export default function ShopLocationStep(): React.ReactElement {
     setDistrictId(null);
     void (async () => {
       try {
-        const list = await fetchDistrictsForCity(city);
+        const list = await logSignupStep(
+          "shopLocation.fetchDistricts",
+          () => fetchDistrictsForCity(city),
+          { city },
+        );
         setDistricts(list);
       } catch {
         setDistricts([]);
@@ -101,15 +110,20 @@ export default function ShopLocationStep(): React.ReactElement {
 
   function useDeviceWorkshopPin(): void {
     void (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await logSignupStep(
+        "shopLocation.requestLocationPerm",
+        () => Location.requestForegroundPermissionsAsync(),
+      );
       if (status !== "granted") {
         Alert.alert(t("errorTitle"), t("locationPermissionNeeded"));
         return;
       }
       try {
-        const pos = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
+        const pos = await logSignupStep("shopLocation.getCurrentPosition", () =>
+          Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          }),
+        );
         setWorkshopLat(pos.coords.latitude);
         setWorkshopLng(pos.coords.longitude);
       } catch {
@@ -158,6 +172,10 @@ export default function ShopLocationStep(): React.ReactElement {
       merged.workshopLat = workshopLat;
       merged.workshopLng = workshopLng;
     }
+    logSignup("shopLocation.continue", {
+      to: "/signup/shop-area",
+      hasPin: workshopLat != null && workshopLng != null,
+    });
     router.push({
       pathname: "/signup/shop-area" as Href,
       params: { data: JSON.stringify(merged) },

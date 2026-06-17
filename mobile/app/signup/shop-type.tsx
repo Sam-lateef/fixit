@@ -1,10 +1,11 @@
 import { router, type Href } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { useI18n } from "@/lib/i18n";
 import type { ShopType } from "@/lib/shop-type";
+import { logSignup } from "@/lib/signup-log";
 import type { StringKey } from "@/lib/strings";
 import { theme } from "@/lib/theme";
 
@@ -28,8 +29,13 @@ export default function ShopTypeStep(): React.ReactElement {
   const { t } = useI18n();
   const [selected, setSelected] = useState<ShopType | null>(null);
 
+  useEffect(() => {
+    logSignup("shopType.mount");
+  }, []);
+
   function handleContinue(): void {
     if (!selected) return;
+    logSignup("shopType.continue", { selected });
 
     if (selected === "TOWING") {
       // Towing shops skip the services/makes/categories steps entirely —

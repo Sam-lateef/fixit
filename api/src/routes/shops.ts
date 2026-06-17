@@ -69,7 +69,7 @@ const createShopBody = z.object({
   // Google-sign-in users land with phone === null and must supply one here.
   phone: z
     .string()
-    .regex(E164_WHATSAPP_OTP, "Phone must be E.164 (+9647... or +90...)")
+    .regex(E164_WHATSAPP_OTP, "Phone must be a valid Iraqi WhatsApp number (+9647XXXXXXXXX)")
     .optional(),
   workshopLat: workshopLatField.optional(),
   workshopLng: workshopLngField.optional(),

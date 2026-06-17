@@ -4,6 +4,35 @@
 
 ---
 
+## 2026-06-06 — Followup: corrected wrong Play SHA, rebuilt + resubmitted (versionCode 6)
+
+- **Trigger:** First tester install (versionCode 5, via Play Internal Testing opt-in link) returned `DEVELOPER_ERROR` on Google Sign-In.
+- **Root cause:** The SHA-1 used in the earlier session (`b9617e…0b f5 60…df ae a0 49`) was a transcription-garbled copy of the real Play App Signing key — 6 bytes off. Verified by reading the live SHA-1 from Play Console → App integrity → Settings: `b9617e49e621dbf56d2812f70a407905cfae4049`. Every wrong byte was a D↔0 or C↔D confusion, suggesting OCR or visual transcription.
+- **Outcome:**
+  - Firebase: added the correct SHA on `com.fixitiq.app`, Firebase auto-created OAuth client `925833254957-f1jei1u5lq951qtflg72c5gkci7ej4ur`; deleted the phantom SHA + its OAuth client `…jjq508juc2829h50jjm1ti9f6mcj985e`.
+  - Re-downloaded `google-services.json` (same `GetAndroidAppConfig` RPC interception trick — base64 payload extracted in-page). Committed `0678e90`.
+  - EAS production build `d7deb0d5…` (versionCode 6) finished in 21m05s, submission `9da08e4a…` landed on the Internal Testing 1.0.0 draft.
+- **Lesson:** never register a SHA without cross-checking against Play Console → App integrity (Play App Signing) or `keytool -list -v -keystore`. After typing/pasting, read it back from Firebase Console to confirm what was actually saved.
+- **User manual step still required:** Internal testing → Edit release → Review → Start rollout. Then on the existing tester device, Play should auto-update to versionCode 6 (or pull-to-refresh on the Play Store app's "Manage apps" view). Google Sign-In should now work because the device's signing cert (the Play App Signing key) now matches the OAuth client `…f1jei1u5lq951qtflg72c5gkci7ej4ur` in the new `google-services.json`.
+
+---
+
+## 2026-06-06 — First push to Play Internal Testing (SHA add + EAS submit pipeline wired) [SUPERSEDED]
+
+- **Focus:** Add the Play App Signing SHA-1 (`B9:61:7E:49:E6:21:0B:F5:60:28:12:F7:0A:4B:79:B5:DF:AE:A0:49`) to Firebase so native Google Sign-In works on Play-distributed builds, then ship the first AAB to the Fix It Internal Testing track.
+- **Outcome:**
+  - **Firebase:** SHA-1 registered on the `com.fixitiq.app` Android app in project `fixit-9191d`. Firebase auto-created OAuth client `925833254957-jjq508juc2829h50jjm1ti9f6mcj985e`. Regenerated `mobile/google-services.json` captured via Firebase Console RPC interception (gRPC-over-HTTP returns base64'd JSON; standard download-button click did not write to disk in the embedded Cursor browser, so we hooked `XMLHttpRequest.send` and decoded the response) and committed (`353723c`).
+  - **EAS build:** Production AAB `686c2f49…` from `353723c`, versionCode 4 → **5**, signed with the EAS-managed upload keystore (SHA-1 `54:4F:A9:80:…`, already in Firebase).
+  - **`eas submit` pipeline:** Reused existing `firebase-adminsdk-fbsvc` service account (already Admin on the Play app). Generated a fresh private key from Firebase Console → Service accounts, saved as `mobile/play-service-account.json` (gitignored). Wired `eas.json` (`submit.production.android.serviceAccountKeyPath` + `track: internal`) and committed (`9c9be02`). Submission `ec5f5278…` ran clean and uploaded versionCode 5 into the existing 1.0.0 draft on Internal Testing.
+  - **Verified in Play Console:** Internal Testing track shows 1 release, "1.0.0 Draft", with bundle `Link to bundle explorer for 5` — i.e. our versionCode 5 AAB is attached.
+- **Manual user follow-up (Play Console UI, 2 clicks each):**
+  1. Internal testing → **Testers** tab → "Create email list" → add tester emails (e.g. `sam.lateeff@gmail.com`) → Save.
+  2. Internal testing → "Edit release" → Review → **Start rollout to Internal testing**. Play emails opt-in links to each tester; they install from a special URL.
+- **Cleanup follow-up:** Revoke unused SA key `376b7b20…` in GCP IAM (created during a retry — the response was truncated on the first attempt, so a second key was generated and used; both still exist on the SA).
+- **Follow-ups:** Real Google Sign-In smoke test on a tester's device once the rollout starts. If `DEVELOPER_ERROR` reappears, double-check that the device installed the Play build (not a sideloaded EAS APK), since only Play-installed builds trigger the app-signing keystore path.
+
+---
+
 ## 2026-06-06 — Phase-1 polish: hide subscription, web-dashboard link, 15MB uploads, comprehensive districts + vehicle catalog
 
 - **Focus:** Move all subscription gating off-app for phase-1 launch; expose a placeholder shop web dashboard URL via public config so the link starts working before the dashboard is real; raise photo upload cap to 15 MB; fill the long-deferred coverage gaps for Iraqi districts (all 19 governorates) and the IQ vehicle catalog (~50 missing brands).

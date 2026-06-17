@@ -11,6 +11,7 @@ import {
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { useI18n } from "@/lib/i18n";
 import { asShopType } from "@/lib/shop-type";
+import { logSignup } from "@/lib/signup-log";
 import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import {
   PARTS_CATEGORY_SLUGS,
@@ -25,6 +26,14 @@ export default function ShopPartsCatsStep(): React.ReactElement {
   const shopType = asShopType(prev.shopType);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    logSignup("shopPartsCats.mount", {
+      shopType,
+      offersParts: Boolean(prev.offersParts),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shopType]);
 
   // Skip this screen for MOTORCYCLE / TOWING shops (parts-category taxonomy
   // is car-only) and for any shop that didn't opt-in to Parts.
@@ -52,6 +61,10 @@ export default function ShopPartsCatsStep(): React.ReactElement {
       ...prev,
       partsCategories: Array.from(selected),
     };
+    logSignup("shopPartsCats.continue", {
+      to: "/signup/shop-location",
+      count: selected.size,
+    });
     router.push({
       pathname: "/signup/shop-location" as Href,
       params: { data: JSON.stringify(merged) },

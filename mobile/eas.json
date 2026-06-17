@@ -1,7 +1,7 @@
 {
   "cli": {
     "version": ">= 16.0.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -22,8 +22,7 @@
         "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "925833254957",
         "EXPO_PUBLIC_FIREBASE_APP_ID": "1:925833254957:web:ec6df23ac247360ad000a4",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "925833254957-i5gu3kvnjm9gkhpcnjruv1aed5m4n6ri.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "925833254957-q88c8f43f3rstdgakil41en72dtj6afi.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "925833254957-4de1a17l3dt2u0v2dc5fc7staobvv3t3.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "925833254957-q88c8f43f3rstdgakil41en72dtj6afi.apps.googleusercontent.com"
       }
     },
     "preview": {
@@ -43,12 +42,11 @@
         "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "925833254957",
         "EXPO_PUBLIC_FIREBASE_APP_ID": "1:925833254957:web:ec6df23ac247360ad000a4",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "925833254957-i5gu3kvnjm9gkhpcnjruv1aed5m4n6ri.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "925833254957-q88c8f43f3rstdgakil41en72dtj6afi.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "925833254957-4de1a17l3dt2u0v2dc5fc7staobvv3t3.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "925833254957-q88c8f43f3rstdgakil41en72dtj6afi.apps.googleusercontent.com"
       }
     },
     "production": {
-      "autoIncrement": true,
+      "autoIncrement": false,
       "android": {
         "buildType": "app-bundle"
       },
@@ -64,8 +62,7 @@
         "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "925833254957",
         "EXPO_PUBLIC_FIREBASE_APP_ID": "1:925833254957:web:ec6df23ac247360ad000a4",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "925833254957-i5gu3kvnjm9gkhpcnjruv1aed5m4n6ri.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "925833254957-q88c8f43f3rstdgakil41en72dtj6afi.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "925833254957-4de1a17l3dt2u0v2dc5fc7staobvv3t3.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "925833254957-q88c8f43f3rstdgakil41en72dtj6afi.apps.googleusercontent.com"
       }
     }
   },
@@ -77,7 +74,10 @@
         "track": "internal"
       },
       "ios": {
-        "ascAppId": "6762974915"
+        "ascAppId": "6762974915",
+        "ascApiKeyPath": "./asc-api-key.p8",
+        "ascApiKeyId": "629KTDD32F",
+        "ascApiKeyIssuerId": "a7506046-4e6d-4fc5-9619-c960245d2a5c"
       }
     }
   }

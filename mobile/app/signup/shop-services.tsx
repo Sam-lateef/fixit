@@ -1,10 +1,11 @@
 import { router, useLocalSearchParams, type Href } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { useI18n } from "@/lib/i18n";
 import { asShopType } from "@/lib/shop-type";
+import { logSignup } from "@/lib/signup-log";
 import { parseSignupWizardData } from "@/lib/signup-wizard-data";
 import { theme } from "@/lib/theme";
 
@@ -35,6 +36,10 @@ export default function ShopServicesStep(): React.ReactElement {
 
   const [selected, setSelected] = useState<Set<ServiceId>>(new Set());
 
+  useEffect(() => {
+    logSignup("shopServices.mount", { shopType });
+  }, [shopType]);
+
   function toggle(id: ServiceId): void {
     setSelected((p) => {
       const next = new Set(p);
@@ -48,6 +53,7 @@ export default function ShopServicesStep(): React.ReactElement {
     if (selected.size === 0) return;
     const offersRepair = selected.has("repair");
     const offersParts = selected.has("parts");
+    logSignup("shopServices.continue", { offersRepair, offersParts, shopType });
 
     const data = JSON.stringify({
       ...prev,

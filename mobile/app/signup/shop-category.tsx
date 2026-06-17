@@ -1,11 +1,12 @@
 import { router, type Href } from "expo-router";
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { WizardProgressBar } from "@/components/WizardProgressBar";
 import { useI18n } from "@/lib/i18n";
 import type { ServiceCategory } from "@/lib/service-category";
 import { SERVICE_CATEGORIES_SIGNUP_VISIBLE } from "@/lib/service-category";
+import { logSignup } from "@/lib/signup-log";
 import type { StringKey } from "@/lib/strings";
 import { theme } from "@/lib/theme";
 
@@ -29,6 +30,12 @@ export default function ShopCategoryStep(): React.ReactElement {
   const { t } = useI18n();
   const [selected, setSelected] = useState<ServiceCategory | null>(null);
 
+  useEffect(() => {
+    logSignup("shopCategory.mount", {
+      multiCategory: SERVICE_CATEGORIES_SIGNUP_VISIBLE.length > 1,
+    });
+  }, []);
+
   useLayoutEffect(() => {
     if (SERVICE_CATEGORIES_SIGNUP_VISIBLE.length === 1) {
       // Multi-category signup is shelved (cars-only release). Forward to the
@@ -48,6 +55,7 @@ export default function ShopCategoryStep(): React.ReactElement {
 
   function handleContinue(): void {
     if (!selected) return;
+    logSignup("shopCategory.continue", { selected });
     // When multi-category signup is re-enabled, this still forwards through
     // the new shop-type picker; the chosen ServiceCategory rides along on
     // the wizard `data` param.
