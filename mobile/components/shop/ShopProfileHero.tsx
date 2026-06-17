@@ -18,6 +18,8 @@ import {
 import { BrandHeaderGradient } from "@/components/BrandHeaderGradient";
 import { PostRemoteImage } from "@/components/PostRemoteImage";
 import { useI18n } from "@/lib/i18n";
+import type { StringKey } from "@/lib/strings";
+import { friendlyApiError } from "@/lib/api-error";
 import { shopDevLog, shopDevSummarizeUrl } from "@/lib/shop-profile-debug";
 import { uploadPhotoUri } from "@/lib/upload-photo";
 import { theme } from "@/lib/theme";
@@ -29,6 +31,9 @@ type ShopProfileHeroProps = {
   onShopNameDraftChange: (value: string) => void;
   onCommitShopName: () => void;
   editable: boolean;
+  /** When false, show name read-only (towing providers edit name in contact card). */
+  nameEditable?: boolean;
+  namePlaceholderKey?: StringKey;
   /** Called after a new cover image is uploaded (parent persists URL). */
   onCoverUrlCommitted?: (url: string) => Promise<void>;
 };
@@ -91,7 +96,7 @@ export function ShopProfileHero(props: ShopProfileHeroProps): ReactElement {
         });
         Alert.alert(
           t("errorTitle"),
-          e instanceof Error ? e.message : t("coverUploadFailed"),
+          friendlyApiError(e, t, "coverUploadFailed"),
         );
       } finally {
         setCoverBusy(false);
@@ -144,7 +149,7 @@ export function ShopProfileHero(props: ShopProfileHeroProps): ReactElement {
       ) : null}
 
       <View style={styles.bottomBlock}>
-        {props.editable ? (
+        {props.editable && props.nameEditable !== false ? (
           <TextInput
             style={[styles.heroNameInput, inputDirection]}
             value={props.shopNameDraft}
@@ -156,7 +161,7 @@ export function ShopProfileHero(props: ShopProfileHeroProps): ReactElement {
               Keyboard.dismiss();
             }}
             blurOnSubmit
-            placeholder={t("shopNameOnHero")}
+            placeholder={t(props.namePlaceholderKey ?? "shopNameOnHero")}
             placeholderTextColor="rgba(255,255,255,0.45)"
             returnKeyType="done"
             maxLength={120}

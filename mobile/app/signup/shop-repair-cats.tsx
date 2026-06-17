@@ -20,6 +20,7 @@ export default function ShopRepairCatsStep(): React.ReactElement {
   const shopType = asShopType(prev.shopType);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [err, setErr] = useState("");
 
   useEffect(() => {
     logSignup("shopRepairCats.mount", {
@@ -30,10 +31,10 @@ export default function ShopRepairCatsStep(): React.ReactElement {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shopType]);
 
-  // Skip this screen for MOTORCYCLE / TOWING shops — the repair-category
-  // taxonomy is car-only. Also skip if the user didn't opt-in to repair.
+  // Skip this screen for TOWING shops — the repair-category taxonomy does not
+  // apply. Also skip if the user didn't opt-in to repair.
   useEffect(() => {
-    const skipForType = shopType != null && shopType !== "CAR";
+    const skipForType = shopType === "TOWING";
     if (skipForType || !Boolean(prev.offersRepair)) {
       const data = raw.data as string;
       if (!skipForType && Boolean(prev.offersParts)) {
@@ -55,6 +56,11 @@ export default function ShopRepairCatsStep(): React.ReactElement {
   }
 
   function handleContinue(): void {
+    if (selected.size === 0) {
+      setErr(t("repairCategoryRequired"));
+      return;
+    }
+    setErr("");
     const merged = { ...prev, repairCategories: Array.from(selected) };
     const data = JSON.stringify(merged);
 
@@ -73,7 +79,7 @@ export default function ShopRepairCatsStep(): React.ReactElement {
     }
   }
 
-  if (!Boolean(prev.offersRepair) || (shopType != null && shopType !== "CAR")) {
+  if (!Boolean(prev.offersRepair) || shopType === "TOWING") {
     return <View />;
   }
 
@@ -99,6 +105,8 @@ export default function ShopRepairCatsStep(): React.ReactElement {
           );
         })}
       </View>
+
+      {err !== "" ? <Text style={s.err}>{err}</Text> : null}
 
       <Pressable style={s.btn} onPress={handleContinue}>
         <Text style={s.btnText}>{t("continue")}</Text>
@@ -132,4 +140,5 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   btnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  err: { marginTop: 12, color: theme.danger, fontSize: 13 },
 });

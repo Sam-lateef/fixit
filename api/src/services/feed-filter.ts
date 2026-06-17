@@ -16,15 +16,23 @@ export type FeedEntry = PostForFeed & { distanceKm: number | null };
 /**
  * Decide whether the post's vehicle scope is compatible with the shop.
  *
- *   CAR        → only CAR posts
- *   MOTORCYCLE → only MOTORCYCLE posts
- *   TOWING     → vehicle-agnostic (both)
+ *   TOWING     → vehicle type not applied (service type gate only)
+ *   CAR        → only CAR vehicle posts
+ *   MOTORCYCLE → only MOTORCYCLE vehicle posts
  */
 function vehicleTypeAllowedForShop(shop: ShopForFeed, post: PostForFeed): boolean {
   if (shop.shopType === "TOWING") return true;
   const isMotoPost = post.vehicleType === "MOTORCYCLE";
   if (shop.shopType === "MOTORCYCLE") return isMotoPost;
   return !isMotoPost;
+}
+
+/** Towing providers only see tow requests — never repair or parts jobs. */
+function serviceTypeAllowedForShop(shop: ShopForFeed, post: PostForFeed): boolean {
+  if (shop.shopType === "TOWING") {
+    return post.serviceType === "TOWING";
+  }
+  return true;
 }
 
 /** Car-specific filters (make / year / repair-cat / parts-cat) only apply to CAR shops. */
@@ -146,6 +154,7 @@ export function moreFeedEntriesInShopCity(
   const out: FeedEntry[] = [];
   for (const post of allPosts) {
     if (matchedIds.has(post.id)) continue;
+    if (!serviceTypeAllowedForShop(shop, post)) continue;
     if (!vehicleTypeAllowedForShop(shop, post)) continue;
     const postCity = post.district?.city?.trim() ?? "";
     if (postCity.length === 0 || normalizeCityKey(postCity) !== shopKey) continue;
@@ -186,6 +195,7 @@ export function buildMoreFeedEntries(
   );
   for (const post of sorted) {
     if (used.has(post.id)) continue;
+    if (!serviceTypeAllowedForShop(shop, post)) continue;
     if (!vehicleTypeAllowedForShop(shop, post)) continue;
     if (out.length >= MORE_POOL_CAP) break;
     out.push({
@@ -211,6 +221,7 @@ export function filterPostsForShop(
 
   for (const post of posts) {
     if (post.category !== shop.category) continue;
+    if (!serviceTypeAllowedForShop(shop, post)) continue;
     if (post.serviceType === "REPAIR" && !shop.offersRepair) continue;
     if (post.serviceType === "PARTS" && !shop.offersParts) continue;
     if (post.serviceType === "TOWING" && !shop.offersTowing) continue;

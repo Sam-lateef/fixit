@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Location from "expo-location";
 import {
   ActivityIndicator,
@@ -38,7 +38,13 @@ import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { openGoogleMapsAt } from "@/lib/open-google-maps";
 import { openAppNotificationSettings } from "@/lib/push-notifications";
 import { promptDeleteAccount } from "@/lib/delete-account";
-import { isValidWhatsappE164 } from "@/lib/whatsapp-e164";
+import {
+  buildIraqWhatsappE164,
+  iraqPhoneSuffixFromE164,
+  isValidWhatsappE164,
+  IRAQ_PHONE_PREFIX,
+  normalizeIraqPhoneSuffix,
+} from "@/lib/whatsapp-e164";
 import { hrefAuthWelcome } from "@/lib/routes-href";
 import { getShopDashboardUrl } from "@/lib/shop-dashboard-url";
 import { signOutFromApp } from "@/lib/sign-out";
@@ -162,7 +168,7 @@ export default function ShopProfileScreen(): React.ReactElement {
   const [pendingSelection, setPendingSelection] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [shopNameDraft, setShopNameDraft] = useState("");
-  const [editPhone, setEditPhone] = useState("");
+  const [editPhoneSuffix, setEditPhoneSuffix] = useState("");
   const [editUserName, setEditUserName] = useState("");
   const [editBio, setEditBio] = useState("");
   const [catalogMakes, setCatalogMakes] = useState<CatalogMake[]>([]);
@@ -199,6 +205,7 @@ export default function ShopProfileScreen(): React.ReactElement {
   const [servedLoading, setServedLoading] = useState(false);
   const [savingServed, setSavingServed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const phoneFocusedRef = useRef(false);
 
   const load = useCallback(async () => {
     shopDevLog("GET /api/v1/shops/me start");
@@ -285,12 +292,14 @@ export default function ShopProfileScreen(): React.ReactElement {
 
   useEffect(() => {
     if (!shop) {
-      setEditPhone("");
+      setEditPhoneSuffix("");
       setEditUserName("");
       setEditBio("");
       return;
     }
-    setEditPhone(shop.user.phone ?? "");
+    if (!phoneFocusedRef.current) {
+      setEditPhoneSuffix(iraqPhoneSuffixFromE164(shop.user.phone));
+    }
     setEditUserName(shop.user.name ?? "");
     setEditBio(shop.bio ?? "");
   }, [shop?.id, shop?.user.phone, shop?.user.name, shop?.bio]);
@@ -584,12 +593,16 @@ export default function ShopProfileScreen(): React.ReactElement {
 
   const commitShopPhoneIfChanged = (): void => {
     if (!shop || saving) return;
-    const trimmed = editPhone.trim();
+    const fullPhone = buildIraqWhatsappE164(editPhoneSuffix);
     const prev = (shop.user.phone ?? "").trim();
-    if (trimmed === prev) return;
-    if (!isValidWhatsappE164(trimmed)) {
+    if (fullPhone === prev) return;
+    if (normalizeIraqPhoneSuffix(editPhoneSuffix).length === 0) {
+      setEditPhoneSuffix(iraqPhoneSuffixFromE164(shop.user.phone));
+      return;
+    }
+    if (!isValidWhatsappE164(fullPhone)) {
       Alert.alert(t("errorTitle"), t("phoneInvalidFormat"));
-      setEditPhone(prev);
+      setEditPhoneSuffix(iraqPhoneSuffixFromE164(shop.user.phone));
       return;
     }
     setSaving(true);
@@ -597,19 +610,12 @@ export default function ShopProfileScreen(): React.ReactElement {
       try {
         await apiFetch("/api/v1/users/me", {
           method: "PUT",
-          body: JSON.stringify({ phone: trimmed }),
+          body: JSON.stringify({ phone: fullPhone }),
         });
         await load();
       } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        const body =
-          msg.includes("already") || msg.toLowerCase().includes("in use")
-            ? t("phoneInUse")
-            : msg.length > 0
-              ? msg
-              : t("updateFailed");
-        Alert.alert(t("errorTitle"), body);
-        setEditPhone(prev);
+        Alert.alert(t("errorTitle"), friendlyApiError(e, t, "updateFailed"));
+        setEditPhoneSuffix(iraqPhoneSuffixFromE164(shop.user.phone));
       } finally {
         setSaving(false);
       }
@@ -833,11 +839,16 @@ export default function ShopProfileScreen(): React.ReactElement {
             onShopNameDraftChange={setShopNameDraft}
             onCommitShopName={commitShopNameIfChanged}
             editable
+            nameEditable={shop.shopType !== "TOWING"}
+            namePlaceholderKey={
+              shop.shopType === "TOWING" ? "towingProviderName" : "shopNameOnHero"
+            }
             onCoverUrlCommitted={commitCoverImageUrl}
           />
         ) : null}
 
         {shop &&
+        shop.shopType !== "TOWING" &&
         shopNameDraft.trim() !== shop.name.trim() &&
         shopNameDraft.trim().length > 0 ? (
           <Pressable
@@ -854,37 +865,74 @@ export default function ShopProfileScreen(): React.ReactElement {
 
         {shop ? (
           <View style={styles.contactCard}>
-            <Text style={styles.fieldLabel}>{t("shopProfilePersonalName")}</Text>
-            <TextInput
-              style={[
-                styles.fieldInput,
-                locale === "ar-iq"
-                  ? { textAlign: "right", writingDirection: "rtl" }
-                  : { textAlign: "left", writingDirection: "ltr" },
-              ]}
-              value={editUserName}
-              onChangeText={setEditUserName}
-              onEndEditing={commitUserNameIfChanged}
-              onBlur={commitUserNameIfChanged}
-              placeholder={t("name")}
-              placeholderTextColor={theme.mutedLight}
-              returnKeyType="done"
-            />
+            {shop.shopType === "TOWING" ? (
+              <>
+                <Text style={styles.fieldLabel}>{t("towingProviderName")}</Text>
+                <TextInput
+                  style={[
+                    styles.fieldInput,
+                    locale === "ar-iq"
+                      ? { textAlign: "right", writingDirection: "rtl" }
+                      : { textAlign: "left", writingDirection: "ltr" },
+                  ]}
+                  value={shopNameDraft}
+                  onChangeText={setShopNameDraft}
+                  onEndEditing={commitShopNameIfChanged}
+                  onBlur={commitShopNameIfChanged}
+                  placeholder={t("name")}
+                  placeholderTextColor={theme.mutedLight}
+                  returnKeyType="done"
+                />
+              </>
+            ) : (
+              <>
+                <Text style={styles.fieldLabel}>{t("shopProfilePersonalName")}</Text>
+                <TextInput
+                  style={[
+                    styles.fieldInput,
+                    locale === "ar-iq"
+                      ? { textAlign: "right", writingDirection: "rtl" }
+                      : { textAlign: "left", writingDirection: "ltr" },
+                  ]}
+                  value={editUserName}
+                  onChangeText={setEditUserName}
+                  onEndEditing={commitUserNameIfChanged}
+                  onBlur={commitUserNameIfChanged}
+                  placeholder={t("name")}
+                  placeholderTextColor={theme.mutedLight}
+                  returnKeyType="done"
+                />
+              </>
+            )}
             <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
               {t("phoneWhatsApp")}
             </Text>
-            <TextInput
-              style={styles.fieldInput}
-              value={editPhone}
-              onChangeText={setEditPhone}
-              onEndEditing={commitShopPhoneIfChanged}
-              onBlur={commitShopPhoneIfChanged}
-              placeholder="+9647XXXXXXXXX"
-              placeholderTextColor={theme.mutedLight}
-              keyboardType="phone-pad"
-              autoCorrect={false}
-              returnKeyType="done"
-            />
+            <View style={styles.phoneRow}>
+              <Text style={styles.phonePrefix}>{IRAQ_PHONE_PREFIX}</Text>
+              <TextInput
+                style={styles.phoneInput}
+                value={editPhoneSuffix}
+                onChangeText={(v) =>
+                  setEditPhoneSuffix(normalizeIraqPhoneSuffix(v))
+                }
+                onFocus={() => {
+                  phoneFocusedRef.current = true;
+                }}
+                onEndEditing={() => {
+                  phoneFocusedRef.current = false;
+                  commitShopPhoneIfChanged();
+                }}
+                onBlur={() => {
+                  phoneFocusedRef.current = false;
+                  commitShopPhoneIfChanged();
+                }}
+                placeholder="7xx xxx xxxx"
+                placeholderTextColor={theme.mutedLight}
+                keyboardType="phone-pad"
+                autoCorrect={false}
+                returnKeyType="done"
+              />
+            </View>
             <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
               {t("city")} · {t("district")}
             </Text>
@@ -1837,6 +1885,33 @@ const styles = StyleSheet.create({
   fieldLabelSpaced: { marginTop: 24 },
   fieldInput: {
     marginTop: 6,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: theme.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: theme.text,
+    backgroundColor: theme.bg,
+    textAlign: "left",
+  },
+  phoneRow: {
+    marginTop: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  phonePrefix: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    backgroundColor: theme.chip,
+    borderRadius: theme.radiusMd,
+    overflow: "hidden",
+    fontWeight: "600",
+    color: theme.text,
+  },
+  phoneInput: {
+    flex: 1,
     borderWidth: 1,
     borderColor: theme.border,
     borderRadius: theme.radiusMd,

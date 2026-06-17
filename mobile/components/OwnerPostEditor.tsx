@@ -225,7 +225,7 @@ export function OwnerPostEditor({
       setDistricts(list);
       if (list.length === 0) {
         setDistrictId("");
-        setDistrictLoadError("No areas found. Please update your profile location.");
+        setDistrictLoadError(t("districtEmptyHelp"));
         return;
       }
       setDistrictId((prev) => {
@@ -246,9 +246,9 @@ export function OwnerPostEditor({
     } catch (error) {
       setDistricts([]);
       setDistrictId("");
-      setDistrictLoadError(error instanceof Error ? error.message : "Failed to load areas.");
+      setDistrictLoadError(friendlyApiError(error, t, "districtsLoadFailed"));
     }
-  }, []);
+  }, [t]);
 
   const loadVehicleMakes = useCallback(async () => {
     setMakesBusy(true);

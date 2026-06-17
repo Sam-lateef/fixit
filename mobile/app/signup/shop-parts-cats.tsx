@@ -26,6 +26,7 @@ export default function ShopPartsCatsStep(): React.ReactElement {
   const shopType = asShopType(prev.shopType);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [err, setErr] = useState("");
 
   useEffect(() => {
     logSignup("shopPartsCats.mount", {
@@ -35,10 +36,9 @@ export default function ShopPartsCatsStep(): React.ReactElement {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shopType]);
 
-  // Skip this screen for MOTORCYCLE / TOWING shops (parts-category taxonomy
-  // is car-only) and for any shop that didn't opt-in to Parts.
+  // Skip this screen for TOWING shops and for any shop that didn't opt-in to Parts.
   useEffect(() => {
-    if ((shopType != null && shopType !== "CAR") || !Boolean(prev.offersParts)) {
+    if (shopType === "TOWING" || !Boolean(prev.offersParts)) {
       router.replace({
         pathname: "/signup/shop-location" as Href,
         params: { data: raw.data as string },
@@ -57,6 +57,11 @@ export default function ShopPartsCatsStep(): React.ReactElement {
   }
 
   function handleContinue(): void {
+    if (selected.size === 0) {
+      setErr(t("partsCategoryRequired"));
+      return;
+    }
+    setErr("");
     const merged = {
       ...prev,
       partsCategories: Array.from(selected),
@@ -71,7 +76,7 @@ export default function ShopPartsCatsStep(): React.ReactElement {
     } as never);
   }
 
-  if (!Boolean(prev.offersParts) || (shopType != null && shopType !== "CAR")) {
+  if (!Boolean(prev.offersParts) || shopType === "TOWING") {
     return <View />;
   }
 
@@ -97,6 +102,8 @@ export default function ShopPartsCatsStep(): React.ReactElement {
           );
         })}
       </View>
+
+      {err !== "" ? <Text style={s.err}>{err}</Text> : null}
 
       <Pressable style={s.btn} onPress={handleContinue}>
         <Text style={s.btnText}>{t("continue")}</Text>
@@ -129,4 +136,5 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   btnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  err: { marginTop: 12, color: theme.danger, fontSize: 13 },
 });

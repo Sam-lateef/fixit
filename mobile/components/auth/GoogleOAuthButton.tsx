@@ -3,6 +3,7 @@ import * as Google from "expo-auth-session/providers/google";
 import { useEffect, useMemo } from "react";
 import { Platform, Pressable, StyleSheet, Text } from "react-native";
 
+import { friendlyApiError } from "@/lib/api-error";
 import { getGoogleOAuthRedirectUri, isExpoGoMissingGoogleProxyRedirect, shouldUseNativeGoogleSignIn } from "@/lib/google-oauth-redirect";
 import { isFirebaseClientConfigured } from "@/lib/firebase";
 import type { BackendAuthResponse } from "@/lib/social-auth";
@@ -85,14 +86,18 @@ export function GoogleOAuthButton(props: GoogleOAuthButtonProps): React.ReactEle
           const res = await signInWithGoogleIdToken(idToken);
           onSignedIn(res);
         } catch (e) {
-          onError(e instanceof Error ? e.message : t("authSignInFailed"));
+          onError(friendlyApiError(e, t, "authSignInFailed"));
         } finally {
           setBusy(false);
         }
       })();
     } else if (response?.type === "error") {
-      const msg = response.error?.message ?? response.params?.error ?? t("authSignInFailed");
-      onError(String(msg));
+      const msg = response.error?.message ?? response.params?.error ?? "";
+      onError(
+        msg.length > 0
+          ? friendlyApiError(new Error(String(msg)), t, "authSignInFailed")
+          : t("authSignInFailed"),
+      );
     }
   }, [response, onError, onSignedIn, setBusy, t]);
 

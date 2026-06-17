@@ -17,6 +17,7 @@ import { apiFetch, formatIqd } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
 import { pushEvents } from "@/lib/push-events";
+import { useRefetchOnAppActive } from "@/lib/use-refetch-on-app-active";
 import { ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
 
@@ -147,6 +148,8 @@ export default function OwnerHomeScreen(): React.ReactElement {
       void load();
     }, [load]),
   );
+
+  useRefetchOnAppActive(load);
 
   // Auto-refresh when a new bid arrives or one of ours is accepted while the
   // app is foregrounded. Push delivery already happens; this just keeps the

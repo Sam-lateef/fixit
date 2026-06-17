@@ -48,7 +48,11 @@ export async function registerFeedRoutes(
           status: "ACTIVE",
           expiresAt: { gt: new Date() },
           category: shop.category,
-          ...(q.data.serviceType ? { serviceType: q.data.serviceType } : {}),
+          ...(shop.shopType === "TOWING"
+            ? { serviceType: ServiceType.TOWING }
+            : q.data.serviceType
+              ? { serviceType: q.data.serviceType }
+              : {}),
           // Hide posts the shop has already bid on (PENDING or ACCEPTED).
           // Once they bid, the post lives in the "My Bids" tab — no point
           // showing it in the feed too. WITHDRAWN bids don't exclude so

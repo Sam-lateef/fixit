@@ -13,11 +13,13 @@ import {
 import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
+import { pushEvents } from "@/lib/push-events";
 import {
   partsCategoryLabel,
   repairCategoryLabel,
 } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
+import { useRefetchOnAppActive } from "@/lib/use-refetch-on-app-active";
 
 export type InboxThreadListProps = {
   /** Extra top padding when the tab bar uses a transparent header (e.g. owner). */
@@ -100,6 +102,23 @@ export function InboxThreadList(props: InboxThreadListProps): React.ReactElement
     });
     return unsubscribe;
   }, [navigation, load]);
+
+  useRefetchOnAppActive(load);
+
+  // New chat message or accepted bid (new thread) while app is foregrounded.
+  useEffect(() => {
+    const unsubs = [
+      pushEvents.on("CHAT", () => {
+        void load();
+      }),
+      pushEvents.on("ACCEPT", () => {
+        void load();
+      }),
+    ];
+    return () => {
+      for (const u of unsubs) u();
+    };
+  }, [load]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

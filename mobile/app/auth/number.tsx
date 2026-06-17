@@ -18,8 +18,13 @@ import {
   logSignupStep,
   resetSignupSession,
 } from "@/lib/signup-log";
+import {
+  buildIraqWhatsappE164,
+  isValidWhatsappE164,
+  IRAQ_PHONE_PREFIX,
+  normalizeIraqPhoneSuffix,
+} from "@/lib/whatsapp-e164";
 import { theme } from "@/lib/theme";
-const PREFIX = "+964";
 
 export default function AuthNumberScreen(): React.ReactElement {
   const { t } = useI18n();
@@ -46,7 +51,7 @@ export default function AuthNumberScreen(): React.ReactElement {
             body: JSON.stringify({ phone: full }),
             skipAuth: true,
           }),
-        { phoneSuffixLen: full.length - PREFIX.length },
+        { phoneSuffixLen: full.length - IRAQ_PHONE_PREFIX.length },
       );
       logSignup("number.navigate", { to: "/auth/otp" });
       router.push({ pathname: "/auth/otp", params: { phone: full } });
@@ -86,7 +91,7 @@ export default function AuthNumberScreen(): React.ReactElement {
         </View>
       ) : null}
       <View style={styles.row}>
-        <Text style={styles.prefix}>{PREFIX}</Text>
+        <Text style={styles.prefix}>{IRAQ_PHONE_PREFIX}</Text>
         <TextInput
           style={styles.input}
           keyboardType="phone-pad"
@@ -94,16 +99,15 @@ export default function AuthNumberScreen(): React.ReactElement {
           placeholderTextColor={theme.mutedLight}
           maxLength={15}
           value={suffix}
-          onChangeText={setSuffix}
+          onChangeText={(v) => setSuffix(normalizeIraqPhoneSuffix(v))}
         />
       </View>
       <Pressable
         style={[styles.btn, busy && styles.btnDisabled]}
         disabled={busy}
         onPress={() => {
-          const digits = suffix.replace(/\D/g, "");
-          const full = `${PREFIX}${digits}`;
-          if (!/^\+9647\d{9}$/.test(full)) {
+          const full = buildIraqWhatsappE164(suffix);
+          if (!isValidWhatsappE164(full)) {
             setErr(t("phoneInvalidFormat"));
             return;
           }

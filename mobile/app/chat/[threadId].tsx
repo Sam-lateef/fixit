@@ -25,10 +25,12 @@ import { friendlyApiError } from "@/lib/api-error";
 import { getApiBaseUrl } from "@/lib/api-base";
 import { getToken } from "@/lib/auth-storage";
 import { useI18n } from "@/lib/i18n";
+import { pushEvents } from "@/lib/push-events";
 import { confirmAndSubmitReport } from "@/lib/report-content";
 import type { LocaleId, StringKey } from "@/lib/strings";
 import { openGoogleMapsAt } from "@/lib/open-google-maps";
 import { theme } from "@/lib/theme";
+import { useRefetchOnAppActive } from "@/lib/use-refetch-on-app-active";
 import { partsCategoryLabel, repairCategoryLabel } from "@/lib/taxonomy-labels";
 
 type Message = {
@@ -302,6 +304,15 @@ export default function ChatThreadScreen(): React.ReactElement {
     }, [load, threadId]),
   );
 
+  useRefetchOnAppActive(load);
+
+  useEffect(() => {
+    const unsub = pushEvents.on("CHAT", () => {
+      void load();
+    });
+    return unsub;
+  }, [load]);
+
   // Defer the back-nav to an effect so we never trigger navigation inside render.
   useEffect(() => {
     if (!threadId) {
@@ -387,8 +398,7 @@ export default function ChatThreadScreen(): React.ReactElement {
               Alert.alert(t("jobCompleted"));
               await load();
             } catch (e) {
-              const msg = e instanceof Error ? e.message : t("updateFailed");
-              Alert.alert(t("errorTitle"), msg);
+              Alert.alert(t("errorTitle"), friendlyApiError(e, t, "updateFailed"));
             }
           })();
         },
@@ -409,8 +419,7 @@ export default function ChatThreadScreen(): React.ReactElement {
         Alert.alert(t("ratingSubmitted"));
         await load();
       } catch (e) {
-        const msg = e instanceof Error ? e.message : t("updateFailed");
-        Alert.alert(t("errorTitle"), msg);
+        Alert.alert(t("errorTitle"), friendlyApiError(e, t, "updateFailed"));
       }
     })();
   };

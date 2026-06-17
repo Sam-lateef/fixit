@@ -82,7 +82,7 @@ export default function ShopAreaStep(): React.ReactElement {
         }
       } catch (e) {
         setDistricts([]);
-        setDistrictsError(e instanceof Error ? e.message : "Failed to load districts");
+        setDistrictsError(friendlyApiError(e, t, "districtsLoadFailed"));
       } finally {
         setDistrictsLoading(false);
       }
@@ -142,11 +142,11 @@ export default function ShopAreaStep(): React.ReactElement {
       carYearMin: shopType === "CAR" ? carYearMin : undefined,
       carYearMax: shopType === "CAR" ? carYearMax : undefined,
       repairCategories:
-        shopType === "CAR" && offersRepair
+        shopType !== "TOWING" && offersRepair
           ? (prev.repairCategories as string[]) ?? []
           : [],
       partsCategories:
-        shopType === "CAR" && offersParts
+        shopType !== "TOWING" && offersParts
           ? (prev.partsCategories as string[]) ?? []
           : [],
       city: prev.city,

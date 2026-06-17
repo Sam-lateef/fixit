@@ -376,3 +376,66 @@ test("filterPostsForShop with empty servedDistrictIds serves whole city (back-co
   const matched = filterPostsForShop(s, [samCityOtherDistrict]);
   assert.equal(matched.length, 1);
 });
+
+test("TOWING shop only sees TOWING posts in matched feed", () => {
+  const s = shop({
+    shopType: "TOWING",
+    offersRepair: false,
+    offersParts: false,
+    offersTowing: true,
+    repairCategories: [],
+    partsCategories: [],
+    carMakes: [],
+  });
+  const towPost = post({
+    id: "tow-1",
+    serviceType: "TOWING",
+    repairCategory: null,
+    carMake: null,
+    carYear: null,
+  });
+  const repairPost = post({ id: "repair-1", serviceType: "REPAIR" });
+  const matched = filterPostsForShop(s, [towPost, repairPost]);
+  assert.equal(matched.length, 1);
+  assert.equal(matched[0].id, "tow-1");
+});
+
+test("TOWING shop excludes repair posts from More feed", () => {
+  const s = shop({
+    shopType: "TOWING",
+    offersRepair: false,
+    offersParts: false,
+    offersTowing: true,
+    repairRadiusKm: 50,
+    repairCategories: [],
+    partsCategories: [],
+    carMakes: [],
+  });
+  const towPost = post({
+    id: "tow-1",
+    serviceType: "TOWING",
+    repairCategory: null,
+    carMake: null,
+    carYear: null,
+  });
+  const repairPost = post({
+    id: "repair-1",
+    serviceType: "REPAIR",
+    carMake: "Kia",
+    district: {
+      id: "d2",
+      name: "Mansour",
+      nameAr: "",
+      city: "Baghdad",
+      cityAr: "",
+      lat: 33.34,
+      lng: 44.36,
+    },
+  });
+  const matched = filterPostsForShop(s, [towPost, repairPost]);
+  assert.equal(matched.length, 1);
+  const more = moreFeedEntriesInShopCity(s, [towPost, repairPost], matched);
+  assert.equal(more.length, 0);
+  const built = buildMoreFeedEntries(s, [towPost, repairPost], matched);
+  assert.equal(built.entries.length, 0);
+});

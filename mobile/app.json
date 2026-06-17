@@ -15,7 +15,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.fixitiq.app",
-      "buildNumber": "8",
+      "buildNumber": "12",
       "supportsTablet": true,
       "icon": "./assets/images/fixit-icon-1024.png",
       "googleServicesFile": "./GoogleService-Info.plist",
@@ -25,7 +25,7 @@
     },
     "android": {
       "package": "com.fixitiq.app",
-      "versionCode": 7,
+      "versionCode": 10,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/fixit-adaptive-fg-1024.png",
@@ -42,6 +42,23 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "extraPods": [
+              {
+                "name": "GoogleUtilities",
+                "modular_headers": true
+              },
+              {
+                "name": "RecaptchaInterop",
+                "modular_headers": true
+              }
+            ]
+          }
+        }
+      ],
       [
         "@react-native-google-signin/google-signin",
         {

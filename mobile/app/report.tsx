@@ -11,6 +11,7 @@ import {
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { friendlyApiError } from "@/lib/api-error";
 import { submitReport } from "@/lib/report-content";
 import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
@@ -68,8 +69,7 @@ export default function ReportScreen(): React.ReactElement {
         Alert.alert(t("reportSent"));
         router.back();
       } catch (e) {
-        const msg = e instanceof Error ? e.message : t("updateFailed");
-        setError(msg);
+        setError(friendlyApiError(e, t, "updateFailed"));
       } finally {
         setBusy(false);
       }

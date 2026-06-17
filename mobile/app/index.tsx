@@ -9,6 +9,7 @@ import {
 } from "react-native";
 
 import { BootstrapTransientError, resolveInitialRoute } from "@/lib/bootstrap";
+import { friendlyApiError } from "@/lib/api-error";
 import { getToken } from "@/lib/auth-storage";
 import { isDevNavHubEnabled } from "@/lib/dev-nav-hub";
 import { hasCompletedLocaleGate, setLocaleGateCompleted } from "@/lib/locale-gate";
@@ -52,14 +53,14 @@ export default function IndexScreen(): React.ReactElement {
       router.replace(target.path as Href);
     } catch (e) {
       if (e instanceof BootstrapTransientError) {
-        setTransientError(e.message);
+        setTransientError(friendlyApiError(e, t, "bootstrapNetworkErrorBody"));
         return;
       }
       // Unknown error — re-throw so the Expo error boundary catches it instead
       // of leaving a blank splash.
       throw e;
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void runBootstrap();
@@ -91,9 +92,11 @@ export default function IndexScreen(): React.ReactElement {
       <View style={styles.wrap}>
         <Text style={styles.errTitle}>{t("bootstrapNetworkErrorTitle")}</Text>
         <Text style={styles.errBody}>{t("bootstrapNetworkErrorBody")}</Text>
-        <Text style={styles.errDetail} numberOfLines={3}>
-          {transientError}
-        </Text>
+        {__DEV__ ? (
+          <Text style={styles.errDetail} numberOfLines={3}>
+            {transientError}
+          </Text>
+        ) : null}
         <Pressable
           style={[styles.btn, retrying && styles.btnDisabled]}
           disabled={retrying}

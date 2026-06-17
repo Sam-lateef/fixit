@@ -3,7 +3,7 @@
 #   fly deploy
 #
 # Set API if not using the default Fly URL:
-#   fly secrets set API_BASE=https://fixit-api.fly.dev
+#   fly secrets set API_BASE=https://fixthecar.app
 app = "fixit-admin"
 primary_region = "iad"
 
@@ -11,7 +11,7 @@ primary_region = "iad"
   dockerfile = "Dockerfile"
 
 [env]
-  API_BASE = "https://fixit-api.fly.dev"
+  API_BASE = "https://fixthecar.app"
 
 [http_service]
   internal_port = 3000

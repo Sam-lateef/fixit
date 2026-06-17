@@ -142,9 +142,39 @@ function refineAddressUnlessTowing(
   }
 }
 
+function refineServiceCategories(
+  data: {
+    shopType: ShopType;
+    offersRepair: boolean;
+    offersParts: boolean;
+    repairCategories: string[];
+    partsCategories: string[];
+  },
+  ctx: z.RefinementCtx,
+): void {
+  if (data.shopType === "TOWING") {
+    return;
+  }
+  if (data.offersRepair && data.repairCategories.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["repairCategories"],
+      message: "Select at least one repair category",
+    });
+  }
+  if (data.offersParts && data.partsCategories.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["partsCategories"],
+      message: "Select at least one parts category",
+    });
+  }
+}
+
 const createShopSchema = createShopBody
   .superRefine(refineShopTypeConsistency)
   .superRefine(refineAddressUnlessTowing)
+  .superRefine(refineServiceCategories)
   .superRefine(refineWorkshopCoordsTogether);
 
 const coverImageUrlSchema = z

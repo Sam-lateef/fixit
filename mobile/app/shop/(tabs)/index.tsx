@@ -15,8 +15,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PostImageLightbox } from "@/components/PostImageLightbox";
 import { ShopPremiumGate } from "@/components/ShopPremiumGate";
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n";
 import { pushEvents } from "@/lib/push-events";
+import { useRefetchOnAppActive } from "@/lib/use-refetch-on-app-active";
 import { confirmAndSubmitReport } from "@/lib/report-content";
 import type { StringKey } from "@/lib/strings";
 import {
@@ -241,11 +243,7 @@ export default function ShopFeedScreen(): React.ReactElement {
         setMorePosts([]);
         setMoreCity(null);
         setMoreHasNational(false);
-        setLoadError(
-          e instanceof Error && e.message.trim().length > 0
-            ? e.message
-            : t("feedCouldNotLoad"),
-        );
+        setLoadError(friendlyApiError(e, t, "feedCouldNotLoad"));
         return;
       }
       try {
@@ -269,11 +267,7 @@ export default function ShopFeedScreen(): React.ReactElement {
         setMorePosts([]);
         setMoreCity(null);
         setMoreHasNational(false);
-        setLoadError(
-          e instanceof Error && e.message.trim().length > 0
-            ? e.message
-            : t("feedCouldNotLoad"),
-        );
+        setLoadError(friendlyApiError(e, t, "feedCouldNotLoad"));
       }
     },
     [t],
@@ -284,6 +278,8 @@ export default function ShopFeedScreen(): React.ReactElement {
       void load(filter);
     }, [load, filter]),
   );
+
+  useRefetchOnAppActive(() => load(filter));
 
   // Auto-refresh the feed when a new matching request arrives while the app
   // is foregrounded. Mirrors the owner-side BID refresh.

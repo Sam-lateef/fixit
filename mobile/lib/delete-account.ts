@@ -2,6 +2,7 @@ import { Alert } from "react-native";
 import { router } from "expo-router";
 
 import { apiFetch } from "@/lib/api";
+import { friendlyApiError } from "@/lib/api-error";
 import { wipeAllLocalStateAfterAccountDeletion } from "@/lib/account-wipe";
 import type { LocaleId, StringKey } from "@/lib/strings";
 
@@ -48,7 +49,7 @@ async function runDeleteAccount(
   } catch (e) {
     Alert.alert(
       t("errorTitle"),
-      e instanceof Error ? e.message : t("deleteAccountFailed"),
+      friendlyApiError(e, t, "deleteAccountFailed"),
     );
   } finally {
     onBusy?.(false);

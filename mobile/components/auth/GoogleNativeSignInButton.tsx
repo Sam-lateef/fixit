@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 
+import { friendlyApiError } from "@/lib/api-error";
 import { getGoogleIdTokenFromNativeSignIn } from "@/lib/google-signin-native";
 import { isFirebaseClientConfigured } from "@/lib/firebase";
 import type { BackendAuthResponse } from "@/lib/social-auth";
@@ -37,7 +38,7 @@ export function GoogleNativeSignInButton(props: GoogleNativeSignInButtonProps): 
       if (msg === "SIGN_IN_CANCELLED" || code.includes("CANCEL")) {
         return;
       }
-      onError(msg.length > 0 ? msg : t("authSignInFailed"));
+      onError(friendlyApiError(e, t, "authSignInFailed"));
     } finally {
       setBusy(false);
     }

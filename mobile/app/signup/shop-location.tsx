@@ -20,9 +20,16 @@ import { useI18n } from "@/lib/i18n";
 import { openGoogleMapsAt } from "@/lib/open-google-maps";
 import { logSignup, logSignupStep } from "@/lib/signup-log";
 import { parseSignupWizardData } from "@/lib/signup-wizard-data";
+import { asShopType } from "@/lib/shop-type";
 import { IRAQ_OWNER_CITIES, ownerCityLabel } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
-import { isValidWhatsappE164 } from "@/lib/whatsapp-e164";
+import {
+  buildIraqWhatsappE164,
+  iraqPhoneSuffixFromE164,
+  isValidWhatsappE164,
+  IRAQ_PHONE_PREFIX,
+  normalizeIraqPhoneSuffix,
+} from "@/lib/whatsapp-e164";
 
 type District = { id: string; name: string; nameAr: string; city: string };
 
@@ -30,19 +37,16 @@ export default function ShopLocationStep(): React.ReactElement {
   const { t, locale } = useI18n();
   const raw = useLocalSearchParams<{ data?: string }>();
   const prev = parseSignupWizardData(raw.data);
+  const shopType = asShopType(prev.shopType);
 
-  // Towing-only shops are mobile providers — no fixed physical address is
-  // required (city + optional district are still mandatory).
-  const isTowingOnly =
-    Boolean(prev.offersTowing) &&
-    !Boolean(prev.offersRepair) &&
-    !Boolean(prev.offersParts);
+  // Towing providers are mobile — no fixed shop address required.
+  const isTowingProvider = shopType === "TOWING";
 
-  const [shopName, setShopName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [city, setCity] = useState("");
   const [districtId, setDistrictId] = useState<string | null>(null);
   const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phoneSuffix, setPhoneSuffix] = useState("");
   const [workshopLat, setWorkshopLat] = useState<number | null>(null);
   const [workshopLng, setWorkshopLng] = useState<number | null>(null);
 
@@ -53,8 +57,8 @@ export default function ShopLocationStep(): React.ReactElement {
   const [districtPickerOpen, setDistrictPickerOpen] = useState(false);
 
   useEffect(() => {
-    logSignup("shopLocation.mount", { isTowingOnly });
-  }, [isTowingOnly]);
+    logSignup("shopLocation.mount", { isTowingProvider, shopType });
+  }, [isTowingProvider, shopType]);
 
   // Pre-fill phone from existing user record. OTP-auth users already have a
   // phone here; Google sign-in users land with phone === null and must
@@ -63,17 +67,22 @@ export default function ShopLocationStep(): React.ReactElement {
     void (async () => {
       try {
         const { user } = await logSignupStep("shopLocation.prefillPhone", () =>
-          apiFetch<{ user: { phone: string | null } }>("/api/v1/users/me"),
+          apiFetch<{ user: { phone: string | null; name: string | null } }>(
+            "/api/v1/users/me",
+          ),
         );
         if (user.phone && user.phone.length > 0) {
-          setPhone(user.phone);
+          setPhoneSuffix(iraqPhoneSuffixFromE164(user.phone));
+        }
+        if (isTowingProvider && user.name && user.name.length > 0) {
+          setDisplayName(user.name);
         }
       } catch {
         // Network failure here is non-fatal — user can still type their
         // phone manually. If they leave it blank, handleContinue blocks them.
       }
     })();
-  }, []);
+  }, [isTowingProvider]);
 
   useEffect(() => {
     if (!city) {
@@ -138,35 +147,35 @@ export default function ShopLocationStep(): React.ReactElement {
 
   function handleContinue(): void {
     setErr("");
-    if (!shopName.trim()) {
-      setErr(t("shopName"));
+    if (!displayName.trim()) {
+      setErr(isTowingProvider ? t("nameRequired") : t("shopName"));
       return;
     }
     if (!city) {
       setErr(t("city"));
       return;
     }
-    if (!isTowingOnly && !address.trim()) {
+    if (!isTowingProvider && !address.trim()) {
       setErr(t("addressRequired"));
       return;
     }
-    const trimmedPhone = phone.trim();
-    if (trimmedPhone.length === 0) {
+    const fullPhone = buildIraqWhatsappE164(phoneSuffix);
+    if (normalizeIraqPhoneSuffix(phoneSuffix).length === 0) {
       setErr(t("phoneRequired"));
       return;
     }
-    if (!isValidWhatsappE164(trimmedPhone)) {
+    if (!isValidWhatsappE164(fullPhone)) {
       setErr(t("phoneInvalidFormat"));
       return;
     }
 
     const merged: Record<string, unknown> = {
       ...prev,
-      shopName: shopName.trim(),
+      shopName: displayName.trim(),
       city,
       districtId: districtId ?? null,
       address: address.trim(),
-      phone: trimmedPhone,
+      phone: fullPhone,
     };
     if (workshopLat != null && workshopLng != null) {
       merged.workshopLat = workshopLat;
@@ -200,7 +209,9 @@ export default function ShopLocationStep(): React.ReactElement {
       >
         <WizardProgressBar step={5} />
 
-        <Text style={s.label}>{t("shopName")}</Text>
+        <Text style={s.label}>
+          {isTowingProvider ? t("towingProviderName") : t("shopName")}
+        </Text>
         <TextInput
           style={[
             s.input,
@@ -208,9 +219,9 @@ export default function ShopLocationStep(): React.ReactElement {
               ? { textAlign: "right", writingDirection: "rtl" }
               : { textAlign: "left", writingDirection: "ltr" },
           ]}
-          value={shopName}
-          onChangeText={setShopName}
-          placeholder={t("shopName")}
+          value={displayName}
+          onChangeText={setDisplayName}
+          placeholder={isTowingProvider ? t("name") : t("shopName")}
           placeholderTextColor={theme.mutedLight}
         />
 
@@ -252,7 +263,7 @@ export default function ShopLocationStep(): React.ReactElement {
         )}
 
         <Text style={s.label}>
-          {isTowingOnly ? t("addressOptional") : t("shopAddress")}
+          {isTowingProvider ? t("addressOptional") : t("shopAddress")}
         </Text>
         <TextInput
           style={[
@@ -263,22 +274,24 @@ export default function ShopLocationStep(): React.ReactElement {
           ]}
           value={address}
           onChangeText={setAddress}
-          placeholder={isTowingOnly ? t("addressOptional") : t("shopAddress")}
+          placeholder={isTowingProvider ? t("addressOptional") : t("shopAddress")}
           placeholderTextColor={theme.mutedLight}
         />
 
         <Text style={s.label}>{t("phoneWhatsApp")}</Text>
-        <Text style={s.hintInline}>{t("phoneInvalidFormat")}</Text>
-        <TextInput
-          style={[s.input, { textAlign: "left", writingDirection: "ltr" }]}
-          value={phone}
-          onChangeText={setPhone}
-          placeholder="+9647XXXXXXXXX"
-          placeholderTextColor={theme.mutedLight}
-          keyboardType="phone-pad"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+        <View style={s.phoneRow}>
+          <Text style={s.phonePrefix}>{IRAQ_PHONE_PREFIX}</Text>
+          <TextInput
+            style={s.phoneInput}
+            value={phoneSuffix}
+            onChangeText={(v) => setPhoneSuffix(normalizeIraqPhoneSuffix(v))}
+            placeholder="7xx xxx xxxx"
+            placeholderTextColor={theme.mutedLight}
+            keyboardType="phone-pad"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
 
         <Text style={s.label}>{t("workshopMapPin")}</Text>
         <Text style={s.hintInline}>{t("workshopMapPinHint")}</Text>
@@ -369,6 +382,32 @@ const s = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 15,
+    color: theme.text,
+    textAlign: "left",
+  },
+  phoneRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  phonePrefix: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    backgroundColor: theme.chip,
+    borderRadius: theme.radiusMd,
+    overflow: "hidden",
+    fontWeight: "600",
+    color: theme.text,
+  },
+  phoneInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: theme.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
     color: theme.text,
     textAlign: "left",
   },

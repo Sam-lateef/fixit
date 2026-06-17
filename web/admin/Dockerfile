@@ -23,7 +23,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-ARG API_BASE=https://fixit-api.fly.dev
+ARG API_BASE=https://fixthecar.app
 ENV API_BASE=$API_BASE
 
 COPY --from=builder /app/public ./public

@@ -24,7 +24,13 @@ import { SearchablePickerModal } from "@/components/SearchablePickerModal";
 import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
 import { openAppNotificationSettings } from "@/lib/push-notifications";
-import { isValidWhatsappE164 } from "@/lib/whatsapp-e164";
+import {
+  buildIraqWhatsappE164,
+  iraqPhoneSuffixFromE164,
+  isValidWhatsappE164,
+  IRAQ_PHONE_PREFIX,
+  normalizeIraqPhoneSuffix,
+} from "@/lib/whatsapp-e164";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { promptDeleteAccount } from "@/lib/delete-account";
 import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "@/lib/legal-public-urls";
@@ -54,7 +60,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [user, setUser] = useState<UserMe | null>(null);
   const [editName, setEditName] = useState("");
-  const [editPhone, setEditPhone] = useState("");
+  const [editPhoneSuffix, setEditPhoneSuffix] = useState("");
   const [busy, setBusy] = useState(false);
   const [districts, setDistricts] = useState<DistrictRow[]>([]);
   const [districtPreparing, setDistrictPreparing] = useState(false);
@@ -82,7 +88,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
         setEditName(u.name ?? "");
       }
       if (!phoneFocusedRef.current) {
-        setEditPhone(u.phone ?? "");
+        setEditPhoneSuffix(iraqPhoneSuffixFromE164(u.phone));
       }
       setLoadError("");
     } catch (e) {
@@ -148,12 +154,16 @@ export default function OwnerProfileScreen(): React.ReactElement {
 
   const commitPhoneIfChanged = (): void => {
     if (!user || busy) return;
-    const trimmed = editPhone.trim();
+    const fullPhone = buildIraqWhatsappE164(editPhoneSuffix);
     const prev = (user.phone ?? "").trim();
-    if (trimmed === prev) return;
-    if (!isValidWhatsappE164(trimmed)) {
+    if (fullPhone === prev) return;
+    if (normalizeIraqPhoneSuffix(editPhoneSuffix).length === 0) {
+      setEditPhoneSuffix(iraqPhoneSuffixFromE164(user.phone));
+      return;
+    }
+    if (!isValidWhatsappE164(fullPhone)) {
       Alert.alert(t("errorTitle"), t("phoneInvalidFormat"));
-      setEditPhone(prev);
+      setEditPhoneSuffix(iraqPhoneSuffixFromE164(user.phone));
       return;
     }
     setBusy(true);
@@ -161,19 +171,12 @@ export default function OwnerProfileScreen(): React.ReactElement {
       try {
         await apiFetch("/api/v1/users/me", {
           method: "PUT",
-          body: JSON.stringify({ phone: trimmed }),
+          body: JSON.stringify({ phone: fullPhone }),
         });
         await load();
       } catch (e) {
-        const msg = e instanceof Error ? e.message : "";
-        const body =
-          msg.includes("already") || msg.toLowerCase().includes("in use")
-            ? t("phoneInUse")
-            : msg.length > 0
-              ? msg
-              : t("updateFailed");
-        Alert.alert(t("errorTitle"), body);
-        setEditPhone(prev);
+        Alert.alert(t("errorTitle"), friendlyApiError(e, t, "updateFailed"));
+        setEditPhoneSuffix(iraqPhoneSuffixFromE164(user.phone));
       } finally {
         setBusy(false);
       }
@@ -362,27 +365,32 @@ export default function OwnerProfileScreen(): React.ReactElement {
           <View style={styles.settingDivider} />
           <View style={styles.fieldBlock}>
             <Text style={styles.fieldLabel}>{t("phoneWhatsApp")}</Text>
-            <TextInput
-              style={styles.fieldInput}
-              value={editPhone}
-              onChangeText={setEditPhone}
-              onFocus={() => {
-                phoneFocusedRef.current = true;
-              }}
-              onEndEditing={() => {
-                phoneFocusedRef.current = false;
-                commitPhoneIfChanged();
-              }}
-              onBlur={() => {
-                phoneFocusedRef.current = false;
-                commitPhoneIfChanged();
-              }}
-              placeholder="+9647XXXXXXXXX"
-              placeholderTextColor={theme.mutedLight}
-              keyboardType="phone-pad"
-              autoCorrect={false}
-              returnKeyType="done"
-            />
+            <View style={styles.phoneRow}>
+              <Text style={styles.phonePrefix}>{IRAQ_PHONE_PREFIX}</Text>
+              <TextInput
+                style={styles.phoneInput}
+                value={editPhoneSuffix}
+                onChangeText={(v) =>
+                  setEditPhoneSuffix(normalizeIraqPhoneSuffix(v))
+                }
+                onFocus={() => {
+                  phoneFocusedRef.current = true;
+                }}
+                onEndEditing={() => {
+                  phoneFocusedRef.current = false;
+                  commitPhoneIfChanged();
+                }}
+                onBlur={() => {
+                  phoneFocusedRef.current = false;
+                  commitPhoneIfChanged();
+                }}
+                placeholder="7xx xxx xxxx"
+                placeholderTextColor={theme.mutedLight}
+                keyboardType="phone-pad"
+                autoCorrect={false}
+                returnKeyType="done"
+              />
+            </View>
           </View>
           <View style={styles.settingDivider} />
           <Pressable
@@ -688,6 +696,32 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   fieldInput: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: theme.radiusMd,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: theme.text,
+    backgroundColor: theme.surface,
+    textAlign: "left",
+  },
+  phoneRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  phonePrefix: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    backgroundColor: theme.chip,
+    borderRadius: theme.radiusMd,
+    overflow: "hidden",
+    fontWeight: "600",
+    color: theme.text,
+  },
+  phoneInput: {
+    flex: 1,
     borderWidth: 1,
     borderColor: theme.border,
     borderRadius: theme.radiusMd,

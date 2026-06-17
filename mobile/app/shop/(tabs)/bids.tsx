@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { router, type Href } from "expo-router";
-import { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -24,6 +24,8 @@ import {
   repairCategoryLabel,
 } from "@/lib/taxonomy-labels";
 import { theme } from "@/lib/theme";
+import { pushEvents } from "@/lib/push-events";
+import { useRefetchOnAppActive } from "@/lib/use-refetch-on-app-active";
 
 type SortOption = "newest" | "oldest";
 
@@ -146,6 +148,17 @@ export default function ShopBidsScreen(): React.ReactElement {
       void load();
     }, [load]),
   );
+
+  useRefetchOnAppActive(load);
+
+  useEffect(() => {
+    const unsubAccept = pushEvents.on("ACCEPT", () => {
+      void load();
+    });
+    return () => {
+      unsubAccept();
+    };
+  }, [load]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
