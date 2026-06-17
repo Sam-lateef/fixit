@@ -68,7 +68,7 @@ export const en = {
     "Sharing: We share information with other users as needed for the marketplace (for example, owners and shops involved in a request or chat). We may use processors (hosting, email, analytics) under contracts that limit their use. We may disclose information if required by law or to protect rights and safety.\n\n" +
     "Safety and abuse prevention: Service-related chat messages, post content, and attached media may be reviewed by authorized team members when needed to investigate abuse, enforce platform rules, handle support requests, or protect users and the service.\n\n" +
     "Retention and security: We keep data only as long as needed for these purposes and as required by law. We use reasonable administrative and technical safeguards; no method of transmission over the Internet is completely secure.\n\n" +
-    "Your rights: Depending on applicable law, you may have rights to access, correct, delete, or restrict certain processing. Contact us at hello@fixitiq.com for requests. The service is not directed at children below the legal age to use the service in your jurisdiction.\n\n" +
+    "Your rights: Depending on applicable law, you may have rights to access, correct, delete, or restrict certain processing. Contact us at admin@fixthecar.app for requests. The service is not directed at children below the legal age to use the service in your jurisdiction.\n\n" +
     "International processing: Data may be processed in Iraq, the United States, the European Economic Area, and other countries where we or our providers operate.\n\n" +
     "Changes: We may update this notice from time to time. Material changes will be reflected on this page or through the app where appropriate.",
   termsStub:
@@ -80,7 +80,7 @@ export const en = {
     "Indemnity: To the extent permitted by law, you agree to indemnify and hold harmless Fix It IQ and its affiliates from claims arising out of your use of the service or your breach of these terms.\n\n" +
     "Suspension: We may suspend or terminate accounts that violate these terms or pose risk to the community.\n\n" +
     "Governing law: Unless mandatory local law provides otherwise, these terms are governed by the laws applicable to Fix It IQ’s place of establishment, without regard to conflict-of-law rules.\n\n" +
-    "Contact: hello@fixitiq.com. This page is a general summary; a fuller agreement may be published before commercial launch.",
+    "Contact: admin@fixthecar.app. This page is a general summary; a fuller agreement may be published before commercial launch.",
   backToHome: "Back to home",
   shopDashboardTitle: "Shop dashboard",
   shopDashboardComingSoonBody:

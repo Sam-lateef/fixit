@@ -33,7 +33,7 @@ import {
 } from "@/lib/whatsapp-e164";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { promptDeleteAccount } from "@/lib/delete-account";
-import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "@/lib/legal-public-urls";
+import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL, SUPPORT_EMAIL, SUPPORT_MAILTO_URL } from "@/lib/legal-public-urls";
 import { hrefAuthWelcome } from "@/lib/routes-href";
 import { signOutFromApp } from "@/lib/sign-out";
 import { useI18n } from "@/lib/i18n";
@@ -447,6 +447,16 @@ export default function OwnerProfileScreen(): React.ReactElement {
         </View>
 
         <View style={styles.sectionCard}>
+          <Pressable
+            style={styles.settingRow}
+            onPress={() => void Linking.openURL(SUPPORT_MAILTO_URL)}
+          >
+            <Text style={styles.settingLabel}>{t("support")}</Text>
+            <Text style={styles.settingValue} numberOfLines={1}>
+              {SUPPORT_EMAIL}
+            </Text>
+          </Pressable>
+          <View style={styles.settingDivider} />
           <Pressable
             style={styles.settingRow}
             onPress={() => void Linking.openURL(LEGAL_PRIVACY_URL)}

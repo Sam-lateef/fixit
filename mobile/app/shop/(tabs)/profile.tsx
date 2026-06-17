@@ -33,7 +33,7 @@ import type { ShopProfilePayload } from "@/components/shop/shop-profile-model";
 import { ShopServiceOverview } from "@/components/shop/ShopServiceOverview";
 import { apiFetch } from "@/lib/api";
 import { friendlyApiError } from "@/lib/api-error";
-import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "@/lib/legal-public-urls";
+import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL, SUPPORT_EMAIL, SUPPORT_MAILTO_URL } from "@/lib/legal-public-urls";
 import { fetchDistrictsForCity } from "@/lib/districts-fetch";
 import { openGoogleMapsAt } from "@/lib/open-google-maps";
 import { openAppNotificationSettings } from "@/lib/push-notifications";
@@ -1130,6 +1130,16 @@ export default function ShopProfileScreen(): React.ReactElement {
 
         {/* Links */}
         <View style={styles.sectionCard}>
+          <Pressable
+            style={styles.settingRow}
+            onPress={() => void Linking.openURL(SUPPORT_MAILTO_URL)}
+          >
+            <Text style={styles.settingLabel}>{t("support")}</Text>
+            <Text style={styles.settingValue} numberOfLines={1}>
+              {SUPPORT_EMAIL}
+            </Text>
+          </Pressable>
+          <View style={styles.settingDivider} />
           <Pressable
             style={styles.settingRow}
             onPress={() => void Linking.openURL(LEGAL_PRIVACY_URL)}
