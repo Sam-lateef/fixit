@@ -12,17 +12,17 @@ import { theme } from "@/lib/theme";
 type ShopTypeCard = {
   id: ShopType;
   titleKey: StringKey;
-  subKey: StringKey;
+  subKey?: StringKey;
 };
 
 const CARDS: ReadonlyArray<ShopTypeCard> = [
-  { id: "CAR", titleKey: "shopTypeCar", subKey: "shopTypeCarSub" },
+  { id: "CAR", titleKey: "shopTypeCar", subKey: "shopTypeRepairPartsSub" },
   {
     id: "MOTORCYCLE",
     titleKey: "shopTypeMotorcycle",
-    subKey: "shopTypeMotorcycleSub",
+    subKey: "shopTypeRepairPartsSub",
   },
-  { id: "TOWING", titleKey: "shopTypeTowing", subKey: "shopTypeTowingSub" },
+  { id: "TOWING", titleKey: "shopTypeTowing" },
 ];
 
 export default function ShopTypeStep(): React.ReactElement {
@@ -89,7 +89,9 @@ export default function ShopTypeStep(): React.ReactElement {
                 <Text style={[s.cardLabel, on && s.cardLabelOn]}>
                   {t(card.titleKey)}
                 </Text>
-                <Text style={s.cardSub}>{t(card.subKey)}</Text>
+                {card.subKey != null ? (
+                  <Text style={s.cardSub}>{t(card.subKey)}</Text>
+                ) : null}
               </View>
               {on ? (
                 <View style={s.check}>

@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 
 import { HeaderBackButton, HeaderLogoutButton } from "@/components/SessionHeaderButtons";
+import { useI18n } from "@/lib/i18n";
 import { theme } from "@/lib/theme";
 
 const flowHeader = {
@@ -10,6 +11,8 @@ const flowHeader = {
 };
 
 export default function AuthLayout(): React.ReactElement {
+  const { isRtl } = useI18n();
+
   return (
     <Stack
       screenOptions={{
@@ -20,7 +23,10 @@ export default function AuthLayout(): React.ReactElement {
         headerTitleStyle: { color: "#fff", fontWeight: "700" as const },
         headerTitleAlign: "center",
         headerShadowVisible: false,
-        contentStyle: { backgroundColor: theme.surface },
+        contentStyle: {
+          backgroundColor: theme.surface,
+          direction: isRtl ? "rtl" : "ltr",
+        },
         // Suppress native iOS back button + any auto back-title so only the
         // custom `‹ Back` from HeaderBackButton ever renders.
         headerBackVisible: false,

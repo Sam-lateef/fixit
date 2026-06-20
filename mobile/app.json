@@ -15,7 +15,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.fixitiq.app",
-      "buildNumber": "18",
+      "buildNumber": "19",
       "supportsTablet": true,
       "icon": "./assets/images/fixit-icon-1024.png",
       "googleServicesFile": "./GoogleService-Info.plist",
@@ -35,7 +35,7 @@
     },
     "android": {
       "package": "com.fixitiq.app",
-      "versionCode": 18,
+      "versionCode": 19,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/fixit-adaptive-fg-1024.png",
