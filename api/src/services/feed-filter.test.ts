@@ -377,6 +377,57 @@ test("filterPostsForShop with empty servedDistrictIds serves whole city (back-co
   assert.equal(matched.length, 1);
 });
 
+test("MOTORCYCLE shop never sees TOWING even when offersTowing is stale true", () => {
+  const s = shop({
+    shopType: "MOTORCYCLE",
+    offersRepair: true,
+    offersParts: false,
+    offersTowing: true,
+    repairCategories: [],
+    partsCategories: [],
+    carMakes: [],
+  });
+  const motoRepair = post({
+    id: "moto-repair",
+    vehicleType: "MOTORCYCLE",
+    serviceType: "REPAIR",
+    carMake: null,
+    carYear: null,
+    motorcycleDetails: "Bajaj 2020",
+  });
+  const motoTow = post({
+    id: "moto-tow",
+    vehicleType: "MOTORCYCLE",
+    serviceType: "TOWING",
+    repairCategory: null,
+    carMake: null,
+    carYear: null,
+  });
+  const matched = filterPostsForShop(s, [motoRepair, motoTow]);
+  assert.equal(matched.length, 1);
+  assert.equal(matched[0].id, "moto-repair");
+});
+
+test("MOTORCYCLE shop excludes CAR repair posts", () => {
+  const s = shop({
+    shopType: "MOTORCYCLE",
+    offersRepair: true,
+    repairCategories: [],
+    carMakes: [],
+  });
+  const carRepair = post({ id: "car-repair", vehicleType: "CAR", carMake: "Toyota" });
+  const motoRepair = post({
+    id: "moto-repair",
+    vehicleType: "MOTORCYCLE",
+    carMake: null,
+    carYear: null,
+    motorcycleDetails: "Toktok",
+  });
+  const matched = filterPostsForShop(s, [carRepair, motoRepair]);
+  assert.equal(matched.length, 1);
+  assert.equal(matched[0].id, "moto-repair");
+});
+
 test("TOWING shop only sees TOWING posts in matched feed", () => {
   const s = shop({
     shopType: "TOWING",

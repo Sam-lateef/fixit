@@ -110,7 +110,7 @@ const PARTS_I18N: Record<PartsSlug, { en: string; ar: string }> = {
 const MOTO_REPAIR_I18N: Record<MotoRepairSlug, { en: string; ar: string }> = {
   Engine: { en: "Engine", ar: "المحرك" },
   Brakes: { en: "Brakes", ar: "بريكات" },
-  Electrical: { en: "Electrical", ar: "الكهربا" },
+  Electrical: { en: "Electrical", ar: "الكهرباء" },
   Tyres: { en: "Tyres", ar: "الإطارات" },
   "Chain & Sprocket": { en: "Chain & Sprocket", ar: "الجنزير والترس" },
   Bodywork: { en: "Bodywork", ar: "السمكرة" },
@@ -120,7 +120,7 @@ const MOTO_REPAIR_I18N: Record<MotoRepairSlug, { en: string; ar: string }> = {
 const MOTO_PARTS_I18N: Record<MotoPartsSlug, { en: string; ar: string }> = {
   "Engine parts": { en: "Engine parts", ar: "قطع المحرك" },
   Brakes: { en: "Brakes", ar: "بريكات" },
-  Electrical: { en: "Electrical", ar: "الكهربا" },
+  Electrical: { en: "Electrical", ar: "الكهرباء" },
   Tyres: { en: "Tyres", ar: "الإطارات" },
   "Chain & Sprocket": { en: "Chain & Sprocket", ar: "الجنزير والترس" },
   Oils: { en: "Oils", ar: "الزيوت" },

@@ -12,6 +12,7 @@
     "prebuild:android:clean": "expo prebuild --platform android --clean",
     "android:sha1": "powershell -ExecutionPolicy Bypass -File ./scripts/print-android-debug-sha1.ps1",
     "android:compare-sha": "powershell -ExecutionPolicy Bypass -File ./scripts/compare-google-sha.ps1",
+    "splash:icon": "node ./scripts/generate-splash-icon.mjs",
     "ios": "expo run:ios",
     "web": "expo start --web"
   },

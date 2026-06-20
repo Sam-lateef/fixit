@@ -3,7 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { UserType } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../db/prisma.js";
-import { E164_WHATSAPP_OTP, e164WhatsAppOtpHint } from "../lib/phone.js";
+import { E164_IRAQ, e164IraqHint } from "../lib/phone.js";
 import { cascadeDeleteUser } from "../services/delete-user.js";
 import {
   refineWorkshopCoordsTogether,
@@ -22,7 +22,7 @@ const updateMeSchema = z
     // user.phone). The regex disallows null/empty already; the handler below
     // adds a belt-and-suspenders check against shop owners clearing it via
     // some future schema relaxation. Update User.phone only — never set to null.
-    phone: z.string().regex(E164_WHATSAPP_OTP, e164WhatsAppOtpHint()).optional(),
+    phone: z.string().regex(E164_IRAQ, e164IraqHint()).optional(),
     city: z.string().min(1).max(80).optional(),
     districtId: z.union([z.string().min(1).max(64), z.null()]).optional(),
     address: z.string().max(500).optional(),

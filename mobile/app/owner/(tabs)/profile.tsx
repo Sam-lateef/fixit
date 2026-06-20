@@ -27,7 +27,7 @@ import { openAppNotificationSettings } from "@/lib/push-notifications";
 import {
   buildIraqWhatsappE164,
   iraqPhoneSuffixFromE164,
-  isValidWhatsappE164,
+  isValidIraqPhoneE164,
   IRAQ_PHONE_PREFIX,
   normalizeIraqPhoneSuffix,
 } from "@/lib/whatsapp-e164";
@@ -161,7 +161,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
       setEditPhoneSuffix(iraqPhoneSuffixFromE164(user.phone));
       return;
     }
-    if (!isValidWhatsappE164(fullPhone)) {
+    if (!isValidIraqPhoneE164(fullPhone)) {
       Alert.alert(t("errorTitle"), t("phoneInvalidFormat"));
       setEditPhoneSuffix(iraqPhoneSuffixFromE164(user.phone));
       return;
@@ -384,7 +384,7 @@ export default function OwnerProfileScreen(): React.ReactElement {
                   phoneFocusedRef.current = false;
                   commitPhoneIfChanged();
                 }}
-                placeholder="7xx xxx xxxx"
+                placeholder={t("phoneSuffixPlaceholder")}
                 placeholderTextColor={theme.mutedLight}
                 keyboardType="phone-pad"
                 autoCorrect={false}
@@ -448,13 +448,11 @@ export default function OwnerProfileScreen(): React.ReactElement {
 
         <View style={styles.sectionCard}>
           <Pressable
-            style={styles.settingRow}
+            style={styles.supportRow}
             onPress={() => void Linking.openURL(SUPPORT_MAILTO_URL)}
           >
             <Text style={styles.settingLabel}>{t("support")}</Text>
-            <Text style={styles.settingValue} numberOfLines={1}>
-              {SUPPORT_EMAIL}
-            </Text>
+            <Text style={styles.supportEmail}>{SUPPORT_EMAIL}</Text>
           </Pressable>
           <View style={styles.settingDivider} />
           <Pressable
@@ -475,18 +473,6 @@ export default function OwnerProfileScreen(): React.ReactElement {
         </View>
 
         <Pressable
-          style={styles.deleteAccountCard}
-          disabled={deleteBusy || busy}
-          onPress={() => promptDeleteAccount(t, setLocale, setDeleteBusy)}
-        >
-          {deleteBusy ? (
-            <ActivityIndicator color={theme.danger} />
-          ) : (
-            <Text style={styles.deleteAccountText}>{t("deleteAccount")}</Text>
-          )}
-        </Pressable>
-
-        <Pressable
           style={styles.logoutCard}
           onPress={() => {
             void (async () => {
@@ -496,6 +482,18 @@ export default function OwnerProfileScreen(): React.ReactElement {
           }}
         >
           <Text style={styles.logoutText}>{t("logout")}</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.deleteAccountCard}
+          disabled={deleteBusy || busy}
+          onPress={() => promptDeleteAccount(t, setLocale, setDeleteBusy)}
+        >
+          {deleteBusy ? (
+            <ActivityIndicator color={theme.danger} size="small" />
+          ) : (
+            <Text style={styles.deleteAccountText}>{t("deleteAccount")}</Text>
+          )}
         </Pressable>
       </KeyboardAwareScrollView>
 
@@ -762,6 +760,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     minHeight: 48,
   },
+  supportRow: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    minHeight: 48,
+    justifyContent: "center",
+  },
+  supportEmail: {
+    fontSize: 15,
+    color: theme.primaryMid,
+    marginTop: 4,
+    writingDirection: "ltr",
+    textAlign: "left",
+  },
   settingLabel: { fontSize: 17, fontWeight: "600", color: theme.text },
   settingValue: {
     fontSize: 15,
@@ -776,16 +787,18 @@ const styles = StyleSheet.create({
   deleteAccountCard: {
     backgroundColor: theme.surface,
     marginHorizontal: 16,
-    marginTop: 14,
-    borderRadius: theme.radiusLg,
-    padding: 16,
+    marginTop: 8,
+    marginBottom: 24,
+    borderRadius: theme.radiusMd,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     alignItems: "center",
     borderWidth: 1,
     borderColor: theme.danger,
-    minHeight: 52,
+    minHeight: 40,
     justifyContent: "center",
   },
-  deleteAccountText: { color: theme.danger, fontWeight: "700", fontSize: 15 },
+  deleteAccountText: { color: theme.danger, fontWeight: "600", fontSize: 13 },
 
   logoutCard: {
     backgroundColor: theme.surface,

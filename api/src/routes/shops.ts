@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { ServiceCategory, ShopType } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../db/prisma.js";
-import { E164_WHATSAPP_OTP } from "../lib/phone.js";
+import { E164_IRAQ } from "../lib/phone.js";
 import {
   refineWorkshopCoordsTogether,
   workshopLatField,
@@ -69,7 +69,7 @@ const createShopBody = z.object({
   // Google-sign-in users land with phone === null and must supply one here.
   phone: z
     .string()
-    .regex(E164_WHATSAPP_OTP, "Phone must be a valid Iraqi WhatsApp number (+9647XXXXXXXXX)")
+    .regex(E164_IRAQ, "Phone must be a valid Iraqi phone number (+964 XXXXXXXXXX)")
     .optional(),
   workshopLat: workshopLatField.optional(),
   workshopLng: workshopLngField.optional(),
@@ -152,7 +152,9 @@ function refineServiceCategories(
   },
   ctx: z.RefinementCtx,
 ): void {
-  if (data.shopType === "TOWING") {
+  if (data.shopType === "TOWING" || data.shopType === "MOTORCYCLE") {
+    // TOWING has no repair/parts. MOTORCYCLE signup skips car-category pickers
+    // (taxonomy is car-only today) — empty arrays mean "no category filter".
     return;
   }
   if (data.offersRepair && data.repairCategories.length === 0) {

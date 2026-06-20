@@ -23,6 +23,8 @@ import { confirmAndSubmitReport } from "@/lib/report-content";
 import type { StringKey } from "@/lib/strings";
 import {
   ownerCityLabel,
+  motorcyclePartsCategoryLabel,
+  motorcycleRepairCategoryLabel,
   partsCategoryLabel,
   repairCategoryLabel,
 } from "@/lib/taxonomy-labels";
@@ -66,6 +68,7 @@ function isNew(createdAt: string): boolean {
 type ShopMe = {
   id: string;
   category: string;
+  shopType: "CAR" | "MOTORCYCLE" | "TOWING";
   offersRepair: boolean;
   offersParts: boolean;
   offersTowing: boolean;
@@ -317,16 +320,24 @@ export default function ShopFeedScreen(): React.ReactElement {
   );
 
   const tabs: Array<{ key: FilterTab; label: string }> = [{ key: "ALL", label: t("all") }];
-  if (shop?.offersRepair) tabs.push({ key: "REPAIR", label: t("repair") });
-  if (shop?.offersParts) tabs.push({ key: "PARTS", label: t("parts") });
-  if (shop?.offersTowing) tabs.push({ key: "TOWING", label: t("towing") });
+  if (shop?.shopType !== "TOWING") {
+    if (shop?.offersRepair) tabs.push({ key: "REPAIR", label: t("repair") });
+    if (shop?.offersParts) tabs.push({ key: "PARTS", label: t("parts") });
+    if (shop?.offersTowing) tabs.push({ key: "TOWING", label: t("towing") });
+  }
+  const showFilterTabs = tabs.length > 1;
 
   const categoryLabel = (p: Post): string | null => {
+    const isMoto = p.vehicleType === "MOTORCYCLE";
     if (p.serviceType.toUpperCase() === "REPAIR" && p.repairCategory) {
-      return repairCategoryLabel(p.repairCategory, locale);
+      return isMoto
+        ? motorcycleRepairCategoryLabel(p.repairCategory, locale)
+        : repairCategoryLabel(p.repairCategory, locale);
     }
     if (p.serviceType.toUpperCase() === "PARTS" && p.partsCategory) {
-      return partsCategoryLabel(p.partsCategory, locale);
+      return isMoto
+        ? motorcyclePartsCategoryLabel(p.partsCategory, locale)
+        : partsCategoryLabel(p.partsCategory, locale);
     }
     return null;
   };
@@ -378,21 +389,23 @@ export default function ShopFeedScreen(): React.ReactElement {
         stickySectionHeadersEnabled={false}
         refreshControl={refreshControl}
         ListHeaderComponent={
-          <View>
-            <View style={styles.tabRow}>
-              {tabs.map((tab) => (
-                <Pressable
-                  key={tab.key}
-                  style={[styles.tab, filter === tab.key && styles.tabActive]}
-                  onPress={() => setFilter(tab.key)}
-                >
-                  <Text style={[styles.tabText, filter === tab.key && styles.tabTextActive]}>
-                    {tab.label}
-                  </Text>
-                </Pressable>
-              ))}
+          showFilterTabs ? (
+            <View>
+              <View style={styles.tabRow}>
+                {tabs.map((tab) => (
+                  <Pressable
+                    key={tab.key}
+                    style={[styles.tab, filter === tab.key && styles.tabActive]}
+                    onPress={() => setFilter(tab.key)}
+                  >
+                    <Text style={[styles.tabText, filter === tab.key && styles.tabTextActive]}>
+                      {tab.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
-          </View>
+          ) : null
         }
         renderSectionHeader={({ section: sec }) => {
           // Matched section: the screen header already says "Requests".

@@ -26,7 +26,7 @@ import { theme } from "@/lib/theme";
 import {
   buildIraqWhatsappE164,
   iraqPhoneSuffixFromE164,
-  isValidWhatsappE164,
+  isValidIraqPhoneE164,
   IRAQ_PHONE_PREFIX,
   normalizeIraqPhoneSuffix,
 } from "@/lib/whatsapp-e164";
@@ -164,7 +164,7 @@ export default function ShopLocationStep(): React.ReactElement {
       setErr(t("phoneRequired"));
       return;
     }
-    if (!isValidWhatsappE164(fullPhone)) {
+    if (!isValidIraqPhoneE164(fullPhone)) {
       setErr(t("phoneInvalidFormat"));
       return;
     }
@@ -285,7 +285,7 @@ export default function ShopLocationStep(): React.ReactElement {
             style={s.phoneInput}
             value={phoneSuffix}
             onChangeText={(v) => setPhoneSuffix(normalizeIraqPhoneSuffix(v))}
-            placeholder="7xx xxx xxxx"
+            placeholder={t("phoneSuffixPlaceholder")}
             placeholderTextColor={theme.mutedLight}
             keyboardType="phone-pad"
             autoCapitalize="none"

@@ -493,6 +493,12 @@ body {
   line-height: 1.5;
 }
 
+.coming-soon-support {
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
 .coming-soon-legal-link {
   color: var(--color-text-tertiary);
   text-decoration: none;

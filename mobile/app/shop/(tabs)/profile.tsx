@@ -41,7 +41,7 @@ import { promptDeleteAccount } from "@/lib/delete-account";
 import {
   buildIraqWhatsappE164,
   iraqPhoneSuffixFromE164,
-  isValidWhatsappE164,
+  isValidIraqPhoneE164,
   IRAQ_PHONE_PREFIX,
   normalizeIraqPhoneSuffix,
 } from "@/lib/whatsapp-e164";
@@ -552,6 +552,14 @@ export default function ShopProfileScreen(): React.ReactElement {
   const saveEdit = (): void => {
     if (!shop || !editSection) return;
     const items = Array.from(pendingSelection);
+    if (editSection === "makes" && items.length === 0) {
+      Alert.alert(t("errorTitle"), t("carMakesRequired"));
+      return;
+    }
+    if (editSection === "repair" && items.length === 0) {
+      Alert.alert(t("errorTitle"), t("repairCategoryRequired"));
+      return;
+    }
     let yearPatch: { min: number | null; max: number | null } | null = null;
     if (editSection === "makes") {
       const parsed = parseShopYearDraft(yearMinDraft, yearMaxDraft);
@@ -600,7 +608,7 @@ export default function ShopProfileScreen(): React.ReactElement {
       setEditPhoneSuffix(iraqPhoneSuffixFromE164(shop.user.phone));
       return;
     }
-    if (!isValidWhatsappE164(fullPhone)) {
+    if (!isValidIraqPhoneE164(fullPhone)) {
       Alert.alert(t("errorTitle"), t("phoneInvalidFormat"));
       setEditPhoneSuffix(iraqPhoneSuffixFromE164(shop.user.phone));
       return;
@@ -926,7 +934,7 @@ export default function ShopProfileScreen(): React.ReactElement {
                   phoneFocusedRef.current = false;
                   commitShopPhoneIfChanged();
                 }}
-                placeholder="7xx xxx xxxx"
+                placeholder={t("phoneSuffixPlaceholder")}
                 placeholderTextColor={theme.mutedLight}
                 keyboardType="phone-pad"
                 autoCorrect={false}
@@ -1131,13 +1139,11 @@ export default function ShopProfileScreen(): React.ReactElement {
         {/* Links */}
         <View style={styles.sectionCard}>
           <Pressable
-            style={styles.settingRow}
+            style={styles.supportRow}
             onPress={() => void Linking.openURL(SUPPORT_MAILTO_URL)}
           >
             <Text style={styles.settingLabel}>{t("support")}</Text>
-            <Text style={styles.settingValue} numberOfLines={1}>
-              {SUPPORT_EMAIL}
-            </Text>
+            <Text style={styles.supportEmail}>{SUPPORT_EMAIL}</Text>
           </Pressable>
           <View style={styles.settingDivider} />
           <Pressable
@@ -1176,7 +1182,7 @@ export default function ShopProfileScreen(): React.ReactElement {
           onPress={() => promptDeleteAccount(t, setLocale, setDeleteBusy)}
         >
           {deleteBusy ? (
-            <ActivityIndicator color={theme.danger} />
+            <ActivityIndicator color={theme.danger} size="small" />
           ) : (
             <Text style={styles.deleteAccountText}>{t("deleteAccount")}</Text>
           )}
@@ -1978,6 +1984,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
   },
+  supportRow: {
+    paddingVertical: 12,
+    justifyContent: "center",
+  },
+  supportEmail: {
+    fontSize: 15,
+    color: theme.primaryMid,
+    marginTop: 4,
+    writingDirection: "ltr",
+    textAlign: "left",
+  },
   settingLabel: { fontSize: 17, fontWeight: "600", color: theme.text },
   settingLabelCol: { flex: 1, paddingRight: 12 },
   settingHint: { fontSize: 12, color: theme.muted, marginTop: 2 },
@@ -1987,16 +2004,18 @@ const styles = StyleSheet.create({
   deleteAccountCard: {
     backgroundColor: theme.surface,
     marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: theme.radiusLg,
-    padding: 16,
+    marginTop: 8,
+    marginBottom: 24,
+    borderRadius: theme.radiusMd,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     alignItems: "center",
     borderWidth: 1,
     borderColor: theme.danger,
-    minHeight: 52,
+    minHeight: 40,
     justifyContent: "center",
   },
-  deleteAccountText: { color: theme.danger, fontWeight: "700", fontSize: 15 },
+  deleteAccountText: { color: theme.danger, fontWeight: "600", fontSize: 13 },
 
   logoutCard: {
     backgroundColor: theme.surface,

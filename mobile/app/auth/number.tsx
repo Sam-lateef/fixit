@@ -95,7 +95,7 @@ export default function AuthNumberScreen(): React.ReactElement {
         <TextInput
           style={styles.input}
           keyboardType="phone-pad"
-          placeholder="7xx xxx xxxx"
+          placeholder={t("phoneSuffixPlaceholder")}
           placeholderTextColor={theme.mutedLight}
           maxLength={15}
           value={suffix}

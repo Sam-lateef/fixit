@@ -108,7 +108,11 @@ export default function ShopRepairCatsStep(): React.ReactElement {
 
       {err !== "" ? <Text style={s.err}>{err}</Text> : null}
 
-      <Pressable style={s.btn} onPress={handleContinue}>
+      <Pressable
+        style={[s.btn, selected.size === 0 && s.btnOff]}
+        disabled={selected.size === 0}
+        onPress={handleContinue}
+      >
         <Text style={s.btnText}>{t("continue")}</Text>
       </Pressable>
     </ScrollView>
@@ -139,6 +143,7 @@ const s = StyleSheet.create({
     borderRadius: theme.radiusMd,
     alignItems: "center",
   },
+  btnOff: { opacity: 0.4 },
   btnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
   err: { marginTop: 12, color: theme.danger, fontSize: 13 },
 });

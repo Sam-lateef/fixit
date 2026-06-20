@@ -626,6 +626,19 @@ export function OwnerPostEditor({
       Alert.alert(t("errorTitle"), t("motorcycleDetailsRequired"));
       return;
     }
+    if (serviceType === "REPAIR" && repairCat === null) {
+      Alert.alert(t("errorTitle"), t("repairCategoryRequired"));
+      return;
+    }
+    if (
+      serviceType !== "TOWING" &&
+      vehicleType === "CAR" &&
+      !carMakeId &&
+      !carMake.trim()
+    ) {
+      Alert.alert(t("errorTitle"), t("carMakeRequired"));
+      return;
+    }
     setBusy(true);
     void (async () => {
       try {
@@ -1082,13 +1095,14 @@ export function OwnerPostEditor({
                   : carModel.trim() || t("carModel")}
               </Text>
             </Pressable>
-            <Pressable style={styles.selectInput} onPress={() => {
-              if (!carModelId) {
-                Alert.alert(t("errorTitle"), t("carModelRequired"));
-                return;
-              }
-              setPickerMode("year");
-            }}>
+            <Pressable
+              style={[styles.selectInput, !carModelId && styles.selectInputDisabled]}
+              disabled={!carModelId}
+              onPress={() => {
+                if (!carModelId) return;
+                setPickerMode("year");
+              }}
+            >
               <Text style={carYear ? styles.selectValue : styles.selectPlaceholder}>
                 {carYear || t("yearOptional")}
               </Text>
@@ -1383,6 +1397,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     backgroundColor: theme.surface,
   },
+  selectInputDisabled: { opacity: 0.45 },
   selectValue: {
     fontSize: 16,
     color: theme.text,

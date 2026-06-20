@@ -27,10 +27,13 @@ function vehicleTypeAllowedForShop(shop: ShopForFeed, post: PostForFeed): boolea
   return !isMotoPost;
 }
 
-/** Towing providers only see tow requests — never repair or parts jobs. */
+/** Towing requests are only for shopType=TOWING. CAR/MOTORCYCLE never see towing. */
 function serviceTypeAllowedForShop(shop: ShopForFeed, post: PostForFeed): boolean {
   if (shop.shopType === "TOWING") {
     return post.serviceType === "TOWING";
+  }
+  if (post.serviceType === "TOWING") {
+    return false;
   }
   return true;
 }

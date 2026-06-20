@@ -116,10 +116,6 @@ function RootLayoutNav(): React.ReactElement {
   });
 
   useEffect(() => {
-    void SplashScreen.hideAsync().catch(() => undefined);
-  }, []);
-
-  useEffect(() => {
     const dedupe = lastNavRef.current;
     void (async () => {
       const last = await Notifications.getLastNotificationResponseAsync();

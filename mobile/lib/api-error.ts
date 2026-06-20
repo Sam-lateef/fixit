@@ -8,6 +8,10 @@ const EXACT_API_ERROR_KEYS: Readonly<Record<string, StringKey>> = {
   "phone number is required for shops": "phoneRequired",
   "shops must have a phone number": "phoneRequired",
   "enter a valid iraqi whatsapp number (+9647xxxxxxxxx)": "phoneInvalidFormat",
+  "enter a valid iraqi whatsapp number (+964 7xx xxx xxxx)": "phoneInvalidFormat",
+  "phone must be a valid iraqi whatsapp number (+964 7xx xxx xxxx)": "phoneInvalidFormat",
+  "enter a valid iraqi phone number (+964 xxxxxxxxxx)": "phoneInvalidFormat",
+  "phone must be a valid iraqi phone number (+964 xxxxxxxxxx)": "phoneInvalidFormat",
   "invalid phone number": "phoneInvalidFormat",
   "incorrect or expired code. request a new code if it has been more than 10 minutes.":
     "otpIncorrectOrExpired",

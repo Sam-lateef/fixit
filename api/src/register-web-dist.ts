@@ -1,14 +1,8 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import fastifyStatic from "@fastify/static";
 import type { FastifyInstance } from "fastify";
-
-/**
- * Files Vite copies from `app/public/` to `dist/` root (not under `/assets/`).
- * Fastify only mounts `dist/assets` for hashed bundles, so each root file needs an explicit route.
- */
-const WEB_DIST_ROOT_STATIC = ["brand-wrench.png"] as const;
 
 function contentTypeForRootFile(name: string): string {
   if (name.endsWith(".png")) {
@@ -20,7 +14,24 @@ function contentTypeForRootFile(name: string): string {
   if (name.endsWith(".svg")) {
     return "image/svg+xml";
   }
+  if (name.endsWith(".webmanifest") || name.endsWith(".manifest")) {
+    return "application/manifest+json";
+  }
   return "application/octet-stream";
+}
+
+function listWebDistRootStaticFiles(root: string): string[] {
+  return readdirSync(root).filter((name) => {
+    if (name === "index.html") {
+      return false;
+    }
+    const filePath = join(root, name);
+    try {
+      return statSync(filePath).isFile();
+    } catch {
+      return false;
+    }
+  });
 }
 
 /**
@@ -42,7 +53,7 @@ export async function registerWebDist(fastify: FastifyInstance): Promise<void> {
     return reply.type("text/html").send(indexHtml);
   });
 
-  for (const name of WEB_DIST_ROOT_STATIC) {
+  for (const name of listWebDistRootStaticFiles(root)) {
     fastify.get(`/${name}`, async (_request, reply) => {
       const filePath = join(root, name);
       if (!existsSync(filePath)) {

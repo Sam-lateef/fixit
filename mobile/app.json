@@ -11,21 +11,31 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1B4332"
     },
     "ios": {
       "bundleIdentifier": "com.fixitiq.app",
-      "buildNumber": "14",
+      "buildNumber": "17",
       "supportsTablet": true,
       "icon": "./assets/images/fixit-icon-1024.png",
       "googleServicesFile": "./GoogleService-Info.plist",
+      "splash": {
+        "image": "./assets/images/splash-icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#1B4332",
+        "dark": {
+          "image": "./assets/images/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#1B4332"
+        }
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.fixitiq.app",
-      "versionCode": 12,
+      "versionCode": 17,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/fixit-adaptive-fg-1024.png",
@@ -33,7 +43,17 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "resize",
+      "splash": {
+        "image": "./assets/images/splash-icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#1B4332",
+        "dark": {
+          "image": "./assets/images/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#1B4332"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -42,6 +62,21 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#1B4332",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#1B4332",
+            "image": "./assets/images/splash-icon.png",
+            "imageWidth": 220,
+            "resizeMode": "contain"
+          }
+        }
+      ],
       [
         "expo-build-properties",
         {

@@ -19,7 +19,7 @@ export function renderEnterNumber(root: HTMLElement): void {
       <p class="muted">${t("enterPhoneHint")}</p>
       <div style="display:flex;gap:8px;margin:16px 0;direction:ltr;">
         <input class="inp inp-ltr" style="width:90px;text-align:center;" value="+964" readonly />
-        <input class="inp inp-ltr" id="phone" type="tel" placeholder="7xx xxx xxxx" maxlength="15" />
+        <input class="inp inp-ltr" id="phone" type="tel" placeholder="750 123 4567" maxlength="15" />
       </div>
       <button class="btn btn-primary" id="send">${t("sendCode")}</button>
       <p id="err" class="danger" style="margin-top:12px;font-size:0.8rem;"></p>
@@ -48,9 +48,14 @@ export function renderEnterNumber(root: HTMLElement): void {
   });
 
   root.querySelector("#send")?.addEventListener("click", async () => {
-    const digits = phoneEl.value.replace(/\D/g, "").replace(/^964/, "");
-    if (digits.length !== 10 || digits[0] !== "7") {
-      err.textContent = "Enter 10 digits starting with 7 (e.g. 7901234567)";
+    const digits = phoneEl.value.replace(/\D/g, "").replace(/^964/, "").replace(/^0/, "");
+    if (
+      digits.length < 9 ||
+      digits.length > 10 ||
+      digits[0] === "0" ||
+      !/^[1-9]\d{8,9}$/.test(digits)
+    ) {
+      err.textContent = "Enter 9–10 digits after +964 (e.g. 750 123 4567)";
       return;
     }
     const full = `+964${digits}`;

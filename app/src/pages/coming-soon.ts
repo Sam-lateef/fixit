@@ -1,4 +1,4 @@
-import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "../config/legal-public-urls.js";
+import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL, SUPPORT_EMAIL } from "../config/legal-public-urls.js";
 import { resolveAdminLoginHref } from "../config/admin-login-url.js";
 import { setLocale, t } from "../i18n/index.js";
 
@@ -32,6 +32,9 @@ export async function renderComingSoon(root: HTMLElement): Promise<void> {
     '<button type="button" class="coming-soon-lang-btn" data-set-locale="en">English</button>' +
     '<span class="coming-soon-lang-gap" aria-hidden="true"></span>' +
     '<button type="button" class="coming-soon-lang-btn" data-set-locale="ar-iq">العربية</button>' +
+    "</div>" +
+    '<div class="coming-soon-support">' +
+    `<a class="coming-soon-legal-link" href="mailto:${escapeHtml(SUPPORT_EMAIL)}">${escapeHtml(t("support"))} · ${escapeHtml(SUPPORT_EMAIL)}</a>` +
     "</div>" +
     '<div class="coming-soon-legal">' +
     `<a class="coming-soon-legal-link" href="${escapeHtml(LEGAL_PRIVACY_URL)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t("privacyPolicy"))}</a>` +
