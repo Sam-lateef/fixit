@@ -8,24 +8,12 @@ import { setToken } from "@/lib/auth-storage";
 import { syncRevenueCatUser } from "@/lib/revenuecat";
 import { useI18n } from "@/lib/i18n";
 import { logSignup, logSignupStep } from "@/lib/signup-log";
-import type { StringKey } from "@/lib/strings";
 import { theme } from "@/lib/theme";
 
 type Choice = "OWNER" | "SHOP";
 
-type AccountTypeCard = {
-  id: Choice;
-  titleKey: StringKey;
-  subKey: StringKey;
-};
-
-const CARDS: ReadonlyArray<AccountTypeCard> = [
-  { id: "OWNER", titleKey: "carOwner", subKey: "accountTypeOwnerSub" },
-  { id: "SHOP", titleKey: "shop", subKey: "accountTypeShopSub" },
-];
-
 export default function AccountTypeScreen(): React.ReactElement {
-  const { t, isRtl } = useI18n();
+  const { t } = useI18n();
   const [choice, setChoice] = useState<Choice>("OWNER");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -38,23 +26,25 @@ export default function AccountTypeScreen(): React.ReactElement {
   // straight to /signup/shop-location. They're now a sub-type of SHOP that
   // the user picks on /signup/shop-type — one less place to keep aligned
   // with the offers* booleans.
-
-  const textAlign = isRtl ? "right" : "left";
+  const cards: { id: Choice; title: string; sub: string }[] = [
+    { id: "OWNER", title: t("carOwner"), sub: t("accountTypeOwnerSub") },
+    { id: "SHOP", title: t("shop"), sub: t("accountTypeShopSub") },
+  ];
 
   return (
     <View style={styles.screen}>
-      <Text style={[styles.h1, { textAlign }]}>{t("accountType")}</Text>
+      <Text style={styles.h1}>{t("accountType")}</Text>
 
-      {CARDS.map((c) => (
+      {cards.map((c) => (
         <Pressable
           key={c.id}
           style={[styles.card, choice === c.id && styles.cardOn]}
           onPress={() => setChoice(c.id)}
         >
-          <Text style={[styles.cardTitle, choice === c.id && styles.cardTitleOn, { textAlign }]}>
-            {t(c.titleKey)}
+          <Text style={[styles.cardTitle, choice === c.id && styles.cardTitleOn]}>
+            {c.title}
           </Text>
-          <Text style={[styles.cardSub, { textAlign }]}>{t(c.subKey)}</Text>
+          <Text style={styles.cardSub}>{c.sub}</Text>
         </Pressable>
       ))}
 
@@ -117,7 +107,7 @@ export default function AccountTypeScreen(): React.ReactElement {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, padding: 20, backgroundColor: theme.surface },
-  h1: { fontSize: 22, fontWeight: "700", color: theme.text, marginBottom: 16 },
+  h1: { fontSize: 22, fontWeight: "700", color: theme.text, marginBottom: 16, textAlign: "left" },
   card: {
     padding: 16,
     borderRadius: theme.radiusLg,
@@ -129,9 +119,9 @@ const styles = StyleSheet.create({
     borderColor: theme.primaryMid,
     backgroundColor: theme.primaryLight,
   },
-  cardTitle: { fontSize: 16, fontWeight: "700", color: theme.text },
+  cardTitle: { fontSize: 16, fontWeight: "700", color: theme.text, textAlign: "left" },
   cardTitleOn: { color: theme.primary },
-  cardSub: { fontSize: 13, color: theme.muted, marginTop: 3 },
+  cardSub: { fontSize: 13, color: theme.muted, marginTop: 3, textAlign: "left" },
   btn: {
     marginTop: 16,
     backgroundColor: theme.primaryMid,
