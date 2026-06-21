@@ -40,9 +40,9 @@ function resolvePublicAdminLoginUrl(): string | null {
  * `SHOP_DASHBOARD_URL` env var to flip the link to a real dashboard later
  * without rebuilding the mobile app.
  *
- * Resolution order: explicit `SHOP_DASHBOARD_URL` → `https://<fly-app>.fly.dev`
- * (when `FLY_APP_NAME` is set, e.g. `fixit-api` → `https://fixit-api.fly.dev/#/shop/dashboard`)
- * → `APP_URL` + hash route → `null`.
+ * Resolution order: explicit `SHOP_DASHBOARD_URL` → `APP_URL` + hash route
+ * (e.g. `https://fixthecar.app/#/shop/dashboard`) → `https://<fly-app>.fly.dev`
+ * only when `APP_URL` is unset (local/dev).
  */
 function resolvePublicShopDashboardUrl(): string | null {
   const raw = process.env.SHOP_DASHBOARD_URL;
@@ -52,14 +52,14 @@ function resolvePublicShopDashboardUrl(): string | null {
     return explicit;
   }
 
-  const flyApp = process.env.FLY_APP_NAME?.trim();
-  if (typeof flyApp === "string" && flyApp.length > 0) {
-    return `https://${flyApp}${FLY_DEV_SUFFIX}${SHOP_DASHBOARD_HASH}`;
-  }
-
   const appUrl = process.env.APP_URL?.trim();
   if (typeof appUrl === "string" && appUrl.length > 0) {
     return `${appUrl.replace(/\/+$/, "")}${SHOP_DASHBOARD_HASH}`;
+  }
+
+  const flyApp = process.env.FLY_APP_NAME?.trim();
+  if (typeof flyApp === "string" && flyApp.length > 0) {
+    return `https://${flyApp}${FLY_DEV_SUFFIX}${SHOP_DASHBOARD_HASH}`;
   }
 
   return null;

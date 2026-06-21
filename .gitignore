@@ -33,3 +33,6 @@ backups/
 
 # Local SHA paste file for compare-google-sha.ps1 (delete after checking)
 tmp/sha-fingerprints.input.txt
+
+# Scratch / working dir — never commit
+tmp/

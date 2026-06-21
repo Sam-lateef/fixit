@@ -100,7 +100,7 @@ export const en = {
   backToHome: "Back to home",
   shopDashboardTitle: "Shop dashboard",
   shopDashboardComingSoonBody:
-    "Your web dashboard is coming soon. You will manage your shop subscription, plan, and billing here. For now, keep using the Fix It Iraq mobile app to run your shop.",
+    "Your web dashboard is coming soon. You'll manage appointments, connect your AI assistant to your shop's social media, WhatsApp, and more. For now, keep using the Fix It Iraq mobile app to run your shop.",
 };
 
 export type EnKeys = keyof typeof en;

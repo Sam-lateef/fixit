@@ -16,6 +16,20 @@ import { apiFetch, ApiTimeoutError } from "@/lib/api";
  * Callers MUST surface a visible error rather than silently doing nothing.
  */
 
+const SHOP_DASHBOARD_HASH = "/#/shop/dashboard";
+
+function normalizeShopDashboardUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed.includes(".fly.dev")) {
+    return trimmed;
+  }
+  const apiBase = process.env.EXPO_PUBLIC_API_URL?.trim();
+  if (typeof apiBase === "string" && apiBase.length > 0) {
+    return `${apiBase.replace(/\/+$/, "")}${SHOP_DASHBOARD_HASH}`;
+  }
+  return "https://fixthecar.app/#/shop/dashboard";
+}
+
 type PublicConfigResponse = {
   adminLoginUrl: string | null;
   shopDashboardUrl: string | null;
@@ -44,7 +58,7 @@ async function fetchFromApi(): Promise<string | null> {
       return null;
     }
     const trimmed = url.trim();
-    return trimmed.length > 0 ? trimmed : null;
+    return trimmed.length > 0 ? normalizeShopDashboardUrl(trimmed) : null;
   } catch (e) {
     if (e instanceof ApiTimeoutError) {
       console.warn("[shop-dashboard-url] public-config timed out");
@@ -68,7 +82,7 @@ export async function getShopDashboardUrl(): Promise<string | null> {
   }
   const envOverride = readEnvOverride();
   if (envOverride !== null) {
-    cached = envOverride;
+    cached = normalizeShopDashboardUrl(envOverride);
     return cached;
   }
   if (inFlight === null) {
